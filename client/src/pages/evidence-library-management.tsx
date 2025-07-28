@@ -231,26 +231,15 @@ export default function EvidenceLibraryManagement() {
         const textData = await response.text();
         
         if (textData.startsWith('<!DOCTYPE html>') || textData.startsWith('<html')) {
-          console.log("[Equipment Types] HTML detected - using database fallback");
-          return [
-            { id: 1, name: "Motors", equipmentGroupId: 9 },
-            { id: 2, name: "Generators", equipmentGroupId: 9 }, 
-            { id: 3, name: "Safety Valves", equipmentGroupId: 3 },
-            { id: 4, name: "Pumps", equipmentGroupId: 1 },
-            { id: 5, name: "Compressors", equipmentGroupId: 1 }
-          ];
+          console.log("[Equipment Types] HTML detected - no fallback data available");
+          return [];
         }
         
         const jsonData = JSON.parse(textData);
         return jsonData;
       } catch (error) {
-        return [
-          { id: 1, name: "Motors", equipmentGroupId: 9 },
-          { id: 2, name: "Generators", equipmentGroupId: 9 }, 
-          { id: 3, name: "Safety Valves", equipmentGroupId: 3 },
-          { id: 4, name: "Pumps", equipmentGroupId: 1 },
-          { id: 5, name: "Compressors", equipmentGroupId: 1 }
-        ];
+        console.log("[Equipment Types] API failed - no fallback data available");
+        return [];
       }
     }
   });
@@ -265,26 +254,15 @@ export default function EvidenceLibraryManagement() {
         const textData = await response.text();
         
         if (textData.startsWith('<!DOCTYPE html>') || textData.startsWith('<html')) {
-          console.log("[Equipment Subtypes] HTML detected - using database fallback");
-          return [
-            { id: 1, name: "Electric", equipmentTypeId: 1 },
-            { id: 2, name: "Hydraulic", equipmentTypeId: 1 },
-            { id: 3, name: "Centrifugal", equipmentTypeId: 4 },
-            { id: 4, name: "Reciprocating", equipmentTypeId: 4 },
-            { id: 5, name: "Safety Relief", equipmentTypeId: 3 }
-          ];
+          console.log("[Equipment Subtypes] HTML detected - no fallback data available");
+          return [];
         }
         
         const jsonData = JSON.parse(textData);
         return jsonData;
       } catch (error) {
-        return [
-          { id: 1, name: "Electric", equipmentTypeId: 1 },
-          { id: 2, name: "Hydraulic", equipmentTypeId: 1 },
-          { id: 3, name: "Centrifugal", equipmentTypeId: 4 },
-          { id: 4, name: "Reciprocating", equipmentTypeId: 4 },
-          { id: 5, name: "Safety Relief", equipmentTypeId: 3 }
-        ];
+        console.log("[Equipment Subtypes] API failed - no fallback data available");
+        return [];
       }
     }
   });
@@ -299,22 +277,14 @@ export default function EvidenceLibraryManagement() {
         
         // Check if Vite middleware returned HTML instead of JSON
         if (text.startsWith('<!DOCTYPE html>')) {
-          console.warn("[Equipment Groups] Vite middleware interference - using fallback");
-          return [
-            "Control Valves", "Electrical", "Environmental", "Fire & Safety", 
-            "HVAC & Utilities", "Instrumentation", "Instrumentation & Automation",
-            "Material Handling", "Plant Utilities", "Rotating", "Static", "Utility"
-          ];
+          console.warn("[Equipment Groups] Vite middleware interference - no fallback data available");
+          return [];
         }
         
         return JSON.parse(text);
       } catch (error) {
-        console.warn("[Equipment Groups] API failed, using database fallback");
-        return [
-          "Control Valves", "Electrical", "Environmental", "Fire & Safety", 
-          "HVAC & Utilities", "Instrumentation", "Instrumentation & Automation",
-          "Material Handling", "Plant Utilities", "Rotating", "Static", "Utility"
-        ];
+        console.warn("[Equipment Groups] API failed - no fallback data available");
+        return [];
       }
     },
   });
@@ -329,14 +299,14 @@ export default function EvidenceLibraryManagement() {
         
         // Check if Vite middleware returned HTML instead of JSON
         if (text.startsWith('<!DOCTYPE html>')) {
-          console.warn("[Risk Rankings] Vite middleware interference - using fallback");
-          return ["Critical", "High", "Medium", "Low"];
+          console.warn("[Risk Rankings] Vite middleware interference - no fallback data available");
+          return [];
         }
         
         return JSON.parse(text);
       } catch (error) {
-        console.warn("[Risk Rankings] API failed, using database fallback");
-        return ["Critical", "High", "Medium", "Low"];
+        console.warn("[Risk Rankings] API failed - no fallback data available");
+        return [];
       }
     },
   });
@@ -351,20 +321,14 @@ export default function EvidenceLibraryManagement() {
         
         // Check if Vite middleware returned HTML instead of JSON
         if (text.startsWith('<!DOCTYPE html>')) {
-          console.warn("[Equipment Types] Vite middleware interference - using fallback");
-          return [
-            "Agitators", "Boilers", "Compressors", "Cooling Towers", "Crushers", 
-            "Fans", "Heat Exchangers", "Motors", "Pumps", "Safety Valves"
-          ];
+          console.warn("[Equipment Types] Vite middleware interference - no fallback data available");
+          return [];
         }
         
         return JSON.parse(text);
       } catch (error) {
-        console.warn("[Equipment Types] API failed, using database fallback");
-        return [
-          "Agitators", "Boilers", "Compressors", "Cooling Towers", "Crushers", 
-          "Fans", "Heat Exchangers", "Motors", "Pumps", "Safety Valves"
-        ];
+        console.warn("[Equipment Types] API failed - no fallback data available");
+        return [];
       }
     },
   });
@@ -606,7 +570,7 @@ export default function EvidenceLibraryManagement() {
     },
   });
 
-  // Import CSV mutation
+  // Import CSV mutation with enhanced error handling
   const importMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
@@ -615,20 +579,47 @@ export default function EvidenceLibraryManagement() {
         method: 'POST',
         body: formData,
       });
-      if (!response.ok) throw new Error('Failed to import CSV');
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        
+        // Enhanced error message with specific details
+        if (errorData.errorDetails && errorData.errorDetails.length > 0) {
+          const detailedErrors = errorData.errorDetails.slice(0, 3).join('; ');
+          const remainingCount = errorData.errorDetails.length > 3 ? ` (and ${errorData.errorDetails.length - 3} more)` : '';
+          throw new Error(`Import failed: ${detailedErrors}${remainingCount}`);
+        }
+        
+        if (errorData.details && Array.isArray(errorData.details)) {
+          const csvErrors = errorData.details.slice(0, 2).join('; ');
+          const remainingCount = errorData.details.length > 2 ? ` (and ${errorData.details.length - 2} more)` : '';
+          throw new Error(`CSV parsing failed: ${csvErrors}${remainingCount}`);
+        }
+        
+        throw new Error(errorData.message || errorData.error || `Import failed with status ${response.status}`);
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
+      const successMessage = data.errors > 0 
+        ? `Imported ${data.imported} items successfully, ${data.errors} items had errors`
+        : `Imported ${data.imported} items successfully`;
+        
       toast({ 
-        title: "Success", 
-        description: `Imported ${data.imported} items successfully` 
+        title: "Import Complete", 
+        description: successMessage,
+        variant: data.errors > 0 ? "default" : "default"
       });
+      
       queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
+      refetch(); // Force immediate refresh
     },
     onError: (error) => {
+      console.error('[Import Error]:', error);
       toast({ 
-        title: "Import Error", 
-        description: error.message,
+        title: "Import Failed", 
+        description: error.message || "Failed to import CSV file",
         variant: "destructive" 
       });
     },
@@ -1063,15 +1054,11 @@ export default function EvidenceLibraryManagement() {
                                               {group.name || group}
                                             </SelectItem>
                                           ))
-                                        : [
-                                            "Control Valves", "Electrical", "Environmental", "Fire & Safety", 
-                                            "HVAC & Utilities", "Instrumentation", "Instrumentation & Automation",
-                                            "Material Handling", "Plant Utilities", "Rotating", "Static", "Utility"
-                                          ].map((group) => (
-                                            <SelectItem key={group} value={group}>
-                                              {group}
+                                        : (
+                                            <SelectItem value="" disabled>
+                                              No equipment groups available - Please add equipment groups in Admin Settings
                                             </SelectItem>
-                                          ))
+                                          )
                                       }
                                     </SelectContent>
                                   </Select>
@@ -1098,14 +1085,11 @@ export default function EvidenceLibraryManagement() {
                                               {type.name || type}
                                             </SelectItem>
                                           ))
-                                        : [
-                                            "Agitators", "Boilers", "Compressors", "Cooling Towers", "Crushers", 
-                                            "Fans", "Heat Exchangers", "Motors", "Pumps", "Safety Valves"
-                                          ].map((type) => (
-                                            <SelectItem key={type} value={type}>
-                                              {type}
+                                        : (
+                                            <SelectItem value="" disabled>
+                                              No equipment types available - Please add equipment types in Admin Settings
                                             </SelectItem>
-                                          ))
+                                          )
                                       }
                                     </SelectContent>
                                   </Select>
@@ -1135,14 +1119,11 @@ export default function EvidenceLibraryManagement() {
                                               {subtype.name || subtype}
                                             </SelectItem>
                                           ))
-                                        : [
-                                            "Centrifugal", "Reciprocating", "Screw", "Rotary", "Electric", 
-                                            "Hydraulic", "Pneumatic", "Heat Exchanger", "Cooler", "Boiler"
-                                          ].map((subtype) => (
-                                            <SelectItem key={subtype} value={subtype}>
-                                              {subtype}
+                                        : (
+                                            <SelectItem value="" disabled>
+                                              No equipment subtypes available - Please add equipment subtypes in Admin Settings
                                             </SelectItem>
-                                          ))
+                                          )
                                       }
                                     </SelectContent>
                                   </Select>
