@@ -588,7 +588,7 @@ export default function AdminSettings() {
 
 
       <Tabs defaultValue="ai-settings" className="space-y-6">
-        <TabsList className="grid w-fit grid-cols-5">
+        <TabsList className="grid w-fit grid-cols-6">
           <TabsTrigger value="ai-settings" className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
             AI Settings
@@ -608,6 +608,10 @@ export default function AdminSettings() {
           <TabsTrigger value="risk-rankings" className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
             Risk Rankings
+          </TabsTrigger>
+          <TabsTrigger value="evidence-library" className="flex items-center gap-2">
+            <Database className="w-4 h-4" />
+            Evidence Library
           </TabsTrigger>
         </TabsList>
 
@@ -1412,6 +1416,34 @@ export default function AdminSettings() {
                   </TableBody>
                 </Table>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Evidence Library Tab */}
+        <TabsContent value="evidence-library" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Database className="w-5 h-5" />
+                <span>Evidence Library Management</span>
+              </CardTitle>
+              <CardDescription>
+                Manage evidence library records with normalized equipment hierarchy.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Button asChild className="w-full">
+                  <Link href="/evidence-library-management">
+                    <Database className="w-4 h-4 mr-2" />
+                    Open Evidence Library Manager
+                  </Link>
+                </Button>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Access the full Evidence Library management interface with search, filter, edit, and import capabilities.
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
