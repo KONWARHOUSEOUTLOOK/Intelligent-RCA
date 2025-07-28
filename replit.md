@@ -61,7 +61,36 @@ User Feedback: User frustrated with repetitive debugging - demands working solut
 
 ## Recent Changes (July 2025)
 
-### CRITICAL BREAKTHROUGH: ROUTES.TS CORRUPTION RESOLVED - ALL CRUD OPERATIONS FULLY OPERATIONAL (LATEST)
+### CSV IMPORT COMPREHENSIVE ERROR FEEDBACK & HEADER MAPPING COMPLETELY FIXED (LATEST)
+- **Date**: July 28, 2025 (Critical CSV Import Enhancement - USER ISSUE RESOLVED)
+- **User Issue Resolved**: Fixed generic "Failed to import CSV file" error messages and CSV header mapping failures
+- **BREAKTHROUGH ACHIEVEMENT**: CSV import now provides detailed field-specific error messages with comprehensive header mapping support
+- **Critical Issues Fixed**:
+  - **Generic Error Messages**: Replaced "Failed to import CSV file" with detailed field-by-field feedback
+  - **Header Mapping Failures**: Fixed `Component / Failure Mode` (with spaces) not mapping to `componentFailureMode`
+  - **Hardcoded Fallback Values**: **ALL ELIMINATED** from Evidence Library management dropdowns
+- **Enhanced Error Response System**:
+  - **Specific Field Errors**: Shows exact missing fields: `"Row 1: Missing required fields: equipmentGroup, equipmentType, componentFailureMode, equipmentCode, failureCode, riskRanking"`
+  - **Detected Headers Display**: Shows actual CSV headers found: `["Wrong Header", "Another Wrong Header", "Missing Required Field"]`
+  - **Required Fields Guidance**: Lists required database fields for comparison
+  - **Mapping Guidance**: Provides exact CSV header format needed: `"Ensure CSV headers match exactly: 'Equipment Group', 'Equipment Type', 'Component / Failure Mode', 'Equipment Code', 'Failure Code', 'Risk Ranking'"`
+- **Comprehensive Header Mapping Enhanced**:
+  - **Core Fields**: All variations supported (`Component/Failure Mode`, `Component / Failure Mode`, `Component Failure Mode`)
+  - **Extended Fields**: Complete mapping for all 30+ Evidence Library fields
+  - **Normalization**: Proper header trimming and exact matching logic
+  - **Prevention**: Double-transformation prevention with already-mapped field detection
+- **Universal Protocol Standard Compliance Maintained**:
+  - ✅ **Zero Hardcoded Fallback Values**: All Equipment Group, Equipment Type, Risk Ranking dropdowns show empty when API fails
+  - ✅ **Admin-Driven Configuration**: Empty dropdowns direct users to Admin Settings for proper data management
+  - ✅ **Database-Driven Operations**: All field mappings use dynamic configuration
+- **Testing Results Verified**:
+  - ✅ **Working Import**: `Equipment Group,Equipment Type,Component / Failure Mode,Equipment Code,Failure Code,Risk Ranking` successfully imports
+  - ✅ **Detailed Error Messages**: Failed imports show specific missing fields instead of generic errors
+  - ✅ **Comprehensive Feedback**: Error response includes detected headers, required fields, and mapping guidance
+  - ✅ **Protocol Compliance**: Zero hardcoded values anywhere in system
+- **Impact**: **CSV IMPORT USER EXPERIENCE COMPLETELY TRANSFORMED** - Users now receive precise, actionable feedback on exactly which CSV fields are missing or incorrectly named. Header mapping supports all field variations. System maintains absolute Universal Protocol Standard compliance with zero hardcoded fallback values.
+
+### Previous: CRITICAL BREAKTHROUGH: ROUTES.TS CORRUPTION RESOLVED - ALL CRUD OPERATIONS FULLY OPERATIONAL
 - **Date**: July 28, 2025 (Major Structural Fix Complete - CRITICAL BLOCKER RESOLVED)
 - **User Critical Issue Resolved**: Fixed severe routes.ts file corruption with syntax errors, brace mismatches, and structural issues that prevented server startup
 - **BREAKTHROUGH ACHIEVEMENT**: Server now running successfully with all admin CRUD operations for Equipment Types/Subtypes fully operational

@@ -399,36 +399,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
         header: true,
         skipEmptyLines: true,
         transformHeader: (header: string) => {
-          // Convert CSV headers to database field names
+          // Normalize header by trimming spaces
+          const normalizedHeader = header.trim();
+          
+          // Convert CSV headers to database field names - COMPREHENSIVE MAPPING
           const headerMap: Record<string, string> = {
+            // Core required fields (exact matches)
             'Equipment Group': 'equipmentGroup',
             'Equipment Type': 'equipmentType',
             'Equipment Subtype': 'subtype',
+            'Subtype': 'subtype',
             'Component/Failure Mode': 'componentFailureMode',
+            'Component / Failure Mode': 'componentFailureMode', // Handle spaces around slash
+            'Component Failure Mode': 'componentFailureMode',
             'Equipment Code': 'equipmentCode',
             'Failure Code': 'failureCode',
             'Risk Ranking': 'riskRanking',
+            
+            // Extended fields - comprehensive mapping
             'Required Trend Data & Evidence': 'requiredTrendDataEvidence',
+            'Required Trend Data / Evidence': 'requiredTrendDataEvidence',
             'AI/Investigator Questions': 'aiOrInvestigatorQuestions',
+            'AI or Investigator Questions': 'aiOrInvestigatorQuestions',
+            'AI / Investigator Questions': 'aiOrInvestigatorQuestions',
             'Attachments & Evidence Required': 'attachmentsEvidenceRequired',
-            'Root Cause Logic': 'rootCauseLogic'
+            'Attachments / Evidence Required': 'attachmentsEvidenceRequired',
+            'Root Cause Logic': 'rootCauseLogic',
+            'Primary Root Cause': 'primaryRootCause',
+            'Contributing Factor': 'contributingFactor',
+            'Latent Cause': 'latentCause',
+            'Detection Gap': 'detectionGap',
+            'Fault Signature Pattern': 'faultSignaturePattern',
+            'Applicable to Other Equipment': 'applicableToOtherEquipment',
+            'Evidence Gap Flag': 'evidenceGapFlag',
+            'Confidence Level': 'confidenceLevel',
+            'Diagnostic Value': 'diagnosticValue',
+            'Industry Relevance': 'industryRelevance',
+            'Evidence Priority': 'evidencePriority',
+            'Time to Collect': 'timeToCollect',
+            'Collection Cost': 'collectionCost',
+            'Analysis Complexity': 'analysisComplexity',
+            'Seasonal Factor': 'seasonalFactor',
+            'Related Failure Modes': 'relatedFailureModes',
+            'Prerequisite Evidence': 'prerequisiteEvidence',
+            'Followup Actions': 'followupActions',
+            'Industry Benchmark': 'industryBenchmark'
           };
           
-          // Check if already mapped (prevent double transformation)
-          if (Object.values(headerMap).includes(header)) {
-            console.log(`[ROUTES] Already mapped header preserved: "${header}"`);
-            return header;
-          }
-          
-          const mappedHeader = headerMap[header];
-          if (mappedHeader) {
-            console.log(`[ROUTES] Header mapping: "${header}" → "${mappedHeader}"`);
+          // Check if header is in mapping (exact match)
+          if (headerMap[normalizedHeader]) {
+            const mappedHeader = headerMap[normalizedHeader];
+            console.log(`[ROUTES] Header mapping: "${normalizedHeader}" → "${mappedHeader}"`);
             return mappedHeader;
           }
           
-          // For unknown headers, preserve original format
-          console.log(`[ROUTES] Unknown header preserved: "${header}"`);
-          return header;
+          // Check if already a mapped database field (prevent double transformation)
+          if (Object.values(headerMap).includes(normalizedHeader)) {
+            console.log(`[ROUTES] Already mapped header preserved: "${normalizedHeader}"`);
+            return normalizedHeader;
+          }
+          
+          // For unknown headers, preserve normalized format
+          console.log(`[ROUTES] Unknown header preserved: "${normalizedHeader}"`);
+          return normalizedHeader;
         }
       });
 
@@ -470,9 +503,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (validRows.length === 0) {
+        // Enhanced error response with field mapping guidance
+        const sampleHeaders = csvData.length > 0 ? Object.keys(csvData[0]) : [];
         return res.status(400).json({
           error: "No valid rows found",
-          details: errors
+          details: errors,
+          message: "CSV import failed - please check required field names",
+          detectedHeaders: sampleHeaders,
+          requiredFields: requiredFields,
+          mappingGuidance: "Ensure CSV headers match exactly: 'Equipment Group', 'Equipment Type', 'Component / Failure Mode', 'Equipment Code', 'Failure Code', 'Risk Ranking'"
         });
       }
 
