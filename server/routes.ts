@@ -1260,7 +1260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Test the active configuration using Enhanced AI Test Service
-      const testResult = await EnhancedAITestService.performTest(activeProvider.id);
+      const testResult = await EnhancedAITestService.testAIProvider(activeProvider.id);
       
       console.log(`[ADMIN] Enhanced test result: ${testResult.success ? 'SUCCESS' : 'FAILED'} - Provider: ${activeProvider.provider}`);
       
