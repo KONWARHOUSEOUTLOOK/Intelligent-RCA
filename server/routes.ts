@@ -1222,7 +1222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         source: 'admin-configuration-save',
         success: true,
         provider: settingsData.provider,
-        model: settingsData.model || UniversalAIConfig.getDefaultModel()
+        model: settingsData.model || settingsData.provider
       });
       
       res.json({

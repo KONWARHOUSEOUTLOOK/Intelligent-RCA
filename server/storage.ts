@@ -294,7 +294,7 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
         if (AIService && setting.encryptedApiKey) {
           try {
             console.log(`[DatabaseInvestigationStorage] Attempting to decrypt API key for setting ${setting.id}`);
-            decryptedApiKey = AIService.decryptApiKey(setting.encryptedApiKey);
+            decryptedApiKey = AIService.decrypt(setting.encryptedApiKey);
             console.log(`[DatabaseInvestigationStorage] Successfully decrypted API key for setting ${setting.id}: ${decryptedApiKey ? 'YES' : 'NO'} (last 4 chars: ${decryptedApiKey ? decryptedApiKey.slice(-4) : 'N/A'})`);
           } catch (error) {
             console.error(`[DatabaseInvestigationStorage] Failed to decrypt API key for setting ${setting.id}:`, error);
