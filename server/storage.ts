@@ -448,7 +448,7 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
         equipmentCode: evidenceLibrary.equipmentCode,
         failureCode: evidenceLibrary.failureCode,
         riskRankingId: evidenceLibrary.riskRankingId,
-        riskRanking: sql<string>`COALESCE(${riskRankings.name}, ${evidenceLibrary.riskRanking}, 'UNKNOWN')`.as('riskRanking'),
+        riskRanking: sql<string>`COALESCE(${riskRankings.label}, ${evidenceLibrary.riskRanking}, 'UNKNOWN')`.as('riskRanking'),
         requiredTrendDataEvidence: evidenceLibrary.requiredTrendDataEvidence,
         aiOrInvestigatorQuestions: evidenceLibrary.aiOrInvestigatorQuestions,
         attachmentsEvidenceRequired: evidenceLibrary.attachmentsEvidenceRequired,
