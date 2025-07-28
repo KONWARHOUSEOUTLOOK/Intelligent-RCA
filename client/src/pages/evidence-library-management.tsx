@@ -312,8 +312,16 @@ export default function EvidenceLibraryManagement() {
   });
 
   // Fetch Equipment Types for edit form dropdown with hierarchy filtering
-  const selectedEquipmentGroup = form.watch("equipmentGroup");
+  const [selectedEquipmentGroup, setSelectedEquipmentGroup] = useState<string>("");
   const [selectedEquipmentGroupId, setSelectedEquipmentGroupId] = useState<number | null>(null);
+  
+  // Watch form changes safely
+  const watchedEquipmentGroup = form.watch("equipmentGroup");
+  useEffect(() => {
+    if (watchedEquipmentGroup !== selectedEquipmentGroup) {
+      setSelectedEquipmentGroup(watchedEquipmentGroup || "");
+    }
+  }, [watchedEquipmentGroup, selectedEquipmentGroup]);
 
   // Get equipment group ID when equipment group changes
   useEffect(() => {
@@ -362,8 +370,16 @@ export default function EvidenceLibraryManagement() {
   });
 
   // Fetch Equipment Subtypes with hierarchy filtering
-  const selectedEquipmentType = form.watch("equipmentType");
+  const [selectedEquipmentType, setSelectedEquipmentType] = useState<string>("");
   const [selectedEquipmentTypeId, setSelectedEquipmentTypeId] = useState<number | null>(null);
+  
+  // Watch form changes safely
+  const watchedEquipmentType = form.watch("equipmentType");
+  useEffect(() => {
+    if (watchedEquipmentType !== selectedEquipmentType) {
+      setSelectedEquipmentType(watchedEquipmentType || "");
+    }
+  }, [watchedEquipmentType, selectedEquipmentType]);
 
   // Get equipment type ID when equipment type changes
   useEffect(() => {
@@ -1135,23 +1151,39 @@ export default function EvidenceLibraryManagement() {
         </Card>
 
         {/* Dialog for Adding/Editing Items */}
-        <Dialog 
-          open={isDialogOpen} 
-          onOpenChange={(open) => {
-            try {
+        {isDialogOpen && (
+          <Dialog 
+            open={isDialogOpen} 
+            onOpenChange={(open) => {
               console.log("[Dialog] OnOpenChange called with:", open);
               setIsDialogOpen(open);
               if (!open) {
                 console.log("[Dialog] Closing - clearing selected item and resetting form");
                 setSelectedItem(null);
-                form.reset();
+                // Reset form safely
+                setTimeout(() => {
+                  form.reset({
+                    equipmentGroup: "",
+                    equipmentType: "",
+                    subtype: "",
+                    componentFailureMode: "",
+                    equipmentCode: "",
+                    failureCode: "",
+                    riskRanking: "",
+                    requiredTrendDataEvidence: "",
+                    aiOrInvestigatorQuestions: "",
+                    attachmentsEvidenceRequired: "",
+                    rootCauseLogic: "",
+                    blankColumn1: "",
+                    blankColumn2: "",
+                    blankColumn3: "",
+                    updatedBy: "admin",
+                  });
+                }, 100);
               }
-            } catch (error) {
-              console.error("[Dialog] Error in onOpenChange:", error);
-            }
-          }}
-        >
-          <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
+            }}
+          >
+            <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-center">
                 {selectedItem ? "Edit Evidence Item" : "Add Evidence Item"}
@@ -1999,8 +2031,9 @@ export default function EvidenceLibraryManagement() {
                         </div>
                       </form>
                     </Form>
-                  </DialogContent>
-        </Dialog>
+                </DialogContent>
+          </Dialog>
+        )}
 
         {/* Evidence Library Table */}
         <Card>
