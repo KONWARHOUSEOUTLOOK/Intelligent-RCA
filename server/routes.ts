@@ -505,13 +505,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (validRows.length === 0) {
         // Enhanced error response with field mapping guidance
         const sampleHeaders = csvData.length > 0 ? Object.keys(csvData[0]) : [];
+        console.log("[ROUTES] COMPREHENSIVE ERROR RESPONSE: No valid rows found");
         return res.status(400).json({
           error: "No valid rows found",
           details: errors,
           message: "CSV import failed - please check required field names",
           detectedHeaders: sampleHeaders,
           requiredFields: requiredFields,
-          mappingGuidance: "Ensure CSV headers match exactly: 'Equipment Group', 'Equipment Type', 'Component / Failure Mode', 'Equipment Code', 'Failure Code', 'Risk Ranking'"
+          mappingGuidance: "Ensure CSV headers match exactly: 'Equipment Group', 'Equipment Type', 'Component / Failure Mode', 'Equipment Code', 'Failure Code', 'Risk Ranking'",
+          totalRows: csvData.length,
+          validRows: validRows.length,
+          errorCount: errors.length
         });
       }
 
@@ -530,10 +534,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
     } catch (error) {
       console.error("[ROUTES] Evidence Library import error:", error);
+      
+      // Enhanced error response for user troubleshooting
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      let userFriendlyMessage = "Unable to import evidence library data";
+      let troubleshooting = [];
+      
+      // Specific error handling for common issues
+      if (errorMessage.includes("invalid input syntax for type integer")) {
+        userFriendlyMessage = "Data type mismatch - text value in number field";
+        troubleshooting.push("Check 'Evidence Priority' field contains only numbers (1, 2, 3, etc.)");
+        troubleshooting.push("Remove text like '1-2 days' from numeric fields");
+        troubleshooting.push("Use separate text fields for duration descriptions");
+      } else if (errorMessage.includes("duplicate key value")) {
+        userFriendlyMessage = "Duplicate equipment code found";
+        troubleshooting.push("Equipment codes must be unique across all records");
+        troubleshooting.push("Check for duplicate values in 'Equipment Code' column");
+      } else if (errorMessage.includes("violates foreign key constraint")) {
+        userFriendlyMessage = "Invalid equipment group, type, or risk ranking";
+        troubleshooting.push("Ensure equipment groups exist in Admin Settings");
+        troubleshooting.push("Verify risk rankings are configured properly");
+      }
+      
       res.status(500).json({ 
         error: "Import failed", 
-        message: "Unable to import evidence library data",
-        details: error instanceof Error ? error.message : "Unknown error"
+        message: userFriendlyMessage,
+        details: errorMessage,
+        troubleshooting: troubleshooting,
+        timestamp: new Date().toISOString()
       });
     }
   });

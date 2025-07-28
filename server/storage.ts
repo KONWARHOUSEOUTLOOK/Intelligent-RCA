@@ -873,6 +873,27 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
     }
   }
 
+  // SAFE INTEGER PARSING FOR CSV IMPORT (prevents type errors)
+  private parseIntegerSafely(value: any, defaultValue: number = 0): number {
+    if (value === null || value === undefined || value === '') {
+      return defaultValue;
+    }
+    
+    // If it's already a number, return it
+    if (typeof value === 'number') {
+      return Math.floor(value);
+    }
+    
+    // Try to parse string to integer
+    const parsed = parseInt(String(value));
+    if (isNaN(parsed)) {
+      console.log(`[STORAGE] Invalid integer value "${value}", using default ${defaultValue}`);
+      return defaultValue;
+    }
+    
+    return parsed;
+  }
+
   // CSV/Excel file import for Evidence Library - Universal Protocol Standard compliant
   async importEvidenceLibrary(file: Express.Multer.File): Promise<{ imported: number; errors: number; details: string[] }> {
     try {
@@ -996,7 +1017,7 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
             // Configurable Intelligence Fields - Admin editable (no hardcoding)
             diagnosticValue: transformedRow.diagnosticValue || null,
             industryRelevance: transformedRow.industryRelevance || null,
-            evidencePriority: transformedRow.evidencePriority ? parseInt(transformedRow.evidencePriority) : null,
+            evidencePriority: this.parseIntegerSafely(transformedRow.evidencePriority, 3), // Default priority 3 if non-numeric
             timeToCollect: transformedRow.timeToCollect || null,
             collectionCost: transformedRow.collectionCost || null,
             analysisComplexity: transformedRow.analysisComplexity || null,
