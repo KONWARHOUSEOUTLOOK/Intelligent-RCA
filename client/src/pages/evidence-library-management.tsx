@@ -317,12 +317,23 @@ export default function EvidenceLibraryManagement() {
 
   // Get equipment group ID when equipment group changes
   useEffect(() => {
-    if (selectedEquipmentGroup && Array.isArray(equipmentGroups)) {
-      const group = equipmentGroups.find((g: any) => g.name === selectedEquipmentGroup);
-      setSelectedEquipmentGroupId(group?.id || null);
-      // Clear equipment type when group changes
-      form.setValue("equipmentType", "");
-      form.setValue("subtype", "");
+    try {
+      if (selectedEquipmentGroup && Array.isArray(equipmentGroups) && equipmentGroups.length > 0) {
+        const group = equipmentGroups.find((g: any) => g.name === selectedEquipmentGroup);
+        console.log("[Equipment Group Effect] Found group:", group, "for name:", selectedEquipmentGroup);
+        setSelectedEquipmentGroupId(group?.id || null);
+        // Clear equipment type when group changes
+        if (form?.setValue) {
+          form.setValue("equipmentType", "");
+          form.setValue("subtype", "");
+        }
+      } else {
+        console.log("[Equipment Group Effect] Clearing - selectedEquipmentGroup:", selectedEquipmentGroup, "equipmentGroups:", equipmentGroups);
+        setSelectedEquipmentGroupId(null);
+      }
+    } catch (error) {
+      console.error("[Equipment Group Effect] Error:", error);
+      setSelectedEquipmentGroupId(null);
     }
   }, [selectedEquipmentGroup, equipmentGroups, form]);
 
@@ -356,11 +367,22 @@ export default function EvidenceLibraryManagement() {
 
   // Get equipment type ID when equipment type changes
   useEffect(() => {
-    if (selectedEquipmentType && Array.isArray(equipmentTypesEditForm)) {
-      const type = equipmentTypesEditForm.find((t: any) => t.name === selectedEquipmentType);
-      setSelectedEquipmentTypeId(type?.id || null);
-      // Clear subtype when type changes
-      form.setValue("subtype", "");
+    try {
+      if (selectedEquipmentType && Array.isArray(equipmentTypesEditForm) && equipmentTypesEditForm.length > 0) {
+        const type = equipmentTypesEditForm.find((t: any) => t.name === selectedEquipmentType);
+        console.log("[Equipment Type Effect] Found type:", type, "for name:", selectedEquipmentType);
+        setSelectedEquipmentTypeId(type?.id || null);
+        // Clear subtype when type changes
+        if (form?.setValue) {
+          form.setValue("subtype", "");
+        }
+      } else {
+        console.log("[Equipment Type Effect] Clearing - selectedEquipmentType:", selectedEquipmentType, "equipmentTypesEditForm:", equipmentTypesEditForm);
+        setSelectedEquipmentTypeId(null);
+      }
+    } catch (error) {
+      console.error("[Equipment Type Effect] Error:", error);
+      setSelectedEquipmentTypeId(null);
     }
   }, [selectedEquipmentType, equipmentTypesEditForm, form]);
 
@@ -1113,17 +1135,32 @@ export default function EvidenceLibraryManagement() {
         </Card>
 
         {/* Dialog for Adding/Editing Items */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog 
+          open={isDialogOpen} 
+          onOpenChange={(open) => {
+            try {
+              console.log("[Dialog] OnOpenChange called with:", open);
+              setIsDialogOpen(open);
+              if (!open) {
+                console.log("[Dialog] Closing - clearing selected item and resetting form");
+                setSelectedItem(null);
+                form.reset();
+              }
+            } catch (error) {
+              console.error("[Dialog] Error in onOpenChange:", error);
+            }
+          }}
+        >
           <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-bold text-center">
-                        {selectedItem ? "Edit Evidence Item" : "Add Evidence Item"}
-                      </DialogTitle>
-                      <div className="bg-blue-600 text-white p-3 rounded-lg mt-2 text-center">
-                        <p className="font-semibold">👇 SCROLL DOWN TO SEE FIELD EXPLANATIONS BELOW 👇</p>
-                        <p className="text-sm mt-1">Each field has detailed explanations and importance badges</p>
-                      </div>
-                    </DialogHeader>
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-center">
+                {selectedItem ? "Edit Evidence Item" : "Add Evidence Item"}
+              </DialogTitle>
+              <div className="bg-blue-600 text-white p-3 rounded-lg mt-2 text-center">
+                <p className="font-semibold">👇 SCROLL DOWN TO SEE FIELD EXPLANATIONS BELOW 👇</p>
+                <p className="text-sm mt-1">Each field has detailed explanations and importance badges</p>
+              </div>
+            </DialogHeader>
                     <Form {...form}>
                       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                         
