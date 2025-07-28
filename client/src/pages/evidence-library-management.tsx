@@ -684,33 +684,62 @@ export default function EvidenceLibraryManagement() {
   });
 
   const handleSubmit = (data: EvidenceLibraryForm) => {
-    if (selectedItem) {
-      updateMutation.mutate({ id: selectedItem.id, data });
-    } else {
-      createMutation.mutate(data);
+    try {
+      console.log("[Submit Form] Form data received:", data);
+      console.log("[Submit Form] Selected item:", selectedItem);
+      
+      if (selectedItem) {
+        console.log("[Submit Form] Updating existing item with ID:", selectedItem.id);
+        updateMutation.mutate({ id: selectedItem.id, data });
+      } else {
+        console.log("[Submit Form] Creating new item");
+        createMutation.mutate(data);
+      }
+    } catch (error) {
+      console.error("[Submit Form] Error in handleSubmit:", error);
+      toast({
+        title: "Form Submission Error",
+        description: "Failed to submit form. Please check all fields and try again.",
+        variant: "destructive"
+      });
     }
   };
 
   const handleEdit = (item: EvidenceLibrary) => {
-    setSelectedItem(item);
-    form.reset({
-      equipmentGroup: item.equipmentGroup,
-      equipmentType: item.equipmentType,
-      subtype: item.subtype || "",
-      componentFailureMode: item.componentFailureMode,
-      equipmentCode: item.equipmentCode,
-      failureCode: item.failureCode,
-      riskRanking: item.riskRanking as "High" | "Medium" | "Low",
-      requiredTrendDataEvidence: item.requiredTrendDataEvidence,
-      aiOrInvestigatorQuestions: item.aiOrInvestigatorQuestions,
-      attachmentsEvidenceRequired: item.attachmentsEvidenceRequired,
-      rootCauseLogic: item.rootCauseLogic,
-      blankColumn1: item.blankColumn1 || "",
-      blankColumn2: item.blankColumn2 || "",
-      blankColumn3: item.blankColumn3 || "",
-      updatedBy: "admin",
-    });
-    setIsDialogOpen(true);
+    try {
+      console.log("[Edit Item] Starting edit for item:", item);
+      setSelectedItem(item);
+      
+      const resetData = {
+        equipmentGroup: item.equipmentGroup || "",
+        equipmentType: item.equipmentType || "",
+        subtype: item.subtype || "",
+        componentFailureMode: item.componentFailureMode || "",
+        equipmentCode: item.equipmentCode || "",
+        failureCode: item.failureCode || "",
+        riskRanking: item.riskRanking || "",
+        requiredTrendDataEvidence: item.requiredTrendDataEvidence || "",
+        aiOrInvestigatorQuestions: item.aiOrInvestigatorQuestions || "",
+        attachmentsEvidenceRequired: item.attachmentsEvidenceRequired || "",
+        rootCauseLogic: item.rootCauseLogic || "",
+        blankColumn1: item.blankColumn1 || "",
+        blankColumn2: item.blankColumn2 || "",
+        blankColumn3: item.blankColumn3 || "",
+        updatedBy: "admin",
+      };
+      
+      console.log("[Edit Item] Reset data prepared:", resetData);
+      form.reset(resetData);
+      console.log("[Edit Item] Form reset complete, opening dialog");
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error("[Edit Item] Error in handleEdit:", error);
+      toast({
+        title: "Edit Error",
+        description: "Failed to open edit form. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDelete = (id: number) => {
@@ -914,14 +943,26 @@ export default function EvidenceLibraryManagement() {
                       Delete ({selectedItems.length})
                     </Button>
                   )}
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                    try {
+                      console.log("[Dialog] OnOpenChange called with:", open);
+                      setIsDialogOpen(open);
+                      if (!open) {
+                        console.log("[Dialog] Closing - clearing selected item");
+                        setSelectedItem(null);
+                      }
+                    } catch (error) {
+                      console.error("[Dialog] Error in onOpenChange:", error);
+                    }
+                  }}>
                     <DialogTrigger asChild>
                       <Button 
                         onClick={() => {
                           try {
-                            console.log("[Add Item] Resetting form and opening dialog");
+                            console.log("[Add Item] Button clicked - preparing to open dialog");
                             setSelectedItem(null);
-                            form.reset({
+                            
+                            const defaultFormData = {
                               equipmentGroup: "",
                               equipmentType: "",
                               subtype: "",
@@ -937,10 +978,24 @@ export default function EvidenceLibraryManagement() {
                               blankColumn2: "",
                               blankColumn3: "",
                               updatedBy: "admin",
-                            });
-                            console.log("[Add Item] Form reset complete");
+                            };
+                            
+                            console.log("[Add Item] Resetting form with:", defaultFormData);
+                            form.reset(defaultFormData);
+                            console.log("[Add Item] Form reset complete - opening dialog");
+                            
+                            // Use setTimeout to ensure form reset completes before dialog opens
+                            setTimeout(() => {
+                              setIsDialogOpen(true);
+                              console.log("[Add Item] Dialog opened");
+                            }, 10);
                           } catch (error) {
-                            console.error("[Add Item] Error resetting form:", error);
+                            console.error("[Add Item] Critical error:", error);
+                            toast({
+                              title: "Error Opening Form",
+                              description: "Failed to open add form. Please refresh the page and try again.",
+                              variant: "destructive"
+                            });
                           }
                         }}
                       >
