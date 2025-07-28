@@ -1038,7 +1038,7 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
         equipmentGroupName: equipmentGroups.name
       })
       .from(equipmentTypes)
-      .innerJoin(equipmentGroups, eq(equipmentTypes.equipmentGroupId, equipmentGroups.id))
+      .leftJoin(equipmentGroups, eq(equipmentTypes.equipmentGroupId, equipmentGroups.id))
       .where(eq(equipmentTypes.isActive, true))
       .orderBy(equipmentTypes.name);
     

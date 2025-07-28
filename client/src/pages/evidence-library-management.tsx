@@ -211,17 +211,6 @@ export default function EvidenceLibraryManagement() {
         
         console.error("[Evidence Library] All API endpoints failed - returning empty array");
         return [];
-        
-        try {
-          const jsonData = JSON.parse(textResponse);
-          console.log("[Evidence Library] Successfully parsed JSON - items count:", jsonData.length);
-          return jsonData;
-        } catch (parseError: unknown) {
-          const errorMessage = parseError instanceof Error ? parseError.message : 'Unknown parsing error';
-          console.error("[Evidence Library] JSON parse error:", parseError);
-          console.error("[Evidence Library] Response content:", textResponse.substring(0, 500));
-          throw new Error(`Invalid JSON response from backend: ${errorMessage}`);
-        }
       } catch (error) {
         console.error("[Evidence Library] API call failed:", error);
         // Return empty array as fallback to prevent UI breaking
@@ -232,8 +221,8 @@ export default function EvidenceLibraryManagement() {
     refetchOnWindowFocus: false
   });
 
-  // Query for equipment types from normalized database
-  const { data: equipmentTypes = [] } = useQuery({
+  // Query for equipment types from normalized database  
+  const { data: equipmentTypesForDropdown = [] } = useQuery({
     queryKey: ["/api/equipment-types"],
     staleTime: 5 * 60 * 1000, // 5 minutes cache
     queryFn: async () => {
@@ -352,8 +341,8 @@ export default function EvidenceLibraryManagement() {
     },
   });
 
-  // Fetch Equipment Types for edit form dropdown
-  const { data: equipmentTypes = [] } = useQuery({
+  // Fetch Equipment Types for edit form dropdown  
+  const { data: equipmentTypesEditForm = [] } = useQuery({
     queryKey: ['/api/equipment-types'],
     queryFn: async () => {
       try {
@@ -382,7 +371,7 @@ export default function EvidenceLibraryManagement() {
 
   // Debug logging
   console.log('Equipment Groups data:', equipmentGroups);
-  console.log('Equipment Types data:', equipmentTypes);
+  console.log('Equipment Types data:', equipmentTypesForDropdown);
   console.log('Risk Rankings data:', riskRankings);
 
   // Get unique filter values from data with proper typing
@@ -1081,8 +1070,8 @@ export default function EvidenceLibraryManagement() {
                                       <SelectValue placeholder="Select Equipment Type" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      {Array.isArray(equipmentTypes) && equipmentTypes.length > 0 
-                                        ? equipmentTypes.map((type: any) => (
+                                      {Array.isArray(equipmentTypesEditForm) && equipmentTypesEditForm.length > 0 
+                                        ? equipmentTypesEditForm.map((type: any) => (
                                             <SelectItem key={type.id || type} value={type.name || type}>
                                               {type.name || type}
                                             </SelectItem>
