@@ -7,61 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Search, Plus, Upload, Download, Edit, Trash2, AlertTriangle, CheckCircle, Home, ArrowLeft, ChevronUp, ChevronDown, Brain, Zap } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { EvidenceLibraryFormComponent } from "@/components/evidence-library-form";
 
-// Form schema for evidence library items with intelligent configurable fields
-const evidenceLibrarySchema = z.object({
-  equipmentGroup: z.string().min(1, "Equipment group is required"),
-  equipmentType: z.string().min(1, "Equipment type is required"),
-  subtype: z.string().optional(),
-  componentFailureMode: z.string().min(1, "Failure mode is required"),
-  equipmentCode: z.string().min(1, "Equipment code is required"),
-  failureCode: z.string().min(1, "Failure code is required"),
-  riskRanking: z.string().min(1, "Risk ranking is required"),
-  requiredTrendDataEvidence: z.string().min(1, "Required trend data is required"),
-  aiOrInvestigatorQuestions: z.string().min(1, "AI questions are required"),
-  attachmentsEvidenceRequired: z.string().min(1, "Attachments required is required"),
-  rootCauseLogic: z.string().min(1, "Root cause logic is required"),
-  
-  // Configurable Intelligence Fields - Admin Editable
-  confidenceLevel: z.string().optional(), // High/Medium/Low
-  diagnosticValue: z.string().optional(), // Critical/Important/Useful/Optional
-  industryRelevance: z.string().optional(), // Petrochemical/Power/Manufacturing/All
-  evidencePriority: z.string().optional(), // Text field - accepts any format including ranges like "1-2 days"
-  timeToCollect: z.string().optional(), // Immediate/Hours/Days/Weeks
-  collectionCost: z.string().optional(), // Low/Medium/High/Very High
-  analysisComplexity: z.string().optional(), // Simple/Moderate/Complex/Expert Required
-  seasonalFactor: z.string().optional(), // None/Summer/Winter/Shutdown/Startup
-  relatedFailureModes: z.string().optional(), // Comma-separated equipment codes
-  prerequisiteEvidence: z.string().optional(), // Evidence needed before this one
-  followupActions: z.string().optional(), // What to do after collecting
-  industryBenchmark: z.string().optional(), // Industry standards/benchmarks
-  
-  // Enriched Evidence Library Fields - from comprehensive CSV import
-  primaryRootCause: z.string().optional(), // Primary Root Cause analysis
-  contributingFactor: z.string().optional(), // Contributing factors
-  latentCause: z.string().optional(), // Latent/underlying causes
-  detectionGap: z.string().optional(), // Detection gaps analysis
-  faultSignaturePattern: z.string().optional(), // Fault signature patterns
-  applicableToOtherEquipment: z.string().optional(), // Cross-equipment applicability
-  evidenceGapFlag: z.string().optional(), // Evidence gap indicators
-  
-  // Legacy fields
-  blankColumn1: z.string().optional(),
-  blankColumn2: z.string().optional(),
-  blankColumn3: z.string().optional(),
-  updatedBy: z.string().optional(),
-});
 
-type EvidenceLibraryForm = z.infer<typeof evidenceLibrarySchema>;
 
 interface EvidenceLibrary {
   id: number;
@@ -129,26 +84,7 @@ export default function EvidenceLibraryManagement() {
   const [sortField, setSortField] = useState<'equipmentGroup' | 'equipmentType' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  const form = useForm<EvidenceLibraryForm>({
-    resolver: zodResolver(evidenceLibrarySchema),
-    defaultValues: {
-      equipmentGroup: "",
-      equipmentType: "",
-      subtype: "",
-      componentFailureMode: "",
-      equipmentCode: "",
-      failureCode: "",
-      riskRanking: "",
-      requiredTrendDataEvidence: "",
-      aiOrInvestigatorQuestions: "",
-      attachmentsEvidenceRequired: "",
-      rootCauseLogic: "",
-      blankColumn1: "",
-      blankColumn2: "",
-      blankColumn3: "",
-      updatedBy: "admin",
-    },
-  });
+  // Form is now handled by separate component
 
   // DIRECT DATABASE ACCESS - BYPASSING VITE MIDDLEWARE COMPLETELY
   const { data: evidenceItems = [], isLoading, refetch } = useQuery<EvidenceLibrary[]>({
@@ -1151,50 +1087,36 @@ export default function EvidenceLibraryManagement() {
         </Card>
 
         {/* Dialog for Adding/Editing Items */}
-        {isDialogOpen && (
-          <Dialog 
-            open={isDialogOpen} 
-            onOpenChange={(open) => {
-              console.log("[Dialog] OnOpenChange called with:", open);
-              setIsDialogOpen(open);
-              if (!open) {
-                console.log("[Dialog] Closing - clearing selected item and resetting form");
-                setSelectedItem(null);
-                // Reset form safely
-                setTimeout(() => {
-                  form.reset({
-                    equipmentGroup: "",
-                    equipmentType: "",
-                    subtype: "",
-                    componentFailureMode: "",
-                    equipmentCode: "",
-                    failureCode: "",
-                    riskRanking: "",
-                    requiredTrendDataEvidence: "",
-                    aiOrInvestigatorQuestions: "",
-                    attachmentsEvidenceRequired: "",
-                    rootCauseLogic: "",
-                    blankColumn1: "",
-                    blankColumn2: "",
-                    blankColumn3: "",
-                    updatedBy: "admin",
-                  });
-                }, 100);
-              }
-            }}
-          >
-            <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
+        <Dialog 
+          open={isDialogOpen} 
+          onOpenChange={(open) => {
+            console.log("[Dialog] OnOpenChange called with:", open);
+            setIsDialogOpen(open);
+            if (!open) {
+              console.log("[Dialog] Closing - clearing selected item");
+              setSelectedItem(null);
+            }
+          }}
+        >
+          <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-center">
                 {selectedItem ? "Edit Evidence Item" : "Add Evidence Item"}
               </DialogTitle>
-              <div className="bg-blue-600 text-white p-3 rounded-lg mt-2 text-center">
-                <p className="font-semibold">👇 SCROLL DOWN TO SEE FIELD EXPLANATIONS BELOW 👇</p>
-                <p className="text-sm mt-1">Each field has detailed explanations and importance badges</p>
-              </div>
             </DialogHeader>
-                    <Form {...form}>
-                      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            
+            {/* Use separate form component to prevent ErrorBoundary issues */}
+            <EvidenceLibraryFormComponent
+              initialData={selectedItem}
+              onSubmit={handleSubmit}
+              onCancel={() => {
+                setIsDialogOpen(false);
+                setSelectedItem(null);
+              }}
+              isSubmitting={createMutation.isPending || updateMutation.isPending}
+            />
+          </DialogContent>
+        </Dialog>
                         
                         {/* FIELD IMPORTANCE LEGEND - ALWAYS VISIBLE AT TOP */}
                         <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 p-4 rounded-lg mb-4 border-2 border-blue-400 shadow-md sticky top-0 z-10">
@@ -2028,12 +1950,7 @@ export default function EvidenceLibraryManagement() {
                           >
                             {selectedItem ? "Update" : "Create"}
                           </Button>
-                        </div>
-                      </form>
-                    </Form>
-                </DialogContent>
-          </Dialog>
-        )}
+
 
         {/* Evidence Library Table */}
         <Card>
