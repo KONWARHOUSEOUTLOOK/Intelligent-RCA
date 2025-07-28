@@ -1026,14 +1026,23 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
   }
 
   async getAllEquipmentTypes(): Promise<EquipmentType[]> {
-    console.log("[DatabaseInvestigationStorage] Retrieving all equipment types");
+    console.log("[DatabaseInvestigationStorage] Retrieving all equipment types with equipment group relationships");
     const results = await db
-      .select()
+      .select({
+        id: equipmentTypes.id,
+        name: equipmentTypes.name,
+        equipmentGroupId: equipmentTypes.equipmentGroupId,
+        isActive: equipmentTypes.isActive,
+        createdAt: equipmentTypes.createdAt,
+        updatedAt: equipmentTypes.updatedAt,
+        equipmentGroupName: equipmentGroups.name
+      })
       .from(equipmentTypes)
+      .innerJoin(equipmentGroups, eq(equipmentTypes.equipmentGroupId, equipmentGroups.id))
       .where(eq(equipmentTypes.isActive, true))
       .orderBy(equipmentTypes.name);
     
-    console.log(`[DatabaseInvestigationStorage] Retrieved ${results.length} equipment types`);
+    console.log(`[DatabaseInvestigationStorage] Retrieved ${results.length} equipment types with relationships`);
     return results;
   }
 
@@ -1065,14 +1074,26 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
   }
 
   async getAllEquipmentSubtypes(): Promise<EquipmentSubtype[]> {
-    console.log("[DatabaseInvestigationStorage] Retrieving all equipment subtypes");  
+    console.log("[DatabaseInvestigationStorage] Retrieving all equipment subtypes with relationships");  
     const results = await db
-      .select()
+      .select({
+        id: equipmentSubtypes.id,
+        name: equipmentSubtypes.name,
+        equipmentTypeId: equipmentSubtypes.equipmentTypeId,
+        isActive: equipmentSubtypes.isActive,
+        createdAt: equipmentSubtypes.createdAt,
+        updatedAt: equipmentSubtypes.updatedAt,
+        equipmentTypeName: equipmentTypes.name,
+        equipmentGroupName: equipmentGroups.name,
+        equipmentGroupId: equipmentTypes.equipmentGroupId
+      })
       .from(equipmentSubtypes)
+      .innerJoin(equipmentTypes, eq(equipmentSubtypes.equipmentTypeId, equipmentTypes.id))
+      .innerJoin(equipmentGroups, eq(equipmentTypes.equipmentGroupId, equipmentGroups.id))
       .where(eq(equipmentSubtypes.isActive, true))
       .orderBy(equipmentSubtypes.name);
     
-    console.log(`[DatabaseInvestigationStorage] Retrieved ${results.length} equipment subtypes`);
+    console.log(`[DatabaseInvestigationStorage] Retrieved ${results.length} equipment subtypes with relationships`);
     return results;
   }
 
@@ -1669,6 +1690,76 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
       console.error('[Storage] Error getting equipment subtypes:', error);
       return [];
     }
+  }
+
+  // EQUIPMENT TYPES UPDATE AND DELETE OPERATIONS (Universal Protocol Standard)
+  async updateEquipmentType(id: number, data: Partial<InsertEquipmentType>): Promise<EquipmentType> {
+    console.log(`[DatabaseInvestigationStorage] Updating equipment type ${id} with data:`, data);
+    const [updatedType] = await db
+      .update(equipmentTypes)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(equipmentTypes.id, id))
+      .returning();
+    
+    if (!updatedType) {
+      throw new Error(`Equipment type with ID ${id} not found`);
+    }
+    
+    console.log(`[DatabaseInvestigationStorage] Successfully updated equipment type ${id}`);
+    return updatedType;
+  }
+
+  async deleteEquipmentType(id: number): Promise<void> {
+    console.log(`[DatabaseInvestigationStorage] Deleting equipment type ${id}`);
+    
+    // Set isActive to false instead of hard delete to maintain referential integrity
+    await db
+      .update(equipmentTypes)
+      .set({
+        isActive: false,
+        updatedAt: new Date()
+      })
+      .where(eq(equipmentTypes.id, id));
+    
+    console.log(`[DatabaseInvestigationStorage] Successfully deactivated equipment type ${id}`);
+  }
+
+  // EQUIPMENT SUBTYPES UPDATE AND DELETE OPERATIONS (Universal Protocol Standard)
+  async updateEquipmentSubtype(id: number, data: Partial<InsertEquipmentSubtype>): Promise<EquipmentSubtype> {
+    console.log(`[DatabaseInvestigationStorage] Updating equipment subtype ${id} with data:`, data);
+    const [updatedSubtype] = await db
+      .update(equipmentSubtypes)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(equipmentSubtypes.id, id))
+      .returning();
+    
+    if (!updatedSubtype) {
+      throw new Error(`Equipment subtype with ID ${id} not found`);
+    }
+    
+    console.log(`[DatabaseInvestigationStorage] Successfully updated equipment subtype ${id}`);
+    return updatedSubtype;
+  }
+
+  async deleteEquipmentSubtype(id: number): Promise<void> {
+    console.log(`[DatabaseInvestigationStorage] Deleting equipment subtype ${id}`);
+    
+    // Set isActive to false instead of hard delete to maintain referential integrity
+    await db
+      .update(equipmentSubtypes)
+      .set({
+        isActive: false,
+        updatedAt: new Date()
+      })
+      .where(eq(equipmentSubtypes.id, id));
+    
+    console.log(`[DatabaseInvestigationStorage] Successfully deactivated equipment subtype ${id}`);
   }
 }
 

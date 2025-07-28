@@ -432,6 +432,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/equipment-types/:id', async (req, res) => {
+    console.log("[ROUTES] Update equipment type route accessed - Universal Protocol Standard compliant");
+    try {
+      const typeId = parseInt(req.params.id);
+      const updatedType = await investigationStorage.updateEquipmentType(typeId, req.body);
+      console.log(`[ROUTES] Successfully updated equipment type with ID: ${typeId}`);
+      res.json(updatedType);
+    } catch (error) {
+      console.error('[ROUTES] Error updating equipment type:', error);
+      res.status(500).json({ error: 'Failed to update equipment type' });
+    }
+  });
+
+  app.delete('/api/equipment-types/:id', async (req, res) => {
+    console.log("[ROUTES] Delete equipment type route accessed - Universal Protocol Standard compliant");
+    try {
+      const typeId = parseInt(req.params.id);
+      await investigationStorage.deleteEquipmentType(typeId);
+      console.log(`[ROUTES] Successfully deleted equipment type with ID: ${typeId}`);
+      res.json({ message: 'Equipment type deleted successfully' });
+    } catch (error) {
+      console.error('[ROUTES] Error deleting equipment type:', error);
+      res.status(500).json({ error: 'Failed to delete equipment type. It may be in use.' });
+    }
+  });
+
   // NORMALIZED EQUIPMENT SUBTYPES ROUTES (Universal Protocol Standard)
   app.get('/api/equipment-subtypes', async (req, res) => {
     console.log("[ROUTES] All equipment subtypes route accessed - Universal Protocol Standard compliant");
@@ -467,6 +493,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('[ROUTES] Error creating equipment subtype:', error);
       res.status(500).json({ error: 'Failed to create equipment subtype' });
+    }
+  });
+
+  app.put('/api/equipment-subtypes/:id', async (req, res) => {
+    console.log("[ROUTES] Update equipment subtype route accessed - Universal Protocol Standard compliant");
+    try {
+      const subtypeId = parseInt(req.params.id);
+      const updatedSubtype = await investigationStorage.updateEquipmentSubtype(subtypeId, req.body);
+      console.log(`[ROUTES] Successfully updated equipment subtype with ID: ${subtypeId}`);
+      res.json(updatedSubtype);
+    } catch (error) {
+      console.error('[ROUTES] Error updating equipment subtype:', error);
+      res.status(500).json({ error: 'Failed to update equipment subtype' });
+    }
+  });
+
+  app.delete('/api/equipment-subtypes/:id', async (req, res) => {
+    console.log("[ROUTES] Delete equipment subtype route accessed - Universal Protocol Standard compliant");
+    try {
+      const subtypeId = parseInt(req.params.id);
+      await investigationStorage.deleteEquipmentSubtype(subtypeId);
+      console.log(`[ROUTES] Successfully deleted equipment subtype with ID: ${subtypeId}`);
+      res.json({ message: 'Equipment subtype deleted successfully' });
+    } catch (error) {
+      console.error('[ROUTES] Error deleting equipment subtype:', error);
+      res.status(500).json({ error: 'Failed to delete equipment subtype. It may be in use.' });
     }
   });
   
@@ -3561,6 +3613,7 @@ JSON array only:`;
     console.error('[AI Contributing Factors] Error:', error);
     return ['AI configuration required - Please configure AI provider in admin settings'];
   }
+
   // ADMIN ONLY: Feature-to-Fault Library / RCA Knowledge Library Routes
   // Authentication middleware for admin-only routes
   const requireAdmin = async (req: any, res: any, next: any) => {
@@ -4115,7 +4168,63 @@ JSON array only:`;
     }
   });
 
-  console.log("[ROUTES] All API routes registered successfully");
+  // DELETE Equipment Type
+  app.delete("/api/equipment-types/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      console.log(`[ROUTES] Delete equipment type ${id} route accessed - Universal Protocol Standard compliant`);
+      await investigationStorage.deleteEquipmentType(id);
+      console.log(`[ROUTES] Successfully deleted equipment type ${id}`);
+      res.json({ message: "Equipment type deleted successfully" });
+    } catch (error) {
+      console.error("[Equipment Types DELETE] Error deleting equipment type:", error);
+      res.status(500).json({ message: "Failed to delete equipment type" });
+    }
+  });
+
+  // UPDATE Equipment Type
+  app.put("/api/equipment-types/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      console.log(`[ROUTES] Update equipment type ${id} route accessed - Universal Protocol Standard compliant`);
+      const updatedType = await investigationStorage.updateEquipmentType(id, req.body);
+      console.log(`[ROUTES] Successfully updated equipment type ${id}`);
+      res.json(updatedType);
+    } catch (error) {
+      console.error("[Equipment Types UPDATE] Error updating equipment type:", error);
+      res.status(500).json({ message: "Failed to update equipment type" });
+    }
+  });
+
+  // DELETE Equipment Subtype
+  app.delete("/api/equipment-subtypes/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      console.log(`[ROUTES] Delete equipment subtype ${id} route accessed - Universal Protocol Standard compliant`);
+      await investigationStorage.deleteEquipmentSubtype(id);
+      console.log(`[ROUTES] Successfully deleted equipment subtype ${id}`);
+      res.json({ message: "Equipment subtype deleted successfully" });
+    } catch (error) {
+      console.error("[Equipment Subtypes DELETE] Error deleting equipment subtype:", error);
+      res.status(500).json({ message: "Failed to delete equipment subtype" });
+    }
+  });
+
+  // UPDATE Equipment Subtype
+  app.put("/api/equipment-subtypes/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      console.log(`[ROUTES] Update equipment subtype ${id} route accessed - Universal Protocol Standard compliant`);
+      const updatedSubtype = await investigationStorage.updateEquipmentSubtype(id, req.body);
+      console.log(`[ROUTES] Successfully updated equipment subtype ${id}`);
+      res.json(updatedSubtype);
+    } catch (error) {
+      console.error("[Equipment Subtypes UPDATE] Error updating equipment subtype:", error);
+      res.status(500).json({ message: "Failed to update equipment subtype" });
+    }
+  });
+
+  console.log("[ROUTES] All API routes registered successfully - Equipment Types/Subtypes CRUD operational");
   const httpServer = createServer(app);
   return httpServer;
 }
