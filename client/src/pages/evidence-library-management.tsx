@@ -364,7 +364,7 @@ export default function EvidenceLibraryManagement() {
     }
   }, [selectedEquipmentType, equipmentTypesEditForm, form]);
 
-  const { data: equipmentSubtypes = [] } = useQuery({
+  const { data: equipmentSubtypesEditForm = [] } = useQuery({
     queryKey: ["/api/equipment-subtypes/by-type", selectedEquipmentTypeId],
     queryFn: async () => {
       if (!selectedEquipmentTypeId) return [];
@@ -393,7 +393,7 @@ export default function EvidenceLibraryManagement() {
   console.log('Selected Equipment Group:', selectedEquipmentGroup, 'ID:', selectedEquipmentGroupId);
   console.log('Equipment Types for Edit Form:', equipmentTypesEditForm);
   console.log('Selected Equipment Type:', selectedEquipmentType, 'ID:', selectedEquipmentTypeId);
-  console.log('Equipment Subtypes:', equipmentSubtypes);
+  console.log('Equipment Subtypes (Edit Form):', equipmentSubtypesEditForm);
   console.log('Risk Rankings data:', riskRankings);
 
   // Get unique filter values from data with proper typing
@@ -1180,7 +1180,7 @@ export default function EvidenceLibraryManagement() {
                                       <SelectValue placeholder={
                                         !selectedEquipmentTypeId 
                                           ? "First select Equipment Type above" 
-                                          : Array.isArray(equipmentSubtypes) && equipmentSubtypes.length > 0
+                                          : Array.isArray(equipmentSubtypesEditForm) && equipmentSubtypesEditForm.length > 0
                                             ? "Select Equipment Subtype"
                                             : "No equipment subtypes available for this type"
                                       } />
@@ -1190,8 +1190,8 @@ export default function EvidenceLibraryManagement() {
                                         <SelectItem value="" disabled>
                                           Please select Equipment Type first
                                         </SelectItem>
-                                      ) : Array.isArray(equipmentSubtypes) && equipmentSubtypes.length > 0 ? (
-                                        equipmentSubtypes.map((subtype: any) => (
+                                      ) : Array.isArray(equipmentSubtypesEditForm) && equipmentSubtypesEditForm.length > 0 ? (
+                                        equipmentSubtypesEditForm.map((subtype: any) => (
                                           <SelectItem key={subtype.id || subtype} value={subtype.name || subtype}>
                                             {subtype.name || subtype}
                                           </SelectItem>
