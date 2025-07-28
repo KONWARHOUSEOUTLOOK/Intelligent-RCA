@@ -70,6 +70,7 @@ export interface IInvestigationStorage {
   getAllEvidenceLibrary(): Promise<EvidenceLibrary[]>;
   getEvidenceLibraryById(id: number): Promise<EvidenceLibrary | undefined>;
   createEvidenceLibrary(data: InsertEvidenceLibrary): Promise<EvidenceLibrary>;
+  createEvidenceLibraryItem(data: InsertEvidenceLibrary): Promise<EvidenceLibrary>;
   updateEvidenceLibrary(id: number, data: Partial<EvidenceLibrary>): Promise<EvidenceLibrary>;
   deleteEvidenceLibrary(id: number): Promise<void>;
   searchEvidenceLibrary(searchTerm: string): Promise<EvidenceLibrary[]>;
@@ -523,6 +524,20 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
         lastUpdated: new Date(),
       })
       .returning();
+    return item;
+  }
+
+  async createEvidenceLibraryItem(data: InsertEvidenceLibrary): Promise<EvidenceLibrary> {
+    console.log(`[DatabaseInvestigationStorage] Creating evidence library item with equipment code: ${data.equipmentCode}`);
+    const [item] = await db
+      .insert(evidenceLibrary)
+      .values({
+        ...data,
+        lastUpdated: new Date(),
+      })
+      .returning();
+    
+    console.log(`[DatabaseInvestigationStorage] Created evidence library item with ID: ${item.id}`);
     return item;
   }
 

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ const evidenceLibrarySchema = z.object({
   confidenceLevel: z.string().optional(), // High/Medium/Low
   diagnosticValue: z.string().optional(), // Critical/Important/Useful/Optional
   industryRelevance: z.string().optional(), // Petrochemical/Power/Manufacturing/All
-  evidencePriority: z.number().min(1).max(4).optional(), // 1=Critical, 2=High, 3=Medium, 4=Low
+  evidencePriority: z.string().optional(), // Text field - accepts any format including ranges like "1-2 days"
   timeToCollect: z.string().optional(), // Immediate/Hours/Days/Weeks
   collectionCost: z.string().optional(), // Low/Medium/High/Very High
   analysisComplexity: z.string().optional(), // Simple/Moderate/Complex/Expert Required
@@ -311,26 +311,81 @@ export default function EvidenceLibraryManagement() {
     },
   });
 
-  // Fetch Equipment Types for edit form dropdown  
+  // Fetch Equipment Types for edit form dropdown with hierarchy filtering
+  const selectedEquipmentGroup = form.watch("equipmentGroup");
+  const [selectedEquipmentGroupId, setSelectedEquipmentGroupId] = useState<number | null>(null);
+
+  // Get equipment group ID when equipment group changes
+  useEffect(() => {
+    if (selectedEquipmentGroup && Array.isArray(equipmentGroups)) {
+      const group = equipmentGroups.find((g: any) => g.name === selectedEquipmentGroup);
+      setSelectedEquipmentGroupId(group?.id || null);
+      // Clear equipment type when group changes
+      form.setValue("equipmentType", "");
+      form.setValue("subtype", "");
+    }
+  }, [selectedEquipmentGroup, equipmentGroups, form]);
+
   const { data: equipmentTypesEditForm = [] } = useQuery({
-    queryKey: ['/api/equipment-types'],
+    queryKey: ["/api/equipment-types/by-group", selectedEquipmentGroupId],
     queryFn: async () => {
+      if (!selectedEquipmentGroupId) return [];
+      
       try {
-        const response = await fetch('/api/equipment-types');
-        const text = await response.text();
+        const response = await fetch(`/api/equipment-types/by-group/${selectedEquipmentGroupId}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.text();
         
-        // Check if Vite middleware returned HTML instead of JSON
-        if (text.startsWith('<!DOCTYPE html>')) {
-          console.warn("[Equipment Types] Vite middleware interference - no fallback data available");
+        if (data.includes("<!DOCTYPE html>")) {
+          console.warn("[Equipment Types] Vite middleware interference - using fallback");
           return [];
         }
         
-        return JSON.parse(text);
+        return JSON.parse(data);
       } catch (error) {
-        console.warn("[Equipment Types] API failed - no fallback data available");
+        console.warn("[Equipment Types] API failed - using fallback");
         return [];
       }
     },
+    enabled: !!selectedEquipmentGroupId,
+  });
+
+  // Fetch Equipment Subtypes with hierarchy filtering
+  const selectedEquipmentType = form.watch("equipmentType");
+  const [selectedEquipmentTypeId, setSelectedEquipmentTypeId] = useState<number | null>(null);
+
+  // Get equipment type ID when equipment type changes
+  useEffect(() => {
+    if (selectedEquipmentType && Array.isArray(equipmentTypesEditForm)) {
+      const type = equipmentTypesEditForm.find((t: any) => t.name === selectedEquipmentType);
+      setSelectedEquipmentTypeId(type?.id || null);
+      // Clear subtype when type changes
+      form.setValue("subtype", "");
+    }
+  }, [selectedEquipmentType, equipmentTypesEditForm, form]);
+
+  const { data: equipmentSubtypes = [] } = useQuery({
+    queryKey: ["/api/equipment-subtypes/by-type", selectedEquipmentTypeId],
+    queryFn: async () => {
+      if (!selectedEquipmentTypeId) return [];
+      
+      try {
+        const response = await fetch(`/api/equipment-subtypes/by-type/${selectedEquipmentTypeId}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.text();
+        
+        if (data.includes("<!DOCTYPE html>")) {
+          console.warn("[Equipment Subtypes] Vite middleware interference - using fallback");
+          return [];
+        }
+        
+        return JSON.parse(data);
+      } catch (error) {
+        console.warn("[Equipment Subtypes] API failed - using fallback");
+        return [];
+      }
+    },
+    enabled: !!selectedEquipmentTypeId,
   });
 
   // Debug logging
@@ -1390,17 +1445,10 @@ export default function EvidenceLibraryManagement() {
                                     <span className="ml-2 text-xs text-gray-500" title="Collection priority order (1=highest, 4=lowest)">📋</span>
                                   </FormLabel>
                                   <FormControl>
-                                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Priority" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="1">1 - Critical</SelectItem>
-                                        <SelectItem value="2">2 - High</SelectItem>
-                                        <SelectItem value="3">3 - Medium</SelectItem>
-                                        <SelectItem value="4">4 - Low</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                    <Input 
+                                      {...field} 
+                                      placeholder="e.g., 1-2 days, Critical, High priority"
+                                    />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>

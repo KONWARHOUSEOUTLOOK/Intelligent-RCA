@@ -374,6 +374,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // CREATE Evidence Library Item Endpoint - Universal Protocol Standard compliant
+  app.post("/api/evidence-library", async (req, res) => {
+    console.log("[ROUTES] Evidence library create route accessed - Universal Protocol Standard compliant");
+    try {
+      const evidenceData = req.body;
+      
+      console.log(`[ROUTES] Creating evidence library item with equipment code: ${evidenceData.equipmentCode}`);
+      const newEvidence = await investigationStorage.createEvidenceLibrary(evidenceData);
+      console.log(`[ROUTES] Successfully created evidence library item with ID: ${newEvidence.id}`);
+      
+      res.json(newEvidence);
+      
+    } catch (error) {
+      console.error("[ROUTES] Evidence library create error:", error);
+      res.status(500).json({ 
+        error: "Create failed", 
+        message: "Unable to create evidence library item",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // ADD EVIDENCE LIBRARY IMPORT ENDPOINT - Universal Protocol Standard compliant
   app.post("/api/evidence-library/import", upload.single('file'), async (req, res) => {
     console.log("[ROUTES] Evidence library import route accessed - Universal Protocol Standard compliant");
