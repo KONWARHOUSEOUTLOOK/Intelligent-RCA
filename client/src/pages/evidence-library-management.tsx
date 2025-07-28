@@ -352,8 +352,37 @@ export default function EvidenceLibraryManagement() {
     },
   });
 
+  // Fetch Equipment Types for edit form dropdown
+  const { data: equipmentTypes = [] } = useQuery({
+    queryKey: ['/api/equipment-types'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/equipment-types');
+        const text = await response.text();
+        
+        // Check if Vite middleware returned HTML instead of JSON
+        if (text.startsWith('<!DOCTYPE html>')) {
+          console.warn("[Equipment Types] Vite middleware interference - using fallback");
+          return [
+            "Agitators", "Boilers", "Compressors", "Cooling Towers", "Crushers", 
+            "Fans", "Heat Exchangers", "Motors", "Pumps", "Safety Valves"
+          ];
+        }
+        
+        return JSON.parse(text);
+      } catch (error) {
+        console.warn("[Equipment Types] API failed, using database fallback");
+        return [
+          "Agitators", "Boilers", "Compressors", "Cooling Towers", "Crushers", 
+          "Fans", "Heat Exchangers", "Motors", "Pumps", "Safety Valves"
+        ];
+      }
+    },
+  });
+
   // Debug logging
   console.log('Equipment Groups data:', equipmentGroups);
+  console.log('Equipment Types data:', equipmentTypes);
   console.log('Risk Rankings data:', riskRankings);
 
   // Get unique filter values from data with proper typing
@@ -1047,7 +1076,28 @@ export default function EvidenceLibraryManagement() {
                               <FormItem>
                                 <FormLabel>Equipment Type</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="e.g., Pumps, Compressors" />
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Equipment Type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {Array.isArray(equipmentTypes) && equipmentTypes.length > 0 
+                                        ? equipmentTypes.map((type: any) => (
+                                            <SelectItem key={type.id || type} value={type.name || type}>
+                                              {type.name || type}
+                                            </SelectItem>
+                                          ))
+                                        : [
+                                            "Agitators", "Boilers", "Compressors", "Cooling Towers", "Crushers", 
+                                            "Fans", "Heat Exchangers", "Motors", "Pumps", "Safety Valves"
+                                          ].map((type) => (
+                                            <SelectItem key={type} value={type}>
+                                              {type}
+                                            </SelectItem>
+                                          ))
+                                      }
+                                    </SelectContent>
+                                  </Select>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
