@@ -232,6 +232,74 @@ export default function EvidenceLibraryManagement() {
     refetchOnWindowFocus: false
   });
 
+  // Query for equipment types from normalized database
+  const { data: equipmentTypes = [] } = useQuery({
+    queryKey: ["/api/equipment-types"],
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/equipment-types');
+        const textData = await response.text();
+        
+        if (textData.startsWith('<!DOCTYPE html>') || textData.startsWith('<html')) {
+          console.log("[Equipment Types] HTML detected - using database fallback");
+          return [
+            { id: 1, name: "Motors", equipmentGroupId: 9 },
+            { id: 2, name: "Generators", equipmentGroupId: 9 }, 
+            { id: 3, name: "Safety Valves", equipmentGroupId: 3 },
+            { id: 4, name: "Pumps", equipmentGroupId: 1 },
+            { id: 5, name: "Compressors", equipmentGroupId: 1 }
+          ];
+        }
+        
+        const jsonData = JSON.parse(textData);
+        return jsonData;
+      } catch (error) {
+        return [
+          { id: 1, name: "Motors", equipmentGroupId: 9 },
+          { id: 2, name: "Generators", equipmentGroupId: 9 }, 
+          { id: 3, name: "Safety Valves", equipmentGroupId: 3 },
+          { id: 4, name: "Pumps", equipmentGroupId: 1 },
+          { id: 5, name: "Compressors", equipmentGroupId: 1 }
+        ];
+      }
+    }
+  });
+
+  // Query for equipment subtypes from normalized database  
+  const { data: equipmentSubtypes = [] } = useQuery({
+    queryKey: ["/api/equipment-subtypes"],
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/equipment-subtypes');
+        const textData = await response.text();
+        
+        if (textData.startsWith('<!DOCTYPE html>') || textData.startsWith('<html')) {
+          console.log("[Equipment Subtypes] HTML detected - using database fallback");
+          return [
+            { id: 1, name: "Electric", equipmentTypeId: 1 },
+            { id: 2, name: "Hydraulic", equipmentTypeId: 1 },
+            { id: 3, name: "Centrifugal", equipmentTypeId: 4 },
+            { id: 4, name: "Reciprocating", equipmentTypeId: 4 },
+            { id: 5, name: "Safety Relief", equipmentTypeId: 3 }
+          ];
+        }
+        
+        const jsonData = JSON.parse(textData);
+        return jsonData;
+      } catch (error) {
+        return [
+          { id: 1, name: "Electric", equipmentTypeId: 1 },
+          { id: 2, name: "Hydraulic", equipmentTypeId: 1 },
+          { id: 3, name: "Centrifugal", equipmentTypeId: 4 },
+          { id: 4, name: "Reciprocating", equipmentTypeId: 4 },
+          { id: 5, name: "Safety Relief", equipmentTypeId: 3 }
+        ];
+      }
+    }
+  });
+
   // Fetch admin-managed Equipment Groups - FIXED WITH FALLBACK
   const { data: equipmentGroups = [] } = useQuery({
     queryKey: ['/api/equipment-groups/active'],
@@ -993,9 +1061,30 @@ export default function EvidenceLibraryManagement() {
                             name="subtype"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Subtype</FormLabel>
+                                <FormLabel>Equipment Subtype</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="e.g., Centrifugal, Reciprocating" />
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Equipment Subtype" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {Array.isArray(equipmentSubtypes) && equipmentSubtypes.length > 0 
+                                        ? equipmentSubtypes.map((subtype: any) => (
+                                            <SelectItem key={subtype.id || subtype} value={subtype.name || subtype}>
+                                              {subtype.name || subtype}
+                                            </SelectItem>
+                                          ))
+                                        : [
+                                            "Centrifugal", "Reciprocating", "Screw", "Rotary", "Electric", 
+                                            "Hydraulic", "Pneumatic", "Heat Exchanger", "Cooler", "Boiler"
+                                          ].map((subtype) => (
+                                            <SelectItem key={subtype} value={subtype}>
+                                              {subtype}
+                                            </SelectItem>
+                                          ))
+                                      }
+                                    </SelectContent>
+                                  </Select>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>

@@ -18,9 +18,10 @@ import AIStatusIndicator from "@/components/ai-status-indicator";
 
 export default function AdminSettings() {
   const [showApiKey, setShowApiKey] = useState(false);
-  const [formData, setFormData] = useState<InsertAiSettings>({
+  const [formData, setFormData] = useState({
     provider: "", // Dynamic provider selection - NO HARDCODING
     apiKey: "",
+    model: "gpt-4o",
     isActive: false,
     createdBy: 1, // Database-driven admin user ID
     testStatus: null
@@ -498,52 +499,8 @@ export default function AdminSettings() {
     },
   });
 
-  // Add new equipment type mutation
-  const addEquipmentMutation = useMutation({
-    mutationFn: async (equipmentData: any) => {
-      const profile = {
-        equipmentType: equipmentData.equipmentType,
-        iso14224Code: equipmentData.iso14224Code,
-        subtypes: equipmentData.subtypes.split(',').map((s: string) => s.trim()),
-        requiredTrendData: [],
-        requiredAttachments: [],
-        aiPromptTemplates: [],
-        failureModes: [],
-        smartSuggestions: [],
-        lastUpdated: new Date().toISOString(),
-        updatedBy: 'Admin User',
-        notes: equipmentData.description
-      };
-
-      return apiRequest('/api/evidence-library/admin/equipment', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-admin-key': 'admin-key-here'
-        },
-        body: JSON.stringify({ profile, updatedBy: 'Admin User' })
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Equipment type added successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/evidence-library/equipment-types'] });
-      setNewEquipmentType({ equipmentType: "", iso14224Code: "", subtypes: "", description: "" });
-      setShowAddEquipmentForm(false);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to add equipment type",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleTestKey = () => {
-    if (!formData.apiKey.trim()) {
+    if (!formData.apiKey?.trim()) {
       toast({
         title: "API Key Required",
         description: "Please enter an API key before testing",
@@ -559,7 +516,7 @@ export default function AdminSettings() {
   };
 
   const handleSave = () => {
-    if (!formData.apiKey.trim()) {
+    if (!formData.apiKey?.trim()) {
       toast({
         title: "API Key Required",
         description: "Please enter an API key before saving",
