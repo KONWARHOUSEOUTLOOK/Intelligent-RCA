@@ -388,9 +388,12 @@ export default function EvidenceLibraryManagement() {
     enabled: !!selectedEquipmentTypeId,
   });
 
-  // Debug logging
+  // Debug logging for hierarchical dropdown functionality
   console.log('Equipment Groups data:', equipmentGroups);
-  console.log('Equipment Types data:', equipmentTypesForDropdown);
+  console.log('Selected Equipment Group:', selectedEquipmentGroup, 'ID:', selectedEquipmentGroupId);
+  console.log('Equipment Types for Edit Form:', equipmentTypesEditForm);
+  console.log('Selected Equipment Type:', selectedEquipmentType, 'ID:', selectedEquipmentTypeId);
+  console.log('Equipment Subtypes:', equipmentSubtypes);
   console.log('Risk Rankings data:', riskRankings);
 
   // Get unique filter values from data with proper typing
@@ -1129,23 +1132,32 @@ export default function EvidenceLibraryManagement() {
                               <FormItem>
                                 <FormLabel>Equipment Type</FormLabel>
                                 <FormControl>
-                                  <Select onValueChange={field.onChange} value={field.value}>
+                                  <Select onValueChange={field.onChange} value={field.value} disabled={!selectedEquipmentGroupId}>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Select Equipment Type" />
+                                      <SelectValue placeholder={
+                                        !selectedEquipmentGroupId 
+                                          ? "First select Equipment Group above" 
+                                          : Array.isArray(equipmentTypesEditForm) && equipmentTypesEditForm.length > 0
+                                            ? "Select Equipment Type"
+                                            : "No equipment types available for this group"
+                                      } />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      {Array.isArray(equipmentTypesEditForm) && equipmentTypesEditForm.length > 0 
-                                        ? equipmentTypesEditForm.map((type: any) => (
-                                            <SelectItem key={type.id || type} value={type.name || type}>
-                                              {type.name || type}
-                                            </SelectItem>
-                                          ))
-                                        : (
-                                            <SelectItem value="" disabled>
-                                              No equipment types available - Please add equipment types in Admin Settings
-                                            </SelectItem>
-                                          )
-                                      }
+                                      {!selectedEquipmentGroupId ? (
+                                        <SelectItem value="" disabled>
+                                          Please select Equipment Group first
+                                        </SelectItem>
+                                      ) : Array.isArray(equipmentTypesEditForm) && equipmentTypesEditForm.length > 0 ? (
+                                        equipmentTypesEditForm.map((type: any) => (
+                                          <SelectItem key={type.id || type} value={type.name || type}>
+                                            {type.name || type}
+                                          </SelectItem>
+                                        ))
+                                      ) : (
+                                        <SelectItem value="" disabled>
+                                          No equipment types available for this group - Please add equipment types in Admin Settings
+                                        </SelectItem>
+                                      )}
                                     </SelectContent>
                                   </Select>
                                 </FormControl>
@@ -1163,23 +1175,32 @@ export default function EvidenceLibraryManagement() {
                               <FormItem>
                                 <FormLabel>Equipment Subtype</FormLabel>
                                 <FormControl>
-                                  <Select onValueChange={field.onChange} value={field.value}>
+                                  <Select onValueChange={field.onChange} value={field.value} disabled={!selectedEquipmentTypeId}>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Select Equipment Subtype" />
+                                      <SelectValue placeholder={
+                                        !selectedEquipmentTypeId 
+                                          ? "First select Equipment Type above" 
+                                          : Array.isArray(equipmentSubtypes) && equipmentSubtypes.length > 0
+                                            ? "Select Equipment Subtype"
+                                            : "No equipment subtypes available for this type"
+                                      } />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      {Array.isArray(equipmentSubtypes) && equipmentSubtypes.length > 0 
-                                        ? equipmentSubtypes.map((subtype: any) => (
-                                            <SelectItem key={subtype.id || subtype} value={subtype.name || subtype}>
-                                              {subtype.name || subtype}
-                                            </SelectItem>
-                                          ))
-                                        : (
-                                            <SelectItem value="" disabled>
-                                              No equipment subtypes available - Please add equipment subtypes in Admin Settings
-                                            </SelectItem>
-                                          )
-                                      }
+                                      {!selectedEquipmentTypeId ? (
+                                        <SelectItem value="" disabled>
+                                          Please select Equipment Type first
+                                        </SelectItem>
+                                      ) : Array.isArray(equipmentSubtypes) && equipmentSubtypes.length > 0 ? (
+                                        equipmentSubtypes.map((subtype: any) => (
+                                          <SelectItem key={subtype.id || subtype} value={subtype.name || subtype}>
+                                            {subtype.name || subtype}
+                                          </SelectItem>
+                                        ))
+                                      ) : (
+                                        <SelectItem value="" disabled>
+                                          No equipment subtypes available for this type - Please add equipment subtypes in Admin Settings
+                                        </SelectItem>
+                                      )}
                                     </SelectContent>
                                   </Select>
                                 </FormControl>
