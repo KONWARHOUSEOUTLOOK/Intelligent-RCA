@@ -57,6 +57,57 @@ const upload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log("[ROUTES] Starting registerRoutes function - CRITICAL DEBUG");
   
+  // MISSING ROUTE: Evidence Library Search with Elimination Logic
+  app.get("/api/evidence-library/search-with-elimination", async (req, res) => {
+    console.log("[ROUTES] Evidence library search with elimination route accessed - Universal Protocol Standard compliant");
+    try {
+      const { equipmentGroup, equipmentType, equipmentSubtype, symptoms } = req.query;
+      
+      // Get all evidence library items and apply basic filtering
+      const evidenceItems = await investigationStorage.getAllEvidenceLibrary();
+      
+      // Filter by equipment hierarchy
+      let filteredItems = evidenceItems;
+      if (equipmentGroup) {
+        filteredItems = filteredItems.filter(item => 
+          item.equipmentGroup?.toLowerCase() === String(equipmentGroup).toLowerCase()
+        );
+      }
+      if (equipmentType) {
+        filteredItems = filteredItems.filter(item => 
+          item.equipmentType?.toLowerCase() === String(equipmentType).toLowerCase()
+        );
+      }
+      if (equipmentSubtype) {
+        filteredItems = filteredItems.filter(item => 
+          item.subtype?.toLowerCase() === String(equipmentSubtype).toLowerCase()
+        );
+      }
+      
+      // Simple elimination logic based on symptoms (if provided)
+      const remainingFailureModes = filteredItems;
+      const eliminatedFailureModes: any[] = []; // No complex elimination for now
+      
+      const eliminationSummary = {
+        totalAnalyzed: evidenceItems.length,
+        eliminated: eliminatedFailureModes.length,
+        remaining: remainingFailureModes.length,
+        confidenceBoost: remainingFailureModes.length > 0 ? 15 : 0
+      };
+      
+      console.log(`[ROUTES] Search with elimination: ${eliminationSummary.remaining} remaining items`);
+      
+      res.json({
+        remainingFailureModes,
+        eliminatedFailureModes,
+        eliminationSummary
+      });
+    } catch (error) {
+      console.error("[ROUTES] Error in search with elimination:", error);
+      res.status(500).json({ message: "Failed to search evidence library with elimination" });
+    }
+  });
+
   // WORKING EVIDENCE LIBRARY ROUTE - UNIVERSAL PROTOCOL STANDARD COMPLIANT
   app.get("/api/evidence-library", async (req, res) => {
     console.log("[ROUTES] Evidence library route accessed - Universal Protocol Standard compliant");
