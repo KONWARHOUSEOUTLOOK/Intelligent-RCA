@@ -6,3 +6,5 @@ vite.config.ts.*
 *.tar.gztest-violation-demo.ts
 .protocol-enforcement.log
 .violations-detected.log
+.env
+.env.local

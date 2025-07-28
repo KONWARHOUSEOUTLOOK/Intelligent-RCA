@@ -44,6 +44,7 @@ import { UniversalRCAFallbackEngine } from "./universal-rca-fallback-engine";
 import { EvidenceLibraryOperations } from "./evidence-library-operations";
 import { UniversalAIConfig } from "./universal-ai-config";
 import { DynamicAIConfig } from "./dynamic-ai-config";
+import { AIService } from "./ai-service";
 import * as os from "os";
 import * as crypto from "crypto";
 
@@ -1286,6 +1287,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Failed to test AI configuration",
         configurationSource: 'admin-database',
         testTimestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // SECURITY COMPLIANCE CHECK ENDPOINT - UNIVERSAL PROTOCOL STANDARD REQUIREMENT
+  app.get("/api/security/check", async (req, res) => {
+    try {
+      const securityStatus = AIService.getSecurityStatus();
+      res.json(securityStatus);
+    } catch (error) {
+      console.error("[SECURITY] Compliance check failed:", error);
+      res.status(500).json({ 
+        "AI_KEY_ENCRYPTION_SECRET": "ERROR",
+        "KeyStorageEncryption": "FAILED",
+        "Compliant": false,
+        "Message": "Security configuration error"
       });
     }
   });

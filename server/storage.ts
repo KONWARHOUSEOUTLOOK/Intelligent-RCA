@@ -327,7 +327,7 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
     try {
       // Encrypt the API key using AIService
       const { AIService } = await import("./ai-service");
-      const encryptedKey = (AIService as any).encryptApiKey(data.apiKey);
+      const encryptedKey = AIService.encrypt(data.apiKey);
       
       // Deactivate other settings if this one is active
       if (data.isActive) {
@@ -342,6 +342,7 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
         .insert(aiSettings)
         .values({
           provider: data.provider,
+          model: data.model || (data.provider === 'openai' ? 'gpt-4' : data.provider),
           encryptedApiKey: encryptedKey,
           isActive: data.isActive,
           createdBy: data.createdBy,

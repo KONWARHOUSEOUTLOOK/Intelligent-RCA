@@ -5,6 +5,18 @@
  * Purpose: Express server with zero hardcoding policy
  */
 
+import dotenv from 'dotenv';
+dotenv.config();
+
+// UNIVERSAL PROTOCOL STANDARD: Validate encryption secret at startup
+const encryptionKey = process.env.AI_KEY_ENCRYPTION_SECRET;
+if (!encryptionKey || encryptionKey.length < 32) {
+  console.error("🚨 PROTOCOL VIOLATION: AI_KEY_ENCRYPTION_SECRET missing or too short (must be 32+ characters)");
+  console.error("Create .env file with: AI_KEY_ENCRYPTION_SECRET=your-32-character-aes-secret-here");
+  process.exit(1);
+}
+console.log("✅ AI_KEY_ENCRYPTION_SECRET loaded successfully");
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { createServer } from "http";
