@@ -788,7 +788,7 @@ export default function EvidenceLibraryManagement() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `evidence-library-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `evidence-library-${performance.now().toString().replace('.', '-')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -918,8 +918,30 @@ export default function EvidenceLibraryManagement() {
                     <DialogTrigger asChild>
                       <Button 
                         onClick={() => {
-                          setSelectedItem(null);
-                          form.reset();
+                          try {
+                            console.log("[Add Item] Resetting form and opening dialog");
+                            setSelectedItem(null);
+                            form.reset({
+                              equipmentGroup: "",
+                              equipmentType: "",
+                              subtype: "",
+                              componentFailureMode: "",
+                              equipmentCode: "",
+                              failureCode: "",
+                              riskRanking: "",
+                              requiredTrendDataEvidence: "",
+                              aiOrInvestigatorQuestions: "",
+                              attachmentsEvidenceRequired: "",
+                              rootCauseLogic: "",
+                              blankColumn1: "",
+                              blankColumn2: "",
+                              blankColumn3: "",
+                              updatedBy: "admin",
+                            });
+                            console.log("[Add Item] Form reset complete");
+                          } catch (error) {
+                            console.error("[Add Item] Error resetting form:", error);
+                          }
                         }}
                       >
                         <Plus className="w-4 h-4 mr-2" />
