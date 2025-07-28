@@ -1,0 +1,30 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🚨 EMBEDDED PROTOCOL ENFORCEMENT - PRE-PUSH HOOK"
+echo "================================================="
+echo "⚠️  FINAL ZERO TOLERANCE CHECK: Scanning entire codebase before push"
+echo "⚠️  This prevents violations from reaching remote repository"
+echo "⚠️  PERMANENTLY EMBEDDED - cannot be disabled or bypassed"
+echo "⚠️  Server-side CI/CD provides secondary enforcement layer"
+echo "================================================="
+
+# Log enforcement trigger
+echo "$(date): PRE-PUSH enforcement triggered by user $(whoami)" >> .protocol-enforcement.log
+
+# Run comprehensive protocol compliance check
+if ! ./protocol_check.sh; then
+    echo ""
+    echo "🛑 PUSH BLOCKED: Critical protocol violations found"
+    echo "🛑 This prevents violations from reaching remote repository"
+    echo "🛑 Fix ALL violations immediately before attempting push"
+    echo "🛑 ZERO TOLERANCE POLICY: No hardcoding allowed anywhere"
+    echo "🛑 CI/CD will also block if you bypass this check"
+    echo ""
+    echo "$(date): PUSH BLOCKED - Protocol violations detected" >> .protocol-enforcement.log
+    exit 1
+fi
+
+echo "✅ Comprehensive protocol compliance verified"
+echo "✅ Push allowed - no violations detected"
+echo "$(date): PUSH ALLOWED - Protocol compliance verified" >> .protocol-enforcement.log

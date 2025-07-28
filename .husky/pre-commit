@@ -1,0 +1,28 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🚨 EMBEDDED PROTOCOL ENFORCEMENT - PRE-COMMIT HOOK"
+echo "=================================================="
+echo "⚠️  ZERO TOLERANCE: Checking for hardcoding violations before commit"
+echo "⚠️  This check is PERMANENTLY EMBEDDED and cannot be bypassed"
+echo "⚠️  NOTE: --no-verify WILL NOT WORK - Server-side CI/CD enforces compliance"
+echo "=================================================="
+
+# Log enforcement trigger
+echo "$(date): PRE-COMMIT enforcement triggered by user $(whoami)" >> .protocol-enforcement.log
+
+# Run protocol compliance check
+if ! ./protocol_check.sh; then
+    echo ""
+    echo "🛑 COMMIT BLOCKED: Protocol violations detected"
+    echo "🛑 Fix ALL violations before attempting to commit"
+    echo "🛑 Run './protocol_check.sh' to see specific issues"
+    echo "🛑 This is a ZERO TOLERANCE policy - no exceptions allowed"
+    echo "🛑 Even with --no-verify, CI/CD will block deployment"
+    echo ""
+    echo "$(date): COMMIT BLOCKED - Protocol violations detected" >> .protocol-enforcement.log
+    exit 1
+fi
+
+echo "✅ Protocol compliance verified - commit allowed"
+echo "$(date): COMMIT ALLOWED - Protocol compliance verified" >> .protocol-enforcement.log
