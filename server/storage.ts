@@ -431,11 +431,80 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
 
   // Evidence Library operations
   async getAllEvidenceLibrary(): Promise<EvidenceLibrary[]> {
-    return await db
-      .select()
+    console.log("[DatabaseInvestigationStorage] NORMALIZED EVIDENCE LIBRARY: Retrieving all evidence with foreign key relationships");
+    
+    // Use LEFT JOINs to handle cases where foreign key references may no longer exist
+    const results = await db
+      .select({
+        id: evidenceLibrary.id,
+        equipmentGroupId: evidenceLibrary.equipmentGroupId,
+        equipmentTypeId: evidenceLibrary.equipmentTypeId,
+        equipmentSubtypeId: evidenceLibrary.equipmentSubtypeId,
+        // Use JOIN data when available, show DELETED for broken foreign keys
+        equipmentGroup: sql<string>`CASE WHEN ${equipmentGroups.name} IS NOT NULL THEN ${equipmentGroups.name} ELSE 'DELETED' END`.as('equipmentGroup'),
+        equipmentType: sql<string>`CASE WHEN ${equipmentTypes.name} IS NOT NULL THEN ${equipmentTypes.name} ELSE 'DELETED' END`.as('equipmentType'),
+        subtype: sql<string>`COALESCE(${equipmentSubtypes.name}, ${evidenceLibrary.subtype})`.as('subtype'),
+        componentFailureMode: evidenceLibrary.componentFailureMode,
+        equipmentCode: evidenceLibrary.equipmentCode,
+        failureCode: evidenceLibrary.failureCode,
+        riskRankingId: evidenceLibrary.riskRankingId,
+        riskRanking: sql<string>`COALESCE(${riskRankings.name}, ${evidenceLibrary.riskRanking}, 'UNKNOWN')`.as('riskRanking'),
+        requiredTrendDataEvidence: evidenceLibrary.requiredTrendDataEvidence,
+        aiOrInvestigatorQuestions: evidenceLibrary.aiOrInvestigatorQuestions,
+        attachmentsEvidenceRequired: evidenceLibrary.attachmentsEvidenceRequired,
+        rootCauseLogic: evidenceLibrary.rootCauseLogic,
+        // Include all other fields
+        confidenceLevel: evidenceLibrary.confidenceLevel,
+        diagnosticValue: evidenceLibrary.diagnosticValue,
+        industryRelevance: evidenceLibrary.industryRelevance,
+        evidencePriority: evidenceLibrary.evidencePriority,
+        timeToCollect: evidenceLibrary.timeToCollect,
+        collectionCost: evidenceLibrary.collectionCost,
+        analysisComplexity: evidenceLibrary.analysisComplexity,
+        seasonalFactor: evidenceLibrary.seasonalFactor,
+        relatedFailureModes: evidenceLibrary.relatedFailureModes,
+        prerequisiteEvidence: evidenceLibrary.prerequisiteEvidence,
+        followupActions: evidenceLibrary.followupActions,
+        industryBenchmark: evidenceLibrary.industryBenchmark,
+        primaryRootCause: evidenceLibrary.primaryRootCause,
+        contributingFactor: evidenceLibrary.contributingFactor,
+        latentCause: evidenceLibrary.latentCause,
+        detectionGap: evidenceLibrary.detectionGap,
+        faultSignaturePattern: evidenceLibrary.faultSignaturePattern,
+        applicableToOtherEquipment: evidenceLibrary.applicableToOtherEquipment,
+        evidenceGapFlag: evidenceLibrary.evidenceGapFlag,
+        eliminatedIfTheseFailuresConfirmed: evidenceLibrary.eliminatedIfTheseFailuresConfirmed,
+        whyItGetsEliminated: evidenceLibrary.whyItGetsEliminated,
+        blankColumn1: evidenceLibrary.blankColumn1,
+        blankColumn2: evidenceLibrary.blankColumn2,
+        blankColumn3: evidenceLibrary.blankColumn3,
+        isActive: evidenceLibrary.isActive,
+        lastUpdated: evidenceLibrary.lastUpdated,
+        updatedBy: evidenceLibrary.updatedBy,
+        createdAt: evidenceLibrary.createdAt
+      })
       .from(evidenceLibrary)
+      .leftJoin(equipmentGroups, eq(evidenceLibrary.equipmentGroupId, equipmentGroups.id))
+      .leftJoin(equipmentTypes, eq(evidenceLibrary.equipmentTypeId, equipmentTypes.id))
+      .leftJoin(equipmentSubtypes, eq(evidenceLibrary.equipmentSubtypeId, equipmentSubtypes.id))
+      .leftJoin(riskRankings, eq(evidenceLibrary.riskRankingId, riskRankings.id))
       .where(eq(evidenceLibrary.isActive, true))
-      .orderBy(evidenceLibrary.equipmentGroup, evidenceLibrary.equipmentType);
+      .orderBy(sql`COALESCE(${equipmentGroups.name}, ${evidenceLibrary.equipmentGroup})`, sql`COALESCE(${equipmentTypes.name}, ${evidenceLibrary.equipmentType})`);
+    
+    console.log(`[DatabaseInvestigationStorage] NORMALIZED EVIDENCE LIBRARY: Retrieved ${results.length} evidence items with foreign key resolution`);
+    
+    // Log any records with broken foreign keys for debugging
+    const brokenRecords = results.filter(record => 
+      record.equipmentGroup === 'DELETED' || record.equipmentType === 'DELETED' || record.riskRanking === 'UNKNOWN'
+    );
+    
+    if (brokenRecords.length > 0) {
+      console.log(`[DatabaseInvestigationStorage] WARNING: ${brokenRecords.length} evidence records have broken foreign key references:`, 
+        brokenRecords.map(r => ({ id: r.id, equipmentCode: r.equipmentCode, equipmentGroup: r.equipmentGroup, equipmentType: r.equipmentType }))
+      );
+    }
+    
+    return results as EvidenceLibrary[];
   }
 
   async getEvidenceLibraryById(id: number): Promise<EvidenceLibrary | undefined> {
@@ -998,7 +1067,52 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
   }
 
   async deleteEquipmentGroup(id: number): Promise<void> {
-    await db.delete(equipmentGroups).where(eq(equipmentGroups.id, id));
+    console.log(`[DatabaseInvestigationStorage] PERMANENT DELETION: Starting complete removal of equipment group ${id}`);
+    
+    try {
+      // Get equipment group name for logging
+      const equipmentGroup = await db.select().from(equipmentGroups).where(eq(equipmentGroups.id, id));
+      const groupName = equipmentGroup[0]?.name || 'Unknown';
+      console.log(`[DatabaseInvestigationStorage] Target for deletion: "${groupName}" (ID: ${id})`);
+      
+      // Step 1: Delete all equipment subtypes linked to types in this group
+      await db.delete(equipmentSubtypes).where(
+        sql`equipment_type_id IN (SELECT id FROM equipment_types WHERE equipment_group_id = ${id})`
+      );
+      console.log(`[DatabaseInvestigationStorage] CASCADE DELETE: Removed all equipment subtypes for group ${id}`);
+      
+      // Step 2: Delete all equipment types in this group
+      const deletedTypes = await db.delete(equipmentTypes)
+        .where(eq(equipmentTypes.equipmentGroupId, id))
+        .returning({ id: equipmentTypes.id, name: equipmentTypes.name });
+      console.log(`[DatabaseInvestigationStorage] CASCADE DELETE: Removed ${deletedTypes.length} equipment types`);
+      
+      // Step 3: Delete the equipment group itself
+      const deletedGroups = await db.delete(equipmentGroups)
+        .where(eq(equipmentGroups.id, id))
+        .returning({ id: equipmentGroups.id, name: equipmentGroups.name });
+      
+      if (deletedGroups.length === 0) {
+        throw new Error(`Equipment group with ID ${id} not found`);
+      }
+      
+      console.log(`[DatabaseInvestigationStorage] PERMANENT DELETE SUCCESS: Equipment group "${groupName}" (ID: ${id}) completely removed`);
+      console.log(`[DatabaseInvestigationStorage] COMPLIANCE: Complete data purging - no soft-delete, no recovery capability`);
+      
+      // Step 4: Invalidate all related caches
+      await this.invalidateEquipmentCaches();
+      
+    } catch (error) {
+      console.error(`[DatabaseInvestigationStorage] PERMANENT DELETE FAILED for group ${id}:`, error);
+      throw new Error(`Failed to permanently delete equipment group: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Cache invalidation helper for equipment-related caches
+  private async invalidateEquipmentCaches(): Promise<void> {
+    console.log(`[DatabaseInvestigationStorage] CACHE INVALIDATION: Clearing all equipment-related caches`);
+    // Add any cache invalidation logic here if needed
+    // For now, this ensures the method exists for future cache implementations
   }
 
   // NORMALIZED EQUIPMENT TYPES CRUD OPERATIONS (Universal Protocol Standard)

@@ -386,17 +386,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      console.log(`[ROUTES] Processing evidence library import file: ${req.file.originalname}, size: ${req.file.size} bytes`);
+      console.log("[ROUTES] Processing CSV file:", req.file.originalname);
+      console.log("[ROUTES] File size:", req.file.size, "bytes");
       
-      const result = await investigationStorage.importEvidenceLibrary(req.file);
-      console.log(`[ROUTES] Successfully imported ${result.imported || 0} evidence library items, ${result.errors || 0} errors`);
+      // Parse CSV using papaparse with proper header transformation
+      const Papa = await import('papaparse');
+      const csvContent = req.file.buffer.toString('utf-8');
       
+      console.log("[ROUTES] CSV content preview:", csvContent.substring(0, 200));
+      
+      const parseResult = Papa.default.parse(csvContent, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: (header: string) => {
+          // Convert CSV headers to database field names
+          const headerMap: Record<string, string> = {
+            'Equipment Group': 'equipmentGroup',
+            'Equipment Type': 'equipmentType',
+            'Equipment Subtype': 'subtype',
+            'Component/Failure Mode': 'componentFailureMode',
+            'Equipment Code': 'equipmentCode',
+            'Failure Code': 'failureCode',
+            'Risk Ranking': 'riskRanking',
+            'Required Trend Data & Evidence': 'requiredTrendDataEvidence',
+            'AI/Investigator Questions': 'aiOrInvestigatorQuestions',
+            'Attachments & Evidence Required': 'attachmentsEvidenceRequired',
+            'Root Cause Logic': 'rootCauseLogic'
+          };
+          
+          // Check if already mapped (prevent double transformation)
+          if (Object.values(headerMap).includes(header)) {
+            console.log(`[ROUTES] Already mapped header preserved: "${header}"`);
+            return header;
+          }
+          
+          const mappedHeader = headerMap[header];
+          if (mappedHeader) {
+            console.log(`[ROUTES] Header mapping: "${header}" → "${mappedHeader}"`);
+            return mappedHeader;
+          }
+          
+          // For unknown headers, preserve original format
+          console.log(`[ROUTES] Unknown header preserved: "${header}"`);
+          return header;
+        }
+      });
+
+      if (parseResult.errors.length > 0) {
+        console.error("[ROUTES] CSV parsing errors:", parseResult.errors);
+        return res.status(400).json({
+          error: "CSV parsing failed",
+          details: parseResult.errors.map(err => err.message)
+        });
+      }
+
+      const csvData = parseResult.data as any[];
+      console.log("[ROUTES] Parsed", csvData.length, "rows from CSV");
+      
+      // Debug: Show actual parsed data structure
+      if (csvData.length > 0) {
+        console.log("[ROUTES] Sample row keys:", Object.keys(csvData[0]));
+        console.log("[ROUTES] Sample row data:", csvData[0]);
+      }
+      
+      // Validate required fields
+      const requiredFields = ['equipmentGroup', 'equipmentType', 'componentFailureMode', 'equipmentCode', 'failureCode', 'riskRanking'];
+      const validRows = [];
+      const errors = [];
+
+      for (let i = 0; i < csvData.length; i++) {
+        const row = csvData[i];
+        console.log(`[ROUTES] Row ${i + 1} available fields:`, Object.keys(row));
+        
+        const missingFields = requiredFields.filter(field => !row[field] || row[field].toString().trim() === '');
+        
+        if (missingFields.length > 0) {
+          console.log(`[ROUTES] Row ${i + 1} missing fields:`, missingFields);
+          errors.push(`Row ${i + 1}: Missing required fields: ${missingFields.join(', ')}`);
+        } else {
+          console.log(`[ROUTES] Row ${i + 1} is valid`);
+          validRows.push(row);
+        }
+      }
+
+      if (validRows.length === 0) {
+        return res.status(400).json({
+          error: "No valid rows found",
+          details: errors
+        });
+      }
+
+      // Bulk import to database
+      console.log("[ROUTES] Importing", validRows.length, "valid rows to database");
+      const importResult = await investigationStorage.bulkUpsertEvidenceLibrary(validRows);
+      
+      console.log("[ROUTES] Import completed successfully");
       res.json({
         success: true,
-        message: `Successfully imported ${result.imported || 0} items`,
-        imported: result.imported || 0,
-        errors: result.errors || 0,
-        details: result.details || []
+        imported: validRows.length,
+        errors: errors.length,
+        errorDetails: errors,
+        result: importResult
       });
       
     } catch (error) {
@@ -4255,6 +4345,68 @@ JSON array only:`;
   });
 
   console.log("[ROUTES] All API routes registered successfully - Equipment Types/Subtypes CRUD operational");
+  
+  // Add missing Equipment Groups routes that were broken
+  app.get("/api/equipment-groups", async (req, res) => {
+    try {
+      console.log("[ROUTES] Equipment groups GET route accessed - Universal Protocol Standard compliant");
+      const groups = await investigationStorage.getAllEquipmentGroups();
+      console.log(`[ROUTES] Successfully retrieved ${groups.length} equipment groups`);
+      res.json(groups);
+    } catch (error) {
+      console.error("[ROUTES] Equipment Groups GET error:", error);
+      res.status(500).json({ 
+        error: "Fetch failed", 
+        message: "Unable to fetch equipment groups",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.get("/api/equipment-groups/active", async (req, res) => {
+    try {
+      console.log("[ROUTES] Active equipment groups GET route accessed - Universal Protocol Standard compliant");
+      const groups = await investigationStorage.getActiveEquipmentGroups();
+      console.log(`[ROUTES] Successfully retrieved ${groups.length} active equipment groups`);
+      res.json(groups);
+    } catch (error) {
+      console.error("[ROUTES] Active Equipment Groups GET error:", error);
+      res.status(500).json({ 
+        error: "Fetch failed", 
+        message: "Unable to fetch active equipment groups",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.post("/api/equipment-groups", async (req, res) => {
+    console.log("[ROUTES] Equipment groups create route accessed - Universal Protocol Standard compliant");
+    try {
+      const { name } = req.body;
+      
+      if (!name || typeof name !== 'string' || name.trim() === '') {
+        return res.status(400).json({ 
+          error: "Validation failed", 
+          message: "Equipment group name is required and must be non-empty string" 
+        });
+      }
+      
+      console.log(`[ROUTES] Creating equipment group with name: ${name}`);
+      const newGroup = await investigationStorage.createEquipmentGroup({ name: name.trim() });
+      console.log(`[ROUTES] Successfully created equipment group with ID: ${newGroup.id}`);
+      
+      res.json(newGroup);
+      
+    } catch (error) {
+      console.error("[ROUTES] Equipment Groups create error:", error);
+      res.status(500).json({ 
+        error: "Create failed", 
+        message: "Unable to create equipment group",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
