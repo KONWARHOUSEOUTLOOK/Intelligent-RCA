@@ -393,6 +393,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // NORMALIZED EQUIPMENT TYPES ROUTES (Universal Protocol Standard)
+  app.get('/api/equipment-types', async (req, res) => {
+    console.log("[ROUTES] All equipment types route accessed - Universal Protocol Standard compliant");
+    try {
+      const equipmentTypes = await investigationStorage.getAllEquipmentTypes();
+      console.log(`[ROUTES] Successfully retrieved ${equipmentTypes.length} equipment types`);
+      res.json(equipmentTypes);
+    } catch (error) {
+      console.error('[ROUTES] Error retrieving equipment types:', error);
+      res.status(500).json({ error: 'Failed to retrieve equipment types' });
+    }
+  });
+
+  app.get('/api/equipment-types/by-group/:groupId', async (req, res) => {
+    console.log(`[ROUTES] Equipment types by group route accessed for group ID: ${req.params.groupId} - Universal Protocol Standard compliant`);
+    try {
+      const groupId = parseInt(req.params.groupId);
+      const equipmentTypes = await investigationStorage.getEquipmentTypesByGroup(groupId);
+      console.log(`[ROUTES] Successfully retrieved ${equipmentTypes.length} equipment types for group ID: ${groupId}`);
+      res.json(equipmentTypes);
+    } catch (error) {
+      console.error('[ROUTES] Error retrieving equipment types by group:', error);
+      res.status(500).json({ error: 'Failed to retrieve equipment types by group' });
+    }
+  });
+
+  app.post('/api/equipment-types', async (req, res) => {
+    console.log("[ROUTES] Create equipment type route accessed - Universal Protocol Standard compliant");
+    try {
+      const equipmentType = await investigationStorage.createEquipmentType(req.body);
+      console.log(`[ROUTES] Successfully created equipment type with ID: ${equipmentType.id}`);
+      res.status(201).json(equipmentType);
+    } catch (error) {
+      console.error('[ROUTES] Error creating equipment type:', error);
+      res.status(500).json({ error: 'Failed to create equipment type' });
+    }
+  });
+
+  // NORMALIZED EQUIPMENT SUBTYPES ROUTES (Universal Protocol Standard)
+  app.get('/api/equipment-subtypes', async (req, res) => {
+    console.log("[ROUTES] All equipment subtypes route accessed - Universal Protocol Standard compliant");
+    try {
+      const equipmentSubtypes = await investigationStorage.getAllEquipmentSubtypes();
+      console.log(`[ROUTES] Successfully retrieved ${equipmentSubtypes.length} equipment subtypes`);
+      res.json(equipmentSubtypes);
+    } catch (error) {
+      console.error('[ROUTES] Error retrieving equipment subtypes:', error);
+      res.status(500).json({ error: 'Failed to retrieve equipment subtypes' });
+    }
+  });
+
+  app.get('/api/equipment-subtypes/by-type/:typeId', async (req, res) => {
+    console.log(`[ROUTES] Equipment subtypes by type route accessed for type ID: ${req.params.typeId} - Universal Protocol Standard compliant`);
+    try {
+      const typeId = parseInt(req.params.typeId);
+      const equipmentSubtypes = await investigationStorage.getEquipmentSubtypesByType(typeId);
+      console.log(`[ROUTES] Successfully retrieved ${equipmentSubtypes.length} equipment subtypes for type ID: ${typeId}`);
+      res.json(equipmentSubtypes);
+    } catch (error) {
+      console.error('[ROUTES] Error retrieving equipment subtypes by type:', error);
+      res.status(500).json({ error: 'Failed to retrieve equipment subtypes by type' });
+    }
+  });
+
+  app.post('/api/equipment-subtypes', async (req, res) => {
+    console.log("[ROUTES] Create equipment subtype route accessed - Universal Protocol Standard compliant");
+    try {
+      const equipmentSubtype = await investigationStorage.createEquipmentSubtype(req.body);
+      console.log(`[ROUTES] Successfully created equipment subtype with ID: ${equipmentSubtype.id}`);
+      res.status(201).json(equipmentSubtype);
+    } catch (error) {
+      console.error('[ROUTES] Error creating equipment subtype:', error);
+      res.status(500).json({ error: 'Failed to create equipment subtype' });
+    }
+  });
   
   // CONTINUE WITH REST OF ROUTES - DO NOT RETURN EARLY
   app.post("/api/investigations/create", async (req, res) => {

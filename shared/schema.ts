@@ -91,16 +91,24 @@ export const insertFaultReferenceLibrarySchema = createInsertSchema(faultReferen
 export type InsertFaultReferenceLibrary = z.infer<typeof insertFaultReferenceLibrarySchema>;
 export type FaultReferenceLibrary = typeof faultReferenceLibrary.$inferSelect;
 
-// Evidence Library table - EXACT CSV column mapping: Equipment Group, Equipment Type, Subtype, Component / Failure Mode, Equipment Code, Failure Code, Risk Ranking, Required Trend Data / Evidence, AI or Investigator Questions, Attachments / Evidence Required, Root Cause Logic, Blank Column 1, Blank Column 2, Blank Column 3
+// Evidence Library table - NORMALIZED with foreign key relationships (Universal Protocol Standard compliant)
 export const evidenceLibrary = pgTable("evidence_library", {
   id: serial("id").primaryKey(),
-  equipmentGroup: varchar("equipment_group").notNull(), // Equipment Group 
-  equipmentType: varchar("equipment_type").notNull(), // Equipment Type
-  subtype: varchar("subtype"), // Subtype
+  // NORMALIZED FOREIGN KEY RELATIONSHIPS (NO HARDCODING) - nullable during transition
+  equipmentGroupId: integer("equipment_group_id"), // FK to equipmentGroups (nullable during migration)
+  equipmentTypeId: integer("equipment_type_id"), // FK to equipmentTypes (nullable during migration)
+  equipmentSubtypeId: integer("equipment_subtype_id"), // FK to equipmentSubtypes (optional)
+  
+  // LEGACY FIELDS - maintained for import compatibility during transition
+  equipmentGroup: varchar("equipment_group"), // Legacy field for CSV import mapping
+  equipmentType: varchar("equipment_type"), // Legacy field for CSV import mapping
+  subtype: varchar("subtype"), // Legacy field for CSV import mapping
+  
   componentFailureMode: varchar("component_failure_mode").notNull(), // Component / Failure Mode
   equipmentCode: varchar("equipment_code").notNull().unique(), // Equipment Code
   failureCode: varchar("failure_code").notNull(), // Failure Code
-  riskRanking: varchar("risk_ranking").notNull(), // Risk Ranking
+  riskRankingId: integer("risk_ranking_id"), // FK to riskRankings (normalized)
+  riskRanking: varchar("risk_ranking"), // Legacy field for import compatibility
   requiredTrendDataEvidence: text("required_trend_data_evidence"), // Required Trend Data / Evidence
   aiOrInvestigatorQuestions: text("ai_or_investigator_questions"), // AI or Investigator Questions
   attachmentsEvidenceRequired: text("attachments_evidence_required"), // Attachments / Evidence Required
@@ -284,6 +292,44 @@ export const insertEquipmentGroupSchema = createInsertSchema(equipmentGroups).om
 
 export type InsertEquipmentGroup = z.infer<typeof insertEquipmentGroupSchema>;
 export type EquipmentGroup = typeof equipmentGroups.$inferSelect;
+
+// Equipment Types table - Normalized equipment types linked to equipment groups
+export const equipmentTypes = pgTable("equipment_types", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(),
+  equipmentGroupId: integer("equipment_group_id").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertEquipmentTypeSchema = createInsertSchema(equipmentTypes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertEquipmentType = z.infer<typeof insertEquipmentTypeSchema>;
+export type EquipmentType = typeof equipmentTypes.$inferSelect;
+
+// Equipment Subtypes table - Normalized equipment subtypes linked to equipment types
+export const equipmentSubtypes = pgTable("equipment_subtypes", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(),
+  equipmentTypeId: integer("equipment_type_id").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertEquipmentSubtypeSchema = createInsertSchema(equipmentSubtypes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertEquipmentSubtype = z.infer<typeof insertEquipmentSubtypeSchema>;
+export type EquipmentSubtype = typeof equipmentSubtypes.$inferSelect;
 
 // Risk Rankings table - Admin editable dropdown values
 export const riskRankings = pgTable("risk_rankings", {

@@ -677,7 +677,7 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
 
   async bulkUpsertEvidenceLibrary(data: InsertEvidenceLibrary[]): Promise<EvidenceLibrary[]> {
     try {
-      console.log(`[Storage] Bulk upserting ${data.length} evidence library items based on Equipment Code`);
+      console.log(`[Storage] NORMALIZED IMPORT: Bulk upserting ${data.length} evidence library items with foreign key resolution`);
       
       const results: EvidenceLibrary[] = [];
       
@@ -687,6 +687,76 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
           continue;
         }
         
+        // NORMALIZED IMPORT: Resolve foreign key IDs from text values
+        let equipmentGroupId = item.equipmentGroupId;
+        let equipmentTypeId = item.equipmentTypeId; 
+        let riskRankingId = item.riskRankingId;
+        
+        // Resolve Equipment Group ID from name
+        if (item.equipmentGroup && !equipmentGroupId) {
+          console.log(`[NORMALIZED] Resolving Equipment Group: ${item.equipmentGroup}`);
+          const [group] = await db.select().from(equipmentGroups).where(eq(equipmentGroups.name, item.equipmentGroup));
+          if (group) {
+            equipmentGroupId = group.id;
+            console.log(`[NORMALIZED] Found Equipment Group ID: ${equipmentGroupId}`);
+          } else {
+            console.log(`[NORMALIZED] Creating new Equipment Group: ${item.equipmentGroup}`);
+            const [newGroup] = await db.insert(equipmentGroups).values({ 
+              name: item.equipmentGroup, 
+              isActive: true 
+            }).returning();
+            equipmentGroupId = newGroup.id;
+          }
+        }
+        
+        // Resolve Equipment Type ID from name and group
+        if (item.equipmentType && equipmentGroupId && !equipmentTypeId) {
+          console.log(`[NORMALIZED] Resolving Equipment Type: ${item.equipmentType} for Group ID: ${equipmentGroupId}`);
+          const [type] = await db.select().from(equipmentTypes)
+            .where(and(
+              eq(equipmentTypes.name, item.equipmentType),
+              eq(equipmentTypes.equipmentGroupId, equipmentGroupId)
+            ));
+          if (type) {
+            equipmentTypeId = type.id;
+            console.log(`[NORMALIZED] Found Equipment Type ID: ${equipmentTypeId}`);
+          } else {
+            console.log(`[NORMALIZED] Creating new Equipment Type: ${item.equipmentType}`);
+            const [newType] = await db.insert(equipmentTypes).values({
+              name: item.equipmentType,
+              equipmentGroupId: equipmentGroupId,
+              isActive: true
+            }).returning();
+            equipmentTypeId = newType.id;
+          }
+        }
+        
+        // Resolve Risk Ranking ID from name
+        if (item.riskRanking && !riskRankingId) {
+          console.log(`[NORMALIZED] Resolving Risk Ranking: ${item.riskRanking}`);
+          const [ranking] = await db.select().from(riskRankings).where(eq(riskRankings.label, item.riskRanking));
+          if (ranking) {
+            riskRankingId = ranking.id;
+            console.log(`[NORMALIZED] Found Risk Ranking ID: ${riskRankingId}`);
+          } else {
+            console.log(`[NORMALIZED] Creating new Risk Ranking: ${item.riskRanking}`);
+            const [newRanking] = await db.insert(riskRankings).values({
+              label: item.riskRanking,
+              isActive: true
+            }).returning();
+            riskRankingId = newRanking.id;
+          }
+        }
+        
+        // Prepare normalized data with both legacy and FK fields
+        const normalizedItem = {
+          ...item,
+          equipmentGroupId,
+          equipmentTypeId,
+          riskRankingId,
+          lastUpdated: new Date()
+        };
+        
         // Check if record exists by Equipment Code (UNIQUE KEY)
         const [existing] = await db
           .select()
@@ -695,33 +765,29 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
           .limit(1);
         
         if (existing) {
-          // UPDATE existing record
-          console.log(`[Storage] Updating existing record with Equipment Code: ${item.equipmentCode}`);
+          // UPDATE existing record with normalized FK data
+          console.log(`[NORMALIZED] Updating existing record with Equipment Code: ${item.equipmentCode}`);
           const [updated] = await db
             .update(evidenceLibrary)
             .set({
-              ...item,
-              lastUpdated: new Date(),
-              updatedBy: item.updatedBy || "admin-import"
+              ...normalizedItem,
+              updatedBy: item.updatedBy || "normalized-import"
             })
             .where(eq(evidenceLibrary.equipmentCode, item.equipmentCode))
             .returning();
           results.push(updated);
         } else {
-          // INSERT new record
-          console.log(`[Storage] Inserting new record with Equipment Code: ${item.equipmentCode}`);
+          // INSERT new record with normalized FK data
+          console.log(`[NORMALIZED] Inserting new record with Equipment Code: ${item.equipmentCode}`);
           const [inserted] = await db
             .insert(evidenceLibrary)
-            .values({
-              ...item,
-              lastUpdated: new Date()
-            })
+            .values(normalizedItem)
             .returning();
           results.push(inserted);
         }
       }
       
-      console.log(`[Storage] Successfully upserted ${results.length} evidence library items`);
+      console.log(`[NORMALIZED] Successfully upserted ${results.length} evidence library items with foreign key relationships`);
       return results;
     } catch (error) {
       console.error('[RCA] Error in bulkUpsertEvidenceLibrary:', error);
@@ -924,6 +990,84 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
 
   async deleteEquipmentGroup(id: number): Promise<void> {
     await db.delete(equipmentGroups).where(eq(equipmentGroups.id, id));
+  }
+
+  // NORMALIZED EQUIPMENT TYPES CRUD OPERATIONS (Universal Protocol Standard)
+  async createEquipmentType(data: InsertEquipmentType): Promise<EquipmentType> {
+    console.log(`[DatabaseInvestigationStorage] Creating equipment type: ${data.name} for group ID: ${data.equipmentGroupId}`);
+    const [equipmentType] = await db
+      .insert(equipmentTypes)
+      .values(data)
+      .returning();
+    
+    console.log(`[DatabaseInvestigationStorage] Created equipment type with ID: ${equipmentType.id}`);
+    return equipmentType;
+  }
+
+  async getEquipmentTypesByGroup(equipmentGroupId: number): Promise<EquipmentType[]> {
+    console.log(`[DatabaseInvestigationStorage] Retrieving equipment types for group ID: ${equipmentGroupId}`);
+    const results = await db
+      .select()
+      .from(equipmentTypes)
+      .where(and(
+        eq(equipmentTypes.equipmentGroupId, equipmentGroupId),
+        eq(equipmentTypes.isActive, true)
+      ))
+      .orderBy(equipmentTypes.name);
+    
+    console.log(`[DatabaseInvestigationStorage] Retrieved ${results.length} equipment types`);
+    return results;
+  }
+
+  async getAllEquipmentTypes(): Promise<EquipmentType[]> {
+    console.log("[DatabaseInvestigationStorage] Retrieving all equipment types");
+    const results = await db
+      .select()
+      .from(equipmentTypes)
+      .where(eq(equipmentTypes.isActive, true))
+      .orderBy(equipmentTypes.name);
+    
+    console.log(`[DatabaseInvestigationStorage] Retrieved ${results.length} equipment types`);
+    return results;
+  }
+
+  // NORMALIZED EQUIPMENT SUBTYPES CRUD OPERATIONS (Universal Protocol Standard)  
+  async createEquipmentSubtype(data: InsertEquipmentSubtype): Promise<EquipmentSubtype> {
+    console.log(`[DatabaseInvestigationStorage] Creating equipment subtype: ${data.name} for type ID: ${data.equipmentTypeId}`);
+    const [equipmentSubtype] = await db
+      .insert(equipmentSubtypes)
+      .values(data)
+      .returning();
+    
+    console.log(`[DatabaseInvestigationStorage] Created equipment subtype with ID: ${equipmentSubtype.id}`);
+    return equipmentSubtype;
+  }
+
+  async getEquipmentSubtypesByType(equipmentTypeId: number): Promise<EquipmentSubtype[]> {
+    console.log(`[DatabaseInvestigationStorage] Retrieving equipment subtypes for type ID: ${equipmentTypeId}`);
+    const results = await db
+      .select()
+      .from(equipmentSubtypes)
+      .where(and(
+        eq(equipmentSubtypes.equipmentTypeId, equipmentTypeId),
+        eq(equipmentSubtypes.isActive, true)
+      ))
+      .orderBy(equipmentSubtypes.name);
+    
+    console.log(`[DatabaseInvestigationStorage] Retrieved ${results.length} equipment subtypes`);
+    return results;
+  }
+
+  async getAllEquipmentSubtypes(): Promise<EquipmentSubtype[]> {
+    console.log("[DatabaseInvestigationStorage] Retrieving all equipment subtypes");  
+    const results = await db
+      .select()
+      .from(equipmentSubtypes)
+      .where(eq(equipmentSubtypes.isActive, true))
+      .orderBy(equipmentSubtypes.name);
+    
+    console.log(`[DatabaseInvestigationStorage] Retrieved ${results.length} equipment subtypes`);
+    return results;
   }
 
   async toggleEquipmentGroupStatus(id: number): Promise<EquipmentGroup> {
