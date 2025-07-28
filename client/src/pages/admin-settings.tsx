@@ -24,7 +24,7 @@ export default function AdminSettings() {
     model: "gpt-4o",
     isActive: false,
     createdBy: 1, // Database-driven admin user ID
-    testStatus: null
+    testStatus: ""
   });
   const [newEquipmentGroup, setNewEquipmentGroup] = useState({ name: "" });
   const [newRiskRanking, setNewRiskRanking] = useState({ label: "" });
@@ -534,7 +534,14 @@ export default function AdminSettings() {
       return;
     }
 
-    saveSettingsMutation.mutate(formData);
+    saveSettingsMutation.mutate({
+      provider: formData.provider,
+      encryptedApiKey: formData.apiKey,
+      model: formData.model,
+      isActive: formData.isActive,
+      createdBy: formData.createdBy,
+      testStatus: formData.testStatus
+    });
   };
 
   const getProviderName = (provider: string) => {
@@ -547,7 +554,7 @@ export default function AdminSettings() {
     return providerNames[provider] || provider;
   };
 
-  const getStatusBadge = (status: string | null, isActive: boolean) => {
+  const getStatusBadge = (status: string | null, isActive: boolean | null) => {
     if (!status) return <Badge variant="outline">Unknown</Badge>;
     if (status === "success" && isActive) return <Badge variant="default" className="bg-green-500">Active</Badge>;
     if (status === "success") return <Badge variant="outline">Success</Badge>;
