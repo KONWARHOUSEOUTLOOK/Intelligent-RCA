@@ -27,19 +27,16 @@ export default function AdminSettings() {
   });
   const [newEquipmentGroup, setNewEquipmentGroup] = useState({ name: "" });
   const [newRiskRanking, setNewRiskRanking] = useState({ label: "" });
+  const [newEquipmentType, setNewEquipmentType] = useState({ name: "", equipmentGroupId: 0 });
+  const [newEquipmentSubtype, setNewEquipmentSubtype] = useState({ name: "", equipmentTypeId: 0 });
   const [editingEquipmentGroup, setEditingEquipmentGroup] = useState<{id: number, name: string} | null>(null);
   const [editingRiskRanking, setEditingRiskRanking] = useState<{id: number, label: string} | null>(null);
+  const [editingEquipmentType, setEditingEquipmentType] = useState<{id: number, name: string} | null>(null);
+  const [editingEquipmentSubtype, setEditingEquipmentSubtype] = useState<{id: number, name: string} | null>(null);
   
   // File upload references
   const [equipmentGroupsFileRef, setEquipmentGroupsFileRef] = useState<HTMLInputElement | null>(null);
   const [riskRankingsFileRef, setRiskRankingsFileRef] = useState<HTMLInputElement | null>(null);
-  const [showAddEquipmentForm, setShowAddEquipmentForm] = useState(false);
-  const [newEquipmentType, setNewEquipmentType] = useState({
-    equipmentType: "",
-    iso14224Code: "",
-    subtypes: "",
-    description: ""
-  });
   const { toast } = useToast();
 
   // Fetch current AI settings
@@ -68,6 +65,20 @@ export default function AdminSettings() {
   
   // Debug logging
   console.log('Risk Rankings:', riskRankings, 'Loading:', riskRankingsLoading);
+
+  // Fetch equipment types using the default queryFn
+  const { data: equipmentTypes, isLoading: equipmentTypesLoading } = useQuery({
+    queryKey: ['/api/equipment-types'],
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+
+  // Fetch equipment subtypes using the default queryFn
+  const { data: equipmentSubtypes, isLoading: equipmentSubtypesLoading } = useQuery({
+    queryKey: ['/api/equipment-subtypes'],
+    staleTime: 0,
+    refetchOnMount: true,
+  });
 
   // Test API key mutation
   const testKeyMutation = useMutation({
@@ -363,6 +374,130 @@ export default function AdminSettings() {
     },
   });
 
+  // Equipment Types mutations
+  const createEquipmentTypeMutation = useMutation({
+    mutationFn: async (data: { name: string; equipmentGroupId: number }) => {
+      return await apiRequest("/api/equipment-types", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Equipment Type Created", description: "Equipment type added successfully" });
+      setNewEquipmentType({ name: "", equipmentGroupId: 0 });
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment-types"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message.includes("already exists") ? "Equipment type name already exists for this group" : "Failed to create equipment type",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateEquipmentTypeMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: { name: string } }) => {
+      return await apiRequest(`/api/equipment-types/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Equipment Type Updated", description: "Equipment type updated successfully" });
+      setEditingEquipmentType(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment-types"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message.includes("already exists") ? "Equipment type name already exists" : "Failed to update equipment type",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteEquipmentTypeMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return await apiRequest(`/api/equipment-types/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast({ title: "Equipment Type Deleted", description: "Equipment type deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment-types"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete equipment type. It may be in use.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Equipment Subtypes mutations
+  const createEquipmentSubtypeMutation = useMutation({
+    mutationFn: async (data: { name: string; equipmentTypeId: number }) => {
+      return await apiRequest("/api/equipment-subtypes", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Equipment Subtype Created", description: "Equipment subtype added successfully" });
+      setNewEquipmentSubtype({ name: "", equipmentTypeId: 0 });
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment-subtypes"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message.includes("already exists") ? "Equipment subtype name already exists for this type" : "Failed to create equipment subtype",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateEquipmentSubtypeMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: { name: string } }) => {
+      return await apiRequest(`/api/equipment-subtypes/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Equipment Subtype Updated", description: "Equipment subtype updated successfully" });
+      setEditingEquipmentSubtype(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment-subtypes"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message.includes("already exists") ? "Equipment subtype name already exists" : "Failed to update equipment subtype",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteEquipmentSubtypeMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return await apiRequest(`/api/equipment-subtypes/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast({ title: "Equipment Subtype Deleted", description: "Equipment subtype deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment-subtypes"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete equipment subtype. It may be in use.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Add new equipment type mutation
   const addEquipmentMutation = useMutation({
     mutationFn: async (equipmentData: any) => {
@@ -489,7 +624,7 @@ export default function AdminSettings() {
 
 
       <Tabs defaultValue="ai-settings" className="space-y-6">
-        <TabsList className="grid w-fit grid-cols-4">
+        <TabsList className="grid w-fit grid-cols-5">
           <TabsTrigger value="ai-settings" className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
             AI Settings
@@ -498,13 +633,17 @@ export default function AdminSettings() {
             <Plus className="w-4 h-4" />
             Equipment Groups
           </TabsTrigger>
+          <TabsTrigger value="equipment-types" className="flex items-center gap-2">
+            <Database className="w-4 h-4" />
+            Equipment Types
+          </TabsTrigger>
+          <TabsTrigger value="equipment-subtypes" className="flex items-center gap-2">
+            <Database className="w-4 h-4" />
+            Equipment Subtypes
+          </TabsTrigger>
           <TabsTrigger value="risk-rankings" className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
             Risk Rankings
-          </TabsTrigger>
-          <TabsTrigger value="evidence-library" className="flex items-center gap-2">
-            <Database className="w-4 h-4" />
-            Evidence Library
           </TabsTrigger>
         </TabsList>
 
@@ -1019,67 +1158,296 @@ export default function AdminSettings() {
           </Card>
         </TabsContent>
 
-        {/* Evidence Library Tab */}
-        <TabsContent value="evidence-library" className="space-y-6">
-          {/* Equipment Types Management */}
+        {/* Equipment Types Tab */}
+        <TabsContent value="equipment-types" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Database className="w-5 h-5" />
-                Equipment Types Library
+                Equipment Types Manager
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Manage equipment types and their evidence requirements for RCA investigations
+                Manage equipment types for the Evidence Library normalized database structure
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Add New Equipment Type */}
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Current Equipment Types</h3>
-                <Button 
-                  onClick={() => setShowAddEquipmentForm(true)}
-                  className="flex items-center gap-2"
+              <div className="flex gap-2">
+                <Select 
+                  value={newEquipmentType.equipmentGroupId.toString()} 
+                  onValueChange={(value) => setNewEquipmentType({ ...newEquipmentType, equipmentGroupId: parseInt(value) })}
                 >
-                  <Plus className="w-4 h-4" />
-                  Add Equipment Type
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select Equipment Group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.isArray(equipmentGroups) && equipmentGroups.map((group: any) => (
+                      <SelectItem key={group.id} value={group.id.toString()}>
+                        {group.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Enter equipment type name..."
+                  value={newEquipmentType.name}
+                  onChange={(e) => setNewEquipmentType({ ...newEquipmentType, name: e.target.value })}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && newEquipmentType.name.trim() && newEquipmentType.equipmentGroupId > 0) {
+                      createEquipmentTypeMutation.mutate({ name: newEquipmentType.name, equipmentGroupId: newEquipmentType.equipmentGroupId });
+                    }
+                  }}
+                />
+                <Button 
+                  onClick={() => createEquipmentTypeMutation.mutate({ name: newEquipmentType.name, equipmentGroupId: newEquipmentType.equipmentGroupId })}
+                  disabled={!newEquipmentType.name.trim() || newEquipmentType.equipmentGroupId === 0 || createEquipmentTypeMutation.isPending}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Type
                 </Button>
               </div>
-
-              {/* Add Evidence Library Item Form - 14 Column CSV Template */}
-              {showAddEquipmentForm && (
-                <Card className="border-primary/20">
-                  <CardHeader>
-                    <CardTitle className="text-base">Add New Evidence Library Item (14-Column CSV Template)</CardTitle>
-                    <p className="text-sm text-muted-foreground">Add equipment failure modes exactly matching your CSV template structure</p>
-                  </CardHeader>
-                  <CardContent>
-                    <Button variant="outline" size="sm" asChild className="mb-4">
-                      <Link href="/evidence-library-management">
-                        Use Full Evidence Library Management →
-                      </Link>
-                    </Button>
-                    <div className="text-sm text-muted-foreground bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
-                      <p className="font-medium">Note:</p>
-                      <p>For complete evidence library management with all 14 columns (Equipment Group, Equipment Type, Subtype/Example, Component/Failure Mode, Equipment Code, Failure Code, Risk Ranking, Required Trend Data/Evidence, AI Questions, Attachments Required, Root Cause Logic, plus 3 blank columns), please use the dedicated Evidence Library Management page.</p>
-                    </div>
-                    <div className="flex gap-2 mt-4">
-                      <Button variant="outline" onClick={() => setShowAddEquipmentForm(false)}>
-                        Cancel
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Equipment Types Table */}
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Equipment Types management has been moved to the dedicated Evidence Library Management page.</p>
-                <Button variant="outline" size="sm" asChild className="mt-2">
-                  <Link href="/evidence-library-management">
-                    Go to Evidence Library Management →
-                  </Link>
+              {equipmentTypesLoading ? (
+                <div className="text-center py-8">Loading equipment types...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Equipment Group</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {Array.isArray(equipmentTypes) && equipmentTypes.map((type: any) => (
+                      <TableRow key={type.id}>
+                        <TableCell>
+                          {editingEquipmentType?.id === type.id ? (
+                            <Input
+                              value={editingEquipmentType?.name || ''}
+                              onChange={(e) => editingEquipmentType && setEditingEquipmentType({ ...editingEquipmentType, name: e.target.value })}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  updateEquipmentTypeMutation.mutate({
+                                    id: type.id,
+                                    data: { name: editingEquipmentType?.name || '' }
+                                  });
+                                }
+                              }}
+                              className="max-w-[200px]"
+                            />
+                          ) : (
+                            type.name
+                          )}
+                        </TableCell>
+                        <TableCell>{type.equipmentGroupName || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Badge variant={type.isActive ? "default" : "secondary"}>
+                            {type.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {type.createdAt ? new Date(type.createdAt).toLocaleDateString() : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            {editingEquipmentType?.id === type.id ? (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => updateEquipmentTypeMutation.mutate({
+                                    id: type.id,
+                                    data: { name: editingEquipmentType?.name || '' }
+                                  })}
+                                  disabled={updateEquipmentTypeMutation.isPending}
+                                >
+                                  <Save className="w-4 h-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => setEditingEquipmentType(null)}
+                                >
+                                  Cancel
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => setEditingEquipmentType({ id: type.id, name: type.name })}
+                                >
+                                  <Edit3 className="w-4 h-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="destructive"
+                                  onClick={() => deleteEquipmentTypeMutation.mutate(type.id)}
+                                  disabled={deleteEquipmentTypeMutation.isPending}
+                                >
+                                  Delete
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Equipment Subtypes Tab */}
+        <TabsContent value="equipment-subtypes" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="w-5 h-5" />
+                Equipment Subtypes Manager
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Manage equipment subtypes for the Evidence Library normalized database structure
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Add New Equipment Subtype */}
+              <div className="flex gap-2">
+                <Select 
+                  value={newEquipmentSubtype.equipmentTypeId.toString()} 
+                  onValueChange={(value) => setNewEquipmentSubtype({ ...newEquipmentSubtype, equipmentTypeId: parseInt(value) })}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select Equipment Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.isArray(equipmentTypes) && equipmentTypes.map((type: any) => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        {type.name} ({type.equipmentGroupName})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Enter equipment subtype name..."
+                  value={newEquipmentSubtype.name}
+                  onChange={(e) => setNewEquipmentSubtype({ ...newEquipmentSubtype, name: e.target.value })}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && newEquipmentSubtype.name.trim() && newEquipmentSubtype.equipmentTypeId > 0) {
+                      createEquipmentSubtypeMutation.mutate({ name: newEquipmentSubtype.name, equipmentTypeId: newEquipmentSubtype.equipmentTypeId });
+                    }
+                  }}
+                />
+                <Button 
+                  onClick={() => createEquipmentSubtypeMutation.mutate({ name: newEquipmentSubtype.name, equipmentTypeId: newEquipmentSubtype.equipmentTypeId })}
+                  disabled={!newEquipmentSubtype.name.trim() || newEquipmentSubtype.equipmentTypeId === 0 || createEquipmentSubtypeMutation.isPending}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Subtype
                 </Button>
               </div>
+
+              {/* Equipment Subtypes Table */}
+              {equipmentSubtypesLoading ? (
+                <div className="text-center py-8">Loading equipment subtypes...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Equipment Type</TableHead>
+                      <TableHead>Equipment Group</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {Array.isArray(equipmentSubtypes) && equipmentSubtypes.map((subtype: any) => (
+                      <TableRow key={subtype.id}>
+                        <TableCell>
+                          {editingEquipmentSubtype?.id === subtype.id ? (
+                            <Input
+                              value={editingEquipmentSubtype?.name || ''}
+                              onChange={(e) => editingEquipmentSubtype && setEditingEquipmentSubtype({ ...editingEquipmentSubtype, name: e.target.value })}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  updateEquipmentSubtypeMutation.mutate({
+                                    id: subtype.id,
+                                    data: { name: editingEquipmentSubtype?.name || '' }
+                                  });
+                                }
+                              }}
+                              className="max-w-[200px]"
+                            />
+                          ) : (
+                            subtype.name
+                          )}
+                        </TableCell>
+                        <TableCell>{subtype.equipmentTypeName || 'N/A'}</TableCell>
+                        <TableCell>{subtype.equipmentGroupName || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Badge variant={subtype.isActive ? "default" : "secondary"}>
+                            {subtype.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {subtype.createdAt ? new Date(subtype.createdAt).toLocaleDateString() : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            {editingEquipmentSubtype?.id === subtype.id ? (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => updateEquipmentSubtypeMutation.mutate({
+                                    id: subtype.id,
+                                    data: { name: editingEquipmentSubtype?.name || '' }
+                                  })}
+                                  disabled={updateEquipmentSubtypeMutation.isPending}
+                                >
+                                  <Save className="w-4 h-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => setEditingEquipmentSubtype(null)}
+                                >
+                                  Cancel
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => setEditingEquipmentSubtype({ id: subtype.id, name: subtype.name })}
+                                >
+                                  <Edit3 className="w-4 h-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="destructive"
+                                  onClick={() => deleteEquipmentSubtypeMutation.mutate(subtype.id)}
+                                  disabled={deleteEquipmentSubtypeMutation.isPending}
+                                >
+                                  Delete
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
