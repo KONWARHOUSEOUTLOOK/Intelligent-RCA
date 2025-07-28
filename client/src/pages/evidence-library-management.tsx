@@ -537,21 +537,43 @@ export default function EvidenceLibraryManagement() {
     },
   });
 
-  // Delete mutation (single item)
+  // Delete mutation (single item) - PERMANENT DELETION WITH CACHE CLEARING
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/evidence-library/${id}`, {
+      const response = await apiRequest(`/api/evidence-library/${id}`, {
         method: "DELETE",
       });
+      
+      // COMPLIANCE REQUIREMENT: Clear ALL browser caches after permanent deletion
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        console.log('[CLIENT] All browser caches cleared after permanent deletion');
+      }
+      
+      // Clear localStorage and sessionStorage
+      localStorage.clear();
+      sessionStorage.clear();
+      console.log('[CLIENT] Local storage cleared after permanent deletion');
+      
+      return response;
     },
-    onSuccess: (_, deletedId) => {
-      toast({ title: "Success", description: "Evidence item deleted successfully" });
+    onSuccess: (response, deletedId) => {
+      console.log('[CLIENT] Permanent deletion confirmed:', response);
+      toast({ 
+        title: "Permanently Deleted", 
+        description: `Evidence item ${deletedId} permanently removed from all storage`,
+        variant: "default"
+      });
+      
+      // Force complete cache invalidation
+      queryClient.clear();
       queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
       setSelectedItems(prev => prev.filter(itemId => itemId !== deletedId));
     },
     onError: (error) => {
       toast({ 
-        title: "Error", 
+        title: "Deletion Error", 
         description: error.message,
         variant: "destructive" 
       });

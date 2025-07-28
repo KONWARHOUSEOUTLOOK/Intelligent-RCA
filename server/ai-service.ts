@@ -147,7 +147,7 @@ export class AIService {
 
     const encryptedKey = this.encrypt(data.apiKey);
     
-    return await investigationStorage.createAiSettings({
+    return await investigationStorage.saveAiSettings({
       provider: data.provider,
       encryptedApiKey: encryptedKey,
       isActive: data.isActive,

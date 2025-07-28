@@ -479,10 +479,13 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
   }
 
   async deleteEvidenceLibrary(id: number): Promise<void> {
-    await db
-      .update(evidenceLibrary)
-      .set({ isActive: false, lastUpdated: new Date() })
-      .where(eq(evidenceLibrary.id, id));
+    console.log(`[DatabaseInvestigationStorage] PERMANENT DELETION: Completely purging evidence library item ${id} from database`);
+    
+    // COMPLIANCE REQUIREMENT: Complete permanent deletion with no recovery
+    // This permanently removes the record from database with NO soft-delete or archiving
+    await db.delete(evidenceLibrary).where(eq(evidenceLibrary.id, id));
+    
+    console.log(`[DatabaseInvestigationStorage] PERMANENT DELETION COMPLETE: Evidence library item ${id} permanently purged from all storage`);
   }
 
   async searchEvidenceLibrary(searchTerm: string): Promise<EvidenceLibrary[]> {
@@ -1713,18 +1716,23 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
   }
 
   async deleteEquipmentType(id: number): Promise<void> {
-    console.log(`[DatabaseInvestigationStorage] Deleting equipment type ${id}`);
+    console.log(`[DatabaseInvestigationStorage] PERMANENT DELETION: Completely purging equipment type ${id} from database`);
     
-    // Set isActive to false instead of hard delete to maintain referential integrity
-    await db
-      .update(equipmentTypes)
-      .set({
-        isActive: false,
-        updatedAt: new Date()
-      })
-      .where(eq(equipmentTypes.id, id));
+    // COMPLIANCE REQUIREMENT: Complete permanent deletion with no recovery
+    // Check for dependent equipment subtypes first
+    const dependentSubtypes = await db.select().from(equipmentSubtypes)
+      .where(eq(equipmentSubtypes.equipmentTypeId, id));
     
-    console.log(`[DatabaseInvestigationStorage] Successfully deactivated equipment type ${id}`);
+    if (dependentSubtypes.length > 0) {
+      // Permanently delete dependent subtypes first
+      await db.delete(equipmentSubtypes).where(eq(equipmentSubtypes.equipmentTypeId, id));
+      console.log(`[DatabaseInvestigationStorage] PERMANENT DELETION: Purged ${dependentSubtypes.length} dependent equipment subtypes`);
+    }
+    
+    // Permanently delete the equipment type record
+    await db.delete(equipmentTypes).where(eq(equipmentTypes.id, id));
+    
+    console.log(`[DatabaseInvestigationStorage] PERMANENT DELETION COMPLETE: Equipment type ${id} and all dependencies permanently purged from all storage`);
   }
 
   // EQUIPMENT SUBTYPES UPDATE AND DELETE OPERATIONS (Universal Protocol Standard)

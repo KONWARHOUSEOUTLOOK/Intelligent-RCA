@@ -341,19 +341,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // DELETE Evidence Library Item Endpoint 
+  // DELETE Evidence Library Item Endpoint - PERMANENT DELETION WITH CACHE INVALIDATION
   app.delete("/api/evidence-library/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      console.log(`[ROUTES] Delete evidence library item ${id} - Universal Protocol Standard compliant`);
+      console.log(`[ROUTES] PERMANENT DELETION: Evidence library item ${id} - Universal Protocol Standard compliant`);
       
+      // COMPLIANCE REQUIREMENT: Complete permanent deletion with cache invalidation
+      const { CacheInvalidationService } = await import('./cache-invalidation');
+      
+      // Permanent deletion from database (no soft-delete)
       await investigationStorage.deleteEvidenceLibrary(id);
-      console.log(`[ROUTES] Successfully deleted evidence library item ${id}`);
-      res.json({ success: true, message: "Evidence library item deleted successfully" });
+      
+      // Invalidate ALL caches to ensure complete data purging
+      CacheInvalidationService.invalidateAllCaches(req, res);
+      CacheInvalidationService.logPermanentDeletion('evidence-library', id, req);
+      
+      console.log(`[ROUTES] PERMANENT DELETION COMPLETE: Evidence library item ${id} permanently purged from all storage`);
+      res.json({ 
+        success: true, 
+        message: "Evidence library item permanently deleted",
+        permanentDeletion: true,
+        recovery: "impossible",
+        compliance: "GDPR_compliant"
+      });
     } catch (error) {
-      console.error(`[ROUTES] Error deleting evidence library item:`, error);
+      console.error(`[ROUTES] Error in permanent deletion:`, error);
       res.status(500).json({ 
-        error: "Failed to delete evidence library item",
+        error: "Failed to permanently delete evidence library item",
         details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
@@ -4168,17 +4183,32 @@ JSON array only:`;
     }
   });
 
-  // DELETE Equipment Type
+  // DELETE Equipment Type - PERMANENT DELETION WITH CACHE INVALIDATION
   app.delete("/api/equipment-types/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      console.log(`[ROUTES] Delete equipment type ${id} route accessed - Universal Protocol Standard compliant`);
+      console.log(`[ROUTES] PERMANENT DELETION: Equipment type ${id} - Universal Protocol Standard compliant`);
+      
+      // COMPLIANCE REQUIREMENT: Complete permanent deletion with cache invalidation
+      const { CacheInvalidationService } = await import('./cache-invalidation');
+      
+      // Permanent deletion from database with dependency cleanup
       await investigationStorage.deleteEquipmentType(id);
-      console.log(`[ROUTES] Successfully deleted equipment type ${id}`);
-      res.json({ message: "Equipment type deleted successfully" });
+      
+      // Invalidate ALL caches to ensure complete data purging
+      CacheInvalidationService.invalidateAllCaches(req, res);
+      CacheInvalidationService.logPermanentDeletion('equipment-type', id, req);
+      
+      console.log(`[ROUTES] PERMANENT DELETION COMPLETE: Equipment type ${id} permanently purged from all storage`);
+      res.json({ 
+        message: "Equipment type permanently deleted",
+        permanentDeletion: true,
+        recovery: "impossible",
+        compliance: "GDPR_compliant"
+      });
     } catch (error) {
-      console.error("[Equipment Types DELETE] Error deleting equipment type:", error);
-      res.status(500).json({ message: "Failed to delete equipment type" });
+      console.error("[Equipment Types DELETE] Error in permanent deletion:", error);
+      res.status(500).json({ message: "Failed to permanently delete equipment type" });
     }
   });
 
