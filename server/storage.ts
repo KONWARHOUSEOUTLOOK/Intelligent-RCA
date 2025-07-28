@@ -349,7 +349,7 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
         .insert(aiSettings)
         .values({
           provider: data.provider,
-          model: data.model || (data.provider === 'openai' ? 'gpt-4' : data.provider),
+          model: data.model || UniversalAIConfig.getDefaultModel(),
           encryptedApiKey: encryptedKey,
           isActive: data.isActive,
           createdBy: data.createdBy,

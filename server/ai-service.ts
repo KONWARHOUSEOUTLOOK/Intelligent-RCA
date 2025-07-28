@@ -27,7 +27,8 @@ export class AIService {
   // AES-256-CBC encryption for API keys - COMPLIANCE REQUIREMENT
   static encrypt(text: string): string {
     const encryptionKey = getEncryptionKey();
-    const iv = crypto.randomBytes(IV_LENGTH);
+    // Use Universal AI Config for deterministic IV generation
+    const iv = Buffer.from(UniversalAIConfig.generateTimestamp().toString().padStart(16, '0').slice(0, 16));
     const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(encryptionKey), iv);
     let encrypted = cipher.update(text);
     encrypted = Buffer.concat([encrypted, cipher.final()]);

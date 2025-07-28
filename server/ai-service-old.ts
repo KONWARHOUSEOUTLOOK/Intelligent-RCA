@@ -219,7 +219,7 @@ export class AIService {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4", // Use fixed model to avoid activeConfig undefined error
+        model: UniversalAIConfig.getDefaultModel(), // Use Universal AI Config dynamic model selection
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: prompt }

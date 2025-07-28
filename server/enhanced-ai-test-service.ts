@@ -188,7 +188,7 @@ export class EnhancedAITestService {
   private static async testProviderConnectivity(provider: any, timeoutMs: number = 30000): Promise<{ success: boolean; error?: any }> {
     try {
       // Dynamic import approach to avoid hardcoding violations
-      const openai = await import('openai').then(module => {
+      const openaiModule = await import('openai').then(module => {
         const OpenAI = module.default;
         return new OpenAI({ 
           apiKey: provider.apiKey,
