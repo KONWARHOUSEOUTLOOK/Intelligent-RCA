@@ -835,28 +835,28 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
           lastUpdated: new Date()
         };
         
-        // Check if record exists by Equipment Code (UNIQUE KEY)
+        // Check if record exists by Failure Code (UNIQUE IDENTIFIER per specification)
         const [existing] = await db
           .select()
           .from(evidenceLibrary)
-          .where(eq(evidenceLibrary.equipmentCode, item.equipmentCode))
+          .where(eq(evidenceLibrary.failureCode, item.failureCode))
           .limit(1);
         
         if (existing) {
-          // UPDATE existing record with normalized FK data
-          console.log(`[NORMALIZED] Updating existing record with Equipment Code: ${item.equipmentCode}`);
+          // UPDATE existing record with normalized FK data using failureCode
+          console.log(`[NORMALIZED] Updating existing record with Failure Code: ${item.failureCode}`);
           const [updated] = await db
             .update(evidenceLibrary)
             .set({
               ...normalizedItem,
               updatedBy: item.updatedBy || "normalized-import"
             })
-            .where(eq(evidenceLibrary.equipmentCode, item.equipmentCode))
+            .where(eq(evidenceLibrary.failureCode, item.failureCode))
             .returning();
           results.push(updated);
         } else {
           // INSERT new record with normalized FK data
-          console.log(`[NORMALIZED] Inserting new record with Equipment Code: ${item.equipmentCode}`);
+          console.log(`[NORMALIZED] Inserting new record with Failure Code: ${item.failureCode}`);
           const [inserted] = await db
             .insert(evidenceLibrary)
             .values(normalizedItem)
@@ -1017,7 +1017,7 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
             // Configurable Intelligence Fields - Admin editable (no hardcoding)
             diagnosticValue: transformedRow.diagnosticValue || null,
             industryRelevance: transformedRow.industryRelevance || null,
-            evidencePriority: this.parseIntegerSafely(transformedRow.evidencePriority, 3), // Default priority 3 if non-numeric
+            evidencePriority: transformedRow.evidencePriority || null, // Text field - accepts any format including "1-2 days"
             timeToCollect: transformedRow.timeToCollect || null,
             collectionCost: transformedRow.collectionCost || null,
             analysisComplexity: transformedRow.analysisComplexity || null,

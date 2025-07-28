@@ -105,8 +105,8 @@ export const evidenceLibrary = pgTable("evidence_library", {
   subtype: varchar("subtype"), // Legacy field for CSV import mapping
   
   componentFailureMode: varchar("component_failure_mode").notNull(), // Component / Failure Mode
-  equipmentCode: varchar("equipment_code").notNull().unique(), // Equipment Code
-  failureCode: varchar("failure_code").notNull(), // Failure Code
+  equipmentCode: varchar("equipment_code").notNull(), // Equipment Code (not unique per specification)
+  failureCode: varchar("failure_code").notNull().unique(), // Failure Code - UNIQUE IDENTIFIER for imports
   riskRankingId: integer("risk_ranking_id"), // FK to riskRankings (normalized)
   riskRanking: varchar("risk_ranking"), // Legacy field for import compatibility
   requiredTrendDataEvidence: text("required_trend_data_evidence"), // Required Trend Data / Evidence
@@ -114,15 +114,15 @@ export const evidenceLibrary = pgTable("evidence_library", {
   attachmentsEvidenceRequired: text("attachments_evidence_required"), // Attachments / Evidence Required
   rootCauseLogic: text("root_cause_logic"), // Root Cause Logic
   
-  // Configurable Intelligence Fields - Admin Editable
-  confidenceLevel: varchar("confidence_level"), // "High", "Medium", "Low" - Admin configurable
-  diagnosticValue: varchar("diagnostic_value"), // "Critical", "Important", "Useful", "Optional" - Admin configurable  
-  industryRelevance: varchar("industry_relevance"), // "Petrochemical", "Power", "Manufacturing", "All" - Admin configurable
-  evidencePriority: integer("evidence_priority").default(3), // 1=Critical, 2=High, 3=Medium, 4=Low - Admin configurable
-  timeToCollect: varchar("time_to_collect"), // "Immediate", "Hours", "Days", "Weeks" - Admin configurable
-  collectionCost: varchar("collection_cost"), // "Low", "Medium", "High", "Very High" - Admin configurable
-  analysisComplexity: varchar("analysis_complexity"), // "Simple", "Moderate", "Complex", "Expert Required" - Admin configurable
-  seasonalFactor: varchar("seasonal_factor"), // "None", "Summer", "Winter", "Shutdown", "Startup" - Admin configurable
+  // All Evidence Fields Must Be Text/String (Per Specification) - Admin Editable
+  confidenceLevel: text("confidence_level"), // Text field - accepts any format - Admin configurable
+  diagnosticValue: text("diagnostic_value"), // Text field - accepts any format - Admin configurable  
+  industryRelevance: text("industry_relevance"), // Text field - accepts any format - Admin configurable
+  evidencePriority: text("evidence_priority"), // TEXT FIELD - accepts ranges, comments, any format - Admin configurable
+  timeToCollect: text("time_to_collect"), // Text field - accepts ranges like "1-2 days" - Admin configurable
+  collectionCost: text("collection_cost"), // Text field - accepts any cost format - Admin configurable
+  analysisComplexity: text("analysis_complexity"), // Text field - accepts any complexity description - Admin configurable
+  seasonalFactor: text("seasonal_factor"), // Text field - accepts any seasonal description - Admin configurable
   relatedFailureModes: text("related_failure_modes"), // Comma-separated equipment codes - Admin editable
   prerequisiteEvidence: text("prerequisite_evidence"), // Evidence needed before this one - Admin editable
   followupActions: text("followup_actions"), // What to do after collecting this evidence - Admin editable
