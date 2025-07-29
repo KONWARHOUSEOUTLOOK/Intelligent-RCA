@@ -652,6 +652,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/equipment-types/active', async (req, res) => {
+    console.log('[ROUTES] Active equipment types route accessed - Universal Protocol Standard compliant');
+    try {
+      const activeEquipmentTypes = await investigationStorage.getActiveEquipmentTypes();
+      console.log(`[ROUTES] Successfully retrieved ${activeEquipmentTypes.length} active equipment types`);
+      res.json(activeEquipmentTypes);
+    } catch (error) {
+      console.error('[ROUTES] Active Equipment Types fetch error:', error);
+      res.status(500).json({ 
+        error: 'Fetch failed', 
+        message: 'Unable to fetch active equipment types',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   app.get('/api/equipment-types/by-group/:groupId', async (req, res) => {
     console.log(`[ROUTES] Equipment types by group route accessed for group ID: ${req.params.groupId} - Universal Protocol Standard compliant`);
     try {

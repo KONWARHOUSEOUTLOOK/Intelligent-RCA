@@ -109,6 +109,10 @@ export interface IInvestigationStorage {
   deleteEquipmentGroup(id: number): Promise<void>;
   toggleEquipmentGroupStatus(id: number): Promise<EquipmentGroup>;
   
+  // Equipment Types operations
+  getAllEquipmentTypes(): Promise<EquipmentType[]>;
+  getActiveEquipmentTypes(): Promise<EquipmentType[]>;
+  
   // Risk Rankings operations
   getAllRiskRankings(): Promise<RiskRanking[]>;
   getActiveRiskRankings(): Promise<RiskRanking[]>;
@@ -1196,6 +1200,18 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
       .orderBy(equipmentTypes.name);
     
     console.log(`[DatabaseInvestigationStorage] Retrieved ${results.length} equipment types with relationships`);
+    return results;
+  }
+
+  async getActiveEquipmentTypes(): Promise<EquipmentType[]> {
+    console.log("[DatabaseInvestigationStorage] Retrieving active equipment types");
+    const results = await db
+      .select()
+      .from(equipmentTypes)
+      .where(eq(equipmentTypes.isActive, true))
+      .orderBy(equipmentTypes.name);
+    
+    console.log(`[DatabaseInvestigationStorage] Retrieved ${results.length} active equipment types`);
     return results;
   }
 
