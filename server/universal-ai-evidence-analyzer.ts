@@ -18,6 +18,7 @@ import Papa from 'papaparse';
  */
 
 import { investigationStorage } from './storage';
+import { DynamicAIConfig } from './dynamic-ai-config';
 import { UniversalAIConfig } from './universal-ai-config';
 import { spawn } from 'child_process';
 
@@ -78,10 +79,14 @@ export class UniversalAIEvidenceAnalyzer {
       const providerName = aiSettings.provider.toLowerCase();
       const dynamicProviderName = process.env.DYNAMIC_PROVIDER_NAME || aiSettings.provider;
       if (providerName === dynamicProviderName.toLowerCase()) {
-        const OpenAI = await import('openai').then(mod => mod.default);
-        this.aiService = new OpenAI({
-          apiKey: decryptedKey
+        // Use DynamicAIConfig for proper admin-driven configuration
+        const aiClient = await DynamicAIConfig.createAIClient({
+          provider: aiSettings.provider,
+          model: aiSettings.model,
+          apiKey: decryptedKey,
+          isActive: aiSettings.isActive
         });
+        this.aiService = aiClient;
       }
       // Add other providers as needed - NO HARDCODING
       

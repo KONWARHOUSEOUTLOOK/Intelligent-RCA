@@ -116,8 +116,10 @@ export class DynamicAIConfig {
       // Dynamic import based on provider (NO HARDCODING)
       const dynamicProviderName = process.env.DYNAMIC_PROVIDER_NAME || config.provider;
       if (config.provider.toLowerCase() === dynamicProviderName.toLowerCase()) {
-        const { OpenAI } = await import('openai');
-        return new OpenAI({
+        // Use admin-configured provider modules only
+        const providerModule = await import(config.provider.toLowerCase());
+        const ProviderClass = providerModule.default || providerModule.OpenAI;
+        return new ProviderClass({
           apiKey: config.apiKey
         });
       }

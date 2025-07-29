@@ -14,6 +14,7 @@
 // Dynamic OpenAI import - NO HARDCODED REFERENCES
 // Import moved to dynamic factory pattern to avoid hardcoding violations
 import { investigationStorage } from './storage';
+import { DynamicAIConfig } from './dynamic-ai-config';
 import { AIStatusMonitor } from './ai-status-monitor';
 import { UniversalAIConfig } from './universal-ai-config';
 import { validateLLMSecurity } from './llm-security-validator';
@@ -187,18 +188,17 @@ export class EnhancedAITestService {
    */
   private static async testProviderConnectivity(provider: any, timeoutMs: number = 30000): Promise<{ success: boolean; error?: any }> {
     try {
-      // Dynamic import approach to avoid hardcoding violations
-      const dynamicModule = await import('openai').then(module => {
-        const OpenAI = module.default;
-        return new OpenAI({ 
-          apiKey: provider.apiKey,
-          timeout: timeoutMs
-        });
+      // Use DynamicAIConfig for admin-configured provider testing
+      const aiClient = await DynamicAIConfig.createAIClient({
+        provider: provider.provider,
+        model: provider.model,
+        apiKey: provider.apiKey,
+        isActive: provider.isActive
       });
       
       // Test with a simple API call  
       const response = await Promise.race([
-        dynamicModule.models ? dynamicModule.models.list() : Promise.resolve({ data: [] }),
+        aiClient.models ? aiClient.models.list() : Promise.resolve({ data: [] }),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
         )
