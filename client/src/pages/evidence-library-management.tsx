@@ -2220,5 +2220,6 @@ export default function EvidenceLibraryManagement() {
         </Card>
       </div>
     </div>
+    </div>
   );
 }
