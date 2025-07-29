@@ -30,6 +30,11 @@ const incidentSchema = z.object({
   priority: z.enum(["Low", "Medium", "High", "Critical"]),
   immediateActions: z.string().optional(),
   safetyImplications: z.string().optional(),
+  // Enhanced AI Context Fields for better hypothesis generation
+  operatingParameters: z.string().optional(),
+  issueFrequency: z.enum(["First", "Recurring", "Unknown"]).optional(),
+  issueSeverity: z.enum(["Low", "Medium", "High", "Critical"]).optional(),
+  initialContextualFactors: z.string().optional(),
   // Sequence of Events fields (NO HARDCODING)
   sequenceOfEvents: z.string().optional(),
   sequenceOfEventsFiles: z.array(z.string()).optional(),
@@ -100,6 +105,10 @@ export default function IncidentReporting() {
       priority: "Medium",
       immediateActions: "",
       safetyImplications: "",
+      operatingParameters: "",
+      issueFrequency: undefined,
+      issueSeverity: undefined,
+      initialContextualFactors: "",
       sequenceOfEvents: "",
       sequenceOfEventsFiles: [],
       reportableStatus: "not_reportable",
@@ -383,6 +392,102 @@ export default function IncidentReporting() {
                               <SelectItem value="Critical">Critical</SelectItem>
                             </SelectContent>
                           </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Enhanced AI Context Fields for Better Hypothesis Generation */}
+                <div className="space-y-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-blue-900">Enhanced Context for AI Analysis</h3>
+                  </div>
+                  <p className="text-sm text-blue-700">
+                    These fields provide additional context to improve AI hypothesis generation quality.
+                  </p>
+
+                  <FormField
+                    control={form.control}
+                    name="operatingParameters"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Operating Parameters at Incident Time (Optional, but recommended)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="e.g., Temperature: 85°C, Pressure: 150 PSI, Flow: 200 GPM, RPM: 1750, Vibration: 2.5 mm/s"
+                            rows={2}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="issueFrequency"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Issue Frequency</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select frequency" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="First">First Occurrence</SelectItem>
+                              <SelectItem value="Recurring">Recurring Issue</SelectItem>
+                              <SelectItem value="Unknown">Unknown</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="issueSeverity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Issue Severity</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select severity" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Low">Low</SelectItem>
+                              <SelectItem value="Medium">Medium</SelectItem>
+                              <SelectItem value="High">High</SelectItem>
+                              <SelectItem value="Critical">Critical</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="initialContextualFactors"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Recent Maintenance or Operational Changes (Optional)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="e.g., Recent bearing replacement 2 weeks ago, process temperature increased last month, new operator training, environmental conditions changed"
+                            rows={2}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

@@ -365,6 +365,12 @@ export const incidents = pgTable("incidents", {
   immediateActions: text("immediate_actions"),
   safetyImplications: text("safety_implications"),
   
+  // Enhanced AI Context Fields (Step 1 - Initial Incident Reporting)
+  operatingParameters: text("operating_parameters"), // Operating conditions at incident time
+  issueFrequency: varchar("issue_frequency"), // First, Recurring, Unknown
+  issueSeverity: varchar("issue_severity"), // Low, Medium, High, Critical
+  initialContextualFactors: text("initial_contextual_factors"), // Recent maintenance, operational changes
+  
   // Sequence of Events fields (NO HARDCODING - Universal RCA Instruction compliance)
   sequenceOfEvents: text("sequence_of_events"), // Chronological narrative of incident
   sequenceOfEventsFiles: jsonb("sequence_of_events_files"), // Uploaded supporting files (logs, DCS exports, timelines)

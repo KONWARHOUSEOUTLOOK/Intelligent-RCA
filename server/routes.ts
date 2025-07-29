@@ -1277,21 +1277,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Incident not found" });
       }
 
-      const incidentText = incident.symptomDescription || incident.description || '';
-      if (!incidentText.trim()) {
+      // Build comprehensive incident context from all available fields
+      const baseDescription = incident.symptomDescription || incident.description || '';
+      if (!baseDescription.trim()) {
         return res.status(400).json({ message: "No incident description available for analysis" });
       }
 
+      // Build enhanced context with new contextual fields
+      let enhancedIncidentContext = `Incident Description: ${baseDescription}`;
+      
+      // Add operating parameters if available
+      if (incident.operatingParameters && incident.operatingParameters.trim()) {
+        enhancedIncidentContext += `\n\nOperating Parameters at Time of Incident: ${incident.operatingParameters}`;
+      }
+      
+      // Add equipment context
+      if (incident.equipmentGroup && incident.equipmentType) {
+        enhancedIncidentContext += `\n\nEquipment: ${incident.equipmentGroup} → ${incident.equipmentType}`;
+        if (incident.equipmentSubtype) {
+          enhancedIncidentContext += ` → ${incident.equipmentSubtype}`;
+        }
+      }
+      
+      // Add frequency and severity context
+      if (incident.issueFrequency) {
+        enhancedIncidentContext += `\n\nFrequency: ${incident.issueFrequency}`;
+      }
+      if (incident.issueSeverity) {
+        enhancedIncidentContext += `\nSeverity: ${incident.issueSeverity}`;
+      }
+      
+      // Add contextual factors
+      if (incident.initialContextualFactors && incident.initialContextualFactors.trim()) {
+        enhancedIncidentContext += `\n\nRecent Changes/Context: ${incident.initialContextualFactors}`;
+      }
+
       // STEP 2: AI-DRIVEN HYPOTHESIS GENERATION using GPT (as per instruction)
-      console.log(`[AI HYPOTHESIS GENERATOR] Using GPT to generate most likely POTENTIAL causes`);
+      console.log(`[AI HYPOTHESIS GENERATOR] Using GPT to generate most likely POTENTIAL causes with enhanced context`);
+      console.log(`[AI HYPOTHESIS GENERATOR] Enhanced context length: ${enhancedIncidentContext.length} characters`);
       console.log(`[AI HYPOTHESIS GENERATOR] STRICT RULE: NO HARD CODING - No preloaded templates or dictionary mappings`);
       
-      // Use protocol-compliant Dynamic AI approach instead of direct import
-      const hypotheses = await DynamicAIConfig.generateHypotheses(incidentText, 'Equipment Analysis');
+      // Use protocol-compliant Dynamic AI approach with enhanced context
+      const hypotheses = await DynamicAIConfig.generateHypotheses(enhancedIncidentContext, 'Enhanced Equipment Analysis');
       const aiResult = {
         hypotheses: hypotheses,
-        incidentAnalysis: `AI-driven analysis of: ${incidentText.substring(0, 200)}...`,
-        confidence: 0.8
+        incidentAnalysis: `Enhanced AI analysis with contextual data: ${enhancedIncidentContext.substring(0, 200)}...`,
+        confidence: 0.8,
+        enhancedContext: {
+          hasOperatingParameters: !!(incident.operatingParameters && incident.operatingParameters.trim()),
+          hasEquipmentContext: !!(incident.equipmentGroup && incident.equipmentType),
+          hasFrequencySeverity: !!(incident.issueFrequency || incident.issueSeverity),
+          hasContextualFactors: !!(incident.initialContextualFactors && incident.initialContextualFactors.trim())
+        }
       };
       
       console.log(`[AI HYPOTHESIS GENERATOR] Generated ${aiResult.hypotheses.length} AI-driven hypotheses for human confirmation`);
