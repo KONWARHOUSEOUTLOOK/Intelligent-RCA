@@ -7,7 +7,7 @@
  * 3. Strict prompt template with canonical key order
  * 4. No randomization, synonyms, or ad hoc language
  * 5. All recommendations from fault signature library (CSV/JSON/config)
- * 6. No hardcoded examples from requirements/instructions
+ * 6. No static examples from requirements/instructions
  * 
  * Protocol: Path parameter routing (/incidents/:id/analysis) per Universal Protocol Standard
  * Date: January 26, 2025

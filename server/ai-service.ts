@@ -11,6 +11,7 @@
 
 import crypto from "crypto";
 import { investigationStorage } from "./storage";
+import { DynamicAIConfig } from "./dynamic-ai-config";
 
 const IV_LENGTH = 16;
 
@@ -27,8 +28,8 @@ export class AIService {
   // AES-256-CBC encryption for API keys - COMPLIANCE REQUIREMENT
   static encrypt(text: string): string {
     const encryptionKey = getEncryptionKey();
-    // Use Universal AI Config for deterministic IV generation
-    const iv = Buffer.from(UniversalAIConfig.generateTimestamp().toString().padStart(16, '0').slice(0, 16));
+    // Use crypto random for IV generation - Protocol compliant
+    const iv = crypto.randomBytes(IV_LENGTH);
     const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(encryptionKey), iv);
     let encrypted = cipher.update(text);
     encrypted = Buffer.concat([encrypted, cipher.final()]);
@@ -114,7 +115,7 @@ export class AIService {
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model: "claude-3-sonnet-20240229",
+          model: "claude-3-haiku-20240307", // Test model only
           max_tokens: 1,
           messages: [{ role: "user", content: "test" }],
         }),

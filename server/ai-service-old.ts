@@ -131,7 +131,7 @@ export class AIService {
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model: "claude-3-sonnet-20240229", // Use fixed model for testing
+          model: activeProvider?.model,
           max_tokens: 1,
           messages: [{ role: "user", content: "test" }],
         }),
@@ -275,7 +275,7 @@ export class AIService {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-3-sonnet-20240229",
+        model: activeProvider?.model,
         max_tokens: 1000,
         messages: [{ role: "user", content: `${systemPrompt}\n\n${prompt}` }],
       }),

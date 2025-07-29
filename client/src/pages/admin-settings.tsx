@@ -21,7 +21,7 @@ export default function AdminSettings() {
   const [formData, setFormData] = useState({
     provider: "", // Dynamic provider selection - NO HARDCODING
     apiKey: "",
-    model: "gpt-4o",
+    model: "",
     isActive: false,
     createdBy: 1, // Database-driven admin user ID
     testStatus: ""
@@ -547,7 +547,7 @@ export default function AdminSettings() {
   const getProviderName = (provider: string) => {
     // Dynamic provider name mapping - Universal Protocol Standard compliant
     const providerNames: Record<string, string> = {
-      "openai": "OpenAI",
+
       "gemini": "Google Gemini", 
       "anthropic": "Anthropic"
     };
@@ -656,7 +656,7 @@ export default function AdminSettings() {
                 </SelectTrigger>
                 <SelectContent>
                   {/* Dynamic provider options - Universal Protocol Standard compliant */}
-                  <SelectItem value="openai">OpenAI</SelectItem>
+
                   <SelectItem value="gemini">Google Gemini</SelectItem>
                   <SelectItem value="anthropic">Anthropic Claude</SelectItem>
                 </SelectContent>
@@ -762,7 +762,7 @@ export default function AdminSettings() {
                       {setting.lastTestedAt ? new Date(setting.lastTestedAt).toLocaleDateString() : "Never"}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {new Date(setting.createdAt).toLocaleDateString()}
+                      {setting.createdAt ? new Date(setting.createdAt).toLocaleDateString() : "Unknown"}
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
@@ -919,7 +919,7 @@ export default function AdminSettings() {
                                   onClick={() => {
                                     updateEquipmentGroupMutation.mutate({
                                       id: group.id,
-                                      data: { name: editingEquipmentGroup.name, isActive: group.isActive }
+                                      data: { name: editingEquipmentGroup?.name || '', isActive: group.isActive }
                                     });
                                   }}
                                   disabled={updateEquipmentGroupMutation.isPending}
@@ -1050,12 +1050,12 @@ export default function AdminSettings() {
                           {editingRiskRanking?.id === ranking.id ? (
                             <Input
                               value={editingRiskRanking.label}
-                              onChange={(e) => setEditingRiskRanking({ ...editingRiskRanking, label: e.target.value })}
+                              onChange={(e) => setEditingRiskRanking({ id: editingRiskRanking?.id || 0, label: e.target.value })}
                               onKeyPress={(e) => {
                                 if (e.key === 'Enter') {
                                   updateRiskRankingMutation.mutate({
                                     id: ranking.id,
-                                    data: { label: editingRiskRanking.label, isActive: ranking.isActive }
+                                    data: { label: editingRiskRanking?.label || '', isActive: ranking.isActive }
                                   });
                                 }
                               }}
@@ -1081,7 +1081,7 @@ export default function AdminSettings() {
                                   onClick={() => {
                                     updateRiskRankingMutation.mutate({
                                       id: ranking.id,
-                                      data: { label: editingRiskRanking.label, isActive: ranking.isActive }
+                                      data: { label: editingRiskRanking?.label || '', isActive: ranking.isActive }
                                     });
                                   }}
                                   disabled={updateRiskRankingMutation.isPending}

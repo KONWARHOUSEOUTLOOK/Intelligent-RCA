@@ -216,7 +216,7 @@ export function IntelligentEvidenceInterface({
             Intelligent Evidence Collection
           </CardTitle>
           <CardDescription>
-            Keyword-filtered failure modes based on incident description. No hardcoded logic.
+            Keyword-filtered failure modes based on incident description. Dynamic logic only.
           </CardDescription>
         </CardHeader>
         <CardContent>
