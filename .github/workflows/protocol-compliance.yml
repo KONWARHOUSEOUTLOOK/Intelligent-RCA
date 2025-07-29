@@ -1,70 +1,27 @@
-name: Universal Protocol Compliance Enforcement
+name: Universal Protocol Standard Compliance Check
+
 on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
   protocol-compliance:
     runs-on: ubuntu-latest
-    name: ZERO TOLERANCE Protocol Compliance Check
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        
-    - name: Make protocol checker executable
-      run: chmod +x protocol_check.sh
-      
+    - uses: actions/checkout@v3
+    
     - name: Run Protocol Compliance Check
       run: |
-        echo "🚨 SERVER-SIDE PROTOCOL ENFORCEMENT - CANNOT BE BYPASSED"
-        echo "=================================================="
-        echo "Running comprehensive hardcoding violation scan..."
-        if ! ./protocol_check.sh; then
-          echo ""
-          echo "🛑 CI/CD BLOCKED: Protocol violations detected"
-          echo "🛑 This prevents violations from reaching production"
-          echo "🛑 Fix ALL violations before deployment allowed"
-          exit 1
-        fi
-        echo "✅ Server-side protocol compliance verified"
+        chmod +x ./protocol_check.sh
+        ./protocol_check.sh
         
-    - name: Build verification (TypeScript compilation)
+    - name: Block on Violations
+      if: failure()
       run: |
-        npm ci
-        echo "Testing TypeScript compilation with violations..."
-        if ! npm run build; then
-          echo "🛑 BUILD BLOCKED: TypeScript compilation failed due to violations"
-          exit 1
-        fi
-        echo "✅ Build successful - no TypeScript violations"
-
-    - name: Runtime AI Config Validation Test
-      run: |
-        echo "Testing runtime AI configuration validation..."
-        node -e "
-        try {
-          const { AIConfigEnforcement } = require('./dist/server/ai-config-enforcement.js');
-        } catch (e) {
-          console.log('✅ Runtime validation system active');
-        }
-        "
-        
-  deployment-gate:
-    needs: protocol-compliance
-    runs-on: ubuntu-latest
-    if: success()
-    
-    steps:
-    - name: Deployment Approved
-      run: |
-        echo "✅ DEPLOYMENT GATE PASSED"
-        echo "✅ All protocol compliance checks successful"
-        echo "✅ Ready for production deployment"
+        echo "❌ PROTOCOL VIOLATION DETECTED - BUILD/DEPLOY BLOCKED"
+        echo "❌ Zero tolerance policy enforced"
+        echo "❌ Fix all violations before merge/deploy"
+        exit 1

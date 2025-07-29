@@ -156,6 +156,20 @@ app.use((req, res, next) => {
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
   
+  // UNIVERSAL PROTOCOL STANDARD RUNTIME ENFORCEMENT
+  const { execSync } = require('child_process');
+  
+  try {
+    console.log('🔍 Running Protocol Compliance Check at startup...');
+    execSync('./protocol_check.sh', { stdio: 'inherit' });
+    console.log('✅ Protocol compliance verified at startup');
+  } catch (error) {
+    console.error('❌ PROTOCOL VIOLATION DETECTED AT RUNTIME - SERVER EXITING');
+    console.error('❌ Zero tolerance policy enforced');
+    console.error('❌ Fix all violations before running server');
+    process.exit(1);
+  }
+
   // Proper server startup with error handling
   server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
