@@ -44,12 +44,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface EquipmentType {
+interface EvidenceLibraryItem {
+  id: number;
+  equipmentGroup: string;
   equipmentType: string;
-  iso14224Code: string;
-  subtypes: string[];
-  lastUpdated: string;
-  updatedBy: string;
+  subtype?: string;
+  componentFailureMode: string;
+  equipmentCode: string;
+  failureCode: string;
+  riskRanking: string;
+  requiredTrendDataEvidence?: string;
+  aiOrInvestigatorQuestions?: string;
+  attachmentsEvidenceRequired?: string;
+  rootCauseLogic?: string;
+  confidenceLevel?: string;
+  diagnosticValue?: string;
+  industryRelevance?: string;
+  evidencePriority?: string;
+  primaryRootCause?: string;
+  contributingFactor?: string;
+  isActive?: boolean;
+  lastUpdated?: string;
+  updatedBy?: string;
 }
 
 interface TrendRequirement {
@@ -95,33 +111,36 @@ export default function EvidenceLibraryAdmin() {
   const [filterByCategory, setFilterByCategory] = useState<string>("all");
   const [filterByLastUpdated, setFilterByLastUpdated] = useState<string>("all");
 
-  // Fetch all equipment types - using default queryFn pattern
-  const { data: equipmentTypes, isLoading, error } = useQuery({
-    queryKey: ['/api/evidence-library/equipment-types'],
+  // Fetch all evidence library items - using default queryFn pattern
+  const { data: evidenceLibraryData, isLoading, error } = useQuery({
+    queryKey: ['/api/evidence-library'],
   });
 
   console.log("Query State:", { 
     isLoading, 
     error: error?.message, 
-    hasData: !!equipmentTypes,
-    dataKeys: equipmentTypes ? Object.keys(equipmentTypes) : [],
-    equipmentTypesLength: equipmentTypes?.equipmentTypes?.length || 0 
+    hasData: !!evidenceLibraryData,
+    dataKeys: evidenceLibraryData ? Object.keys(evidenceLibraryData) : [],
+    itemCount: Array.isArray(evidenceLibraryData) ? evidenceLibraryData.length : 0 
   });
 
   // Smart Search and Filtering Logic
   const filteredAndSortedEquipment = useMemo(() => {
-    if (!equipmentTypes?.equipmentTypes) return [];
+    if (!Array.isArray(evidenceLibraryData)) return [];
     
-    let filtered = equipmentTypes.equipmentTypes;
+    let filtered = evidenceLibraryData;
     
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter((equipment: EquipmentType) => {
+      filtered = filtered.filter((item: EvidenceLibraryItem) => {
         const searchableText = [
-          equipment.equipmentType,
-          equipment.iso14224Code,
-          ...equipment.subtypes
+          item.equipmentGroup,
+          item.equipmentType,
+          item.subtype,
+          item.componentFailureMode,
+          item.equipmentCode,
+          item.failureCode
         ].join(' ').toLowerCase();
         
         return searchableText.includes(query);
@@ -130,16 +149,18 @@ export default function EvidenceLibraryAdmin() {
     
     // Apply category filter
     if (filterBy !== "all") {
-      filtered = filtered.filter((equipment: EquipmentType) => {
+      filtered = filtered.filter((item: EvidenceLibraryItem) => {
         switch (filterBy) {
           case "rotating":
-            return ["Pumps", "Compressors", "Turbines", "Electric Motors", "Fans / Blowers", "Generators"].includes(equipment.equipmentType);
-          case "static":
-            return ["Heat Exchangers", "Pressure Vessels", "Tanks", "Piping", "Columns/Towers", "Filters/Strainers"].includes(equipment.equipmentType);
+            return item.equipmentGroup === "Rotating Equipment";
           case "electrical":
-            return ["Electric Motors", "Generators", "Transformers", "Switchgear"].includes(equipment.equipmentType);
-          case "process":
-            return ["Heat Exchangers", "Columns/Towers", "Pressure Vessels", "Filters/Strainers", "Tanks"].includes(equipment.equipmentType);
+            return item.equipmentGroup === "Electrical";
+          case "control":
+            return item.equipmentGroup === "Control Valves";
+          case "environmental":
+            return item.equipmentGroup === "Environmental";
+          case "instrumentation":
+            return item.equipmentGroup === "Instrumentation";
           default:
             return true;
         }
@@ -148,18 +169,18 @@ export default function EvidenceLibraryAdmin() {
     
     // Apply category filter (advanced)
     if (filterByCategory !== "all") {
-      filtered = filtered.filter((equipment: EquipmentType) => {
+      filtered = filtered.filter((item: EvidenceLibraryItem) => {
         switch (filterByCategory) {
           case "rotating":
-            return ["Pumps", "Compressors", "Turbines", "Electric Motors", "Fans / Blowers", "Generators", "Agitators / Mixers"].includes(equipment.equipmentType);
-          case "static":
-            return ["Heat Exchangers", "Pressure Vessels", "Tanks", "Piping", "Columns/Towers", "Filters/Strainers", "Boilers"].includes(equipment.equipmentType);
+            return item.equipmentGroup === "Rotating Equipment";
           case "electrical":
-            return ["Electric Motors", "Generators", "Transformers", "Switchgear", "UPS/Rectifiers", "Cables/Busbars"].includes(equipment.equipmentType);
-          case "process":
-            return ["Heat Exchangers", "Columns/Towers", "Pressure Vessels", "Filters/Strainers", "Tanks", "Control Valves", "Valves"].includes(equipment.equipmentType);
+            return item.equipmentGroup === "Electrical";
+          case "control":
+            return item.equipmentGroup === "Control Valves";
+          case "environmental":
+            return item.equipmentGroup === "Environmental";
           case "instrumentation":
-            return ["Sensors/Transmitters", "PLCs/DCS Systems", "Analyzers", "Control Valves"].includes(equipment.equipmentType);
+            return item.equipmentGroup === "Instrumentation";
           default:
             return true;
         }
@@ -169,8 +190,8 @@ export default function EvidenceLibraryAdmin() {
     // Apply last updated filter
     if (filterByLastUpdated !== "all") {
       const now = new Date();
-      filtered = filtered.filter((equipment: EquipmentType) => {
-        const updatedDate = new Date(equipment.lastUpdated);
+      filtered = filtered.filter((item: EvidenceLibraryItem) => {
+        const updatedDate = new Date(item.lastUpdated || '');
         const daysDiff = Math.floor((now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60 * 24));
         
         switch (filterByLastUpdated) {
@@ -189,7 +210,7 @@ export default function EvidenceLibraryAdmin() {
     }
     
     // Apply sorting
-    filtered.sort((a: EquipmentType, b: EquipmentType) => {
+    filtered.sort((a: EvidenceLibraryItem, b: EvidenceLibraryItem) => {
       let aValue: string, bValue: string;
       
       switch (sortBy) {
@@ -197,18 +218,18 @@ export default function EvidenceLibraryAdmin() {
           aValue = a.equipmentType;
           bValue = b.equipmentType;
           break;
-        case "iso14224Code":
-          aValue = a.iso14224Code;
-          bValue = b.iso14224Code;
+        case "failureCode":
+          aValue = a.failureCode;
+          bValue = b.failureCode;
           break;
         case "lastUpdated":
-          aValue = a.lastUpdated;
-          bValue = b.lastUpdated;
+          aValue = a.lastUpdated || '';
+          bValue = b.lastUpdated || '';
           break;
-        case "subtypeCount":
-          return sortOrder === "asc" 
-            ? a.subtypes.length - b.subtypes.length
-            : b.subtypes.length - a.subtypes.length;
+        case "riskRanking":
+          aValue = a.riskRanking;
+          bValue = b.riskRanking;
+          break;
         default:
           aValue = a.equipmentType;
           bValue = b.equipmentType;
@@ -219,7 +240,7 @@ export default function EvidenceLibraryAdmin() {
     });
     
     return filtered;
-  }, [equipmentTypes, searchQuery, filterBy, sortBy, sortOrder, filterByCategory, filterByLastUpdated]);
+  }, [evidenceLibraryData, searchQuery, filterBy, sortBy, sortOrder, filterByCategory, filterByLastUpdated]);
 
   // Clear all filters
   const clearFilters = () => {
@@ -392,7 +413,7 @@ export default function EvidenceLibraryAdmin() {
             Evidence Library Administration
           </h1>
           <p className="text-gray-600 mt-2">
-            Manage equipment-specific evidence requirements and AI prompts ({equipmentTypes?.equipmentTypes?.length || 0} equipment types)
+            Manage equipment-specific evidence requirements and AI prompts ({Array.isArray(evidenceLibraryData) ? evidenceLibraryData.length : 0} evidence items)
           </p>
         </div>
         <div className="flex gap-2">
@@ -400,31 +421,39 @@ export default function EvidenceLibraryAdmin() {
             variant="outline"
             onClick={async () => {
               try {
-                if (!equipmentTypes?.equipmentTypes?.length) {
+                if (!Array.isArray(evidenceLibraryData) || !evidenceLibraryData.length) {
                   toast({
                     title: "No Data",
-                    description: "No equipment types to export",
+                    description: "No evidence library items to export",
                     variant: "destructive",
                   });
                   return;
                 }
 
-                // Create CSV header matching user's table format
+                // Create CSV header matching evidence library format
                 const csvHeaders = [
+                  "Equipment Group",
                   "Equipment Type",
-                  "Typical Subtypes / Examples", 
+                  "Component/Failure Mode", 
+                  "Equipment Code",
+                  "Failure Code",
+                  "Risk Ranking",
                   "Required Trend Data",
-                  "AI Prompt Examples",
-                  "Attachments / Evidence Required"
+                  "AI Questions",
+                  "Attachments Required"
                 ];
 
                 // Create CSV rows with actual data
-                const csvRows = equipmentTypes.equipmentTypes.map((equipment: EquipmentType) => [
-                  equipment.equipmentType,
-                  equipment.subtypes.join(', '),
-                  "Comprehensive trend data requirements available",
-                  "Equipment-specific AI prompts configured", 
-                  "Standard attachment requirements defined"
+                const csvRows = evidenceLibraryData.map((item: EvidenceLibraryItem) => [
+                  item.equipmentGroup,
+                  item.equipmentType,
+                  item.componentFailureMode,
+                  item.equipmentCode,
+                  item.failureCode,
+                  item.riskRanking,
+                  item.requiredTrendDataEvidence || '',
+                  item.aiOrInvestigatorQuestions || '',
+                  item.attachmentsEvidenceRequired || ''
                 ]);
 
                 // Convert to CSV format
@@ -438,7 +467,7 @@ export default function EvidenceLibraryAdmin() {
                 const link = document.createElement('a');
                 const url = URL.createObjectURL(blob);
                 link.setAttribute('href', url);
-                link.setAttribute('download', `equipment-types-${new Date().toISOString().split('T')[0]}.csv`);
+                link.setAttribute('download', `evidence-library-${new Date().toISOString().split('T')[0]}.csv`);
                 link.style.visibility = 'hidden';
                 document.body.appendChild(link);
                 link.click();
@@ -447,7 +476,7 @@ export default function EvidenceLibraryAdmin() {
 
                 toast({
                   title: "CSV Export Successful",
-                  description: `Exported ${equipmentTypes.equipmentTypes.length} equipment types to CSV`,
+                  description: `Exported ${evidenceLibraryData.length} evidence library items to CSV`,
                 });
               } catch (error) {
                 console.error('CSV export failed:', error);
@@ -639,9 +668,9 @@ export default function EvidenceLibraryAdmin() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="equipmentType">Equipment Type</SelectItem>
-                      <SelectItem value="iso14224Code">ISO Code</SelectItem>
+                      <SelectItem value="failureCode">Failure Code</SelectItem>
                       <SelectItem value="lastUpdated">Last Updated</SelectItem>
-                      <SelectItem value="subtypeCount">Subtype Count</SelectItem>
+                      <SelectItem value="riskRanking">Risk Ranking</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button
@@ -675,7 +704,7 @@ export default function EvidenceLibraryAdmin() {
                 )}
 
                 <div className="text-sm text-gray-600 ml-auto">
-                  Showing {filteredAndSortedEquipment.length} of {equipmentTypes?.totalCount || equipmentTypes?.equipmentTypes?.length || 0} equipment types
+                  Showing {filteredAndSortedEquipment.length} of {Array.isArray(evidenceLibraryData) ? evidenceLibraryData.length : 0} evidence items
                 </div>
               </div>
 
