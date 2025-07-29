@@ -27,11 +27,11 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 const evidenceFormSchema = z.object({
   equipmentGroupId: z.string().min(1, "Equipment Group is required"),
   equipmentTypeId: z.string().min(1, "Equipment Type is required"),
-  subtype: z.string().optional(),
+  equipmentSubtypeId: z.string().optional(), // FIXED: Use subtypeId for FK relationship
   componentFailureMode: z.string().min(1, "Component/Failure Mode is required"),
   equipmentCode: z.string().min(1, "Equipment Code is required"),
   failureCode: z.string().min(1, "Failure Code is required"),
-  riskRanking: z.string().min(1, "Risk Ranking is required"),
+  riskRankingId: z.string().min(1, "Risk Ranking is required"), // FIXED: Use riskRankingId for FK relationship
   requiredTrendDataEvidence: z.string().min(1, "Required trend data evidence is required"),
   aiOrInvestigatorQuestions: z.string().min(1, "AI/Investigator questions is required"),
   attachmentsEvidenceRequired: z.string().min(1, "Attachments evidence required is required"),
@@ -69,21 +69,44 @@ export default function EvidenceLibraryForm({ item, onSuccess, onCancel }: Evide
     },
   });
 
+  // CRITICAL FIX: Add Risk Rankings query to eliminate hardcoded values
+  const { data: riskRankings = [] } = useQuery({
+    queryKey: ['/api/risk-rankings'],
+    queryFn: async () => {
+      const response = await fetch('/api/risk-rankings');
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
   const form = useForm<EvidenceFormData>({
     resolver: zodResolver(evidenceFormSchema),
     defaultValues: {
       equipmentGroupId: item?.equipmentGroupId?.toString() || "",
       equipmentTypeId: item?.equipmentTypeId?.toString() || "",
-      subtype: item?.subtype || "",
+      equipmentSubtypeId: item?.equipmentSubtypeId?.toString() || "", // FIXED: Use FK ID
       componentFailureMode: item?.componentFailureMode || "",
       equipmentCode: item?.equipmentCode || "",
       failureCode: item?.failureCode || "",
-      riskRanking: item?.riskRanking || "",
+      riskRankingId: item?.riskRankingId?.toString() || "", // FIXED: Use FK ID
       requiredTrendDataEvidence: item?.requiredTrendDataEvidence || "",
       aiOrInvestigatorQuestions: item?.aiOrInvestigatorQuestions || "",
       attachmentsEvidenceRequired: item?.attachmentsEvidenceRequired || "",
       rootCauseLogic: item?.rootCauseLogic || "",
     },
+  });
+
+  // CRITICAL FIX: Add Equipment Subtypes query filtered by selected equipment type
+  const selectedEquipmentTypeId = form.watch('equipmentTypeId');
+  const { data: equipmentSubtypes = [] } = useQuery({
+    queryKey: ['/api/equipment-subtypes/by-type', selectedEquipmentTypeId],
+    queryFn: async () => {
+      if (!selectedEquipmentTypeId) return [];
+      const response = await fetch(`/api/equipment-subtypes/by-type/${selectedEquipmentTypeId}`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!selectedEquipmentTypeId,
   });
 
   // Create/Update mutation
@@ -98,6 +121,8 @@ export default function EvidenceLibraryForm({ item, onSuccess, onCancel }: Evide
           ...data,
           equipmentGroupId: parseInt(data.equipmentGroupId),
           equipmentTypeId: parseInt(data.equipmentTypeId),
+          equipmentSubtypeId: data.equipmentSubtypeId ? parseInt(data.equipmentSubtypeId) : null, // FIXED: Handle optional FK
+          riskRankingId: parseInt(data.riskRankingId), // FIXED: Use FK ID
         }),
       });
     },
@@ -183,17 +208,38 @@ export default function EvidenceLibraryForm({ item, onSuccess, onCancel }: Evide
             )}
           />
 
-          {/* Subtype */}
+          {/* CRITICAL FIX: Subtype now linked to Equipment Type table */}
           <FormField
             control={form.control}
-            name="subtype"
+            name="equipmentSubtypeId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subtype (Optional)</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter equipment subtype" />
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={selectedEquipmentTypeId ? "Select equipment subtype" : "Select equipment type first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {equipmentSubtypes.map((subtype: any) => (
+                        <SelectItem key={subtype.id} value={subtype.id.toString()}>
+                          {subtype.name}
+                        </SelectItem>
+                      ))}
+                      {equipmentSubtypes.length === 0 && selectedEquipmentTypeId && (
+                        <SelectItem value="" disabled>
+                          No subtypes available for this equipment type
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
+                {!selectedEquipmentTypeId && (
+                  <p className="text-sm text-muted-foreground">
+                    Not mapped. Select an Equipment Type first to see available subtypes
+                  </p>
+                )}
               </FormItem>
             )}
           />
@@ -244,10 +290,10 @@ export default function EvidenceLibraryForm({ item, onSuccess, onCancel }: Evide
           />
         </div>
 
-        {/* Risk Ranking */}
+        {/* CRITICAL FIX: Risk Ranking now from admin master table only */}
         <FormField
           control={form.control}
-          name="riskRanking"
+          name="riskRankingId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Risk Ranking</FormLabel>
@@ -257,14 +303,23 @@ export default function EvidenceLibraryForm({ item, onSuccess, onCancel }: Evide
                     <SelectValue placeholder="Select risk ranking" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Critical">Critical</SelectItem>
-                    <SelectItem value="High">High</SelectItem>
-                    <SelectItem value="Medium">Medium</SelectItem>
-                    <SelectItem value="Low">Low</SelectItem>
+                    {riskRankings.map((ranking: any) => (
+                      <SelectItem key={ranking.id} value={ranking.id.toString()}>
+                        {ranking.label}
+                      </SelectItem>
+                    ))}
+                    {riskRankings.length === 0 && (
+                      <SelectItem value="" disabled>
+                        No risk rankings configured in admin section
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </FormControl>
               <FormMessage />
+              <p className="text-sm text-muted-foreground">
+                Values from Risk Ranking master table under admin section - {riskRankings.length} items available
+              </p>
             </FormItem>
           )}
         />
