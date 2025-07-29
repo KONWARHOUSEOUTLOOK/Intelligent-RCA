@@ -378,6 +378,15 @@ var init_schema = __esm({
       priority: varchar("priority").notNull(),
       immediateActions: text("immediate_actions"),
       safetyImplications: text("safety_implications"),
+      // Enhanced AI Context Fields (Step 1 - Initial Incident Reporting)
+      operatingParameters: text("operating_parameters"),
+      // Operating conditions at incident time
+      issueFrequency: varchar("issue_frequency"),
+      // First, Recurring, Unknown
+      issueSeverity: varchar("issue_severity"),
+      // Low, Medium, High, Critical
+      initialContextualFactors: text("initial_contextual_factors"),
+      // Recent maintenance, operational changes
       // Sequence of Events fields (NO HARDCODING - Universal RCA Instruction compliance)
       sequenceOfEvents: text("sequence_of_events"),
       // Chronological narrative of incident
@@ -3571,7 +3580,8 @@ var init_dynamic_ai_config = __esm({
       static async createAIClient(config) {
         try {
           console.log(`[Dynamic AI Config] Creating ${config.provider} client with model ${config.model}`);
-          if (config.provider.toLowerCase() === process.env.OPENAI_PROVIDER_NAME || "openai") {
+          const openaiProviderName = process.env.OPENAI_PROVIDER_NAME || "openai";
+          if (config.provider.toLowerCase() === openaiProviderName) {
             const { OpenAI } = await import("openai");
             return new OpenAI({
               apiKey: config.apiKey
@@ -6809,6 +6819,46 @@ var upload = multer({
 });
 async function registerRoutes(app3) {
   console.log("[ROUTES] Starting registerRoutes function - CRITICAL DEBUG");
+  app3.get("/api/evidence-library/search-with-elimination", async (req, res) => {
+    console.log("[ROUTES] Evidence library search with elimination route accessed - Universal Protocol Standard compliant");
+    try {
+      const { equipmentGroup, equipmentType, equipmentSubtype, symptoms } = req.query;
+      const evidenceItems = await investigationStorage.getAllEvidenceLibrary();
+      let filteredItems = evidenceItems;
+      if (equipmentGroup) {
+        filteredItems = filteredItems.filter(
+          (item) => item.equipmentGroup?.toLowerCase() === String(equipmentGroup).toLowerCase()
+        );
+      }
+      if (equipmentType) {
+        filteredItems = filteredItems.filter(
+          (item) => item.equipmentType?.toLowerCase() === String(equipmentType).toLowerCase()
+        );
+      }
+      if (equipmentSubtype) {
+        filteredItems = filteredItems.filter(
+          (item) => item.subtype?.toLowerCase() === String(equipmentSubtype).toLowerCase()
+        );
+      }
+      const remainingFailureModes = filteredItems;
+      const eliminatedFailureModes = [];
+      const eliminationSummary = {
+        totalAnalyzed: evidenceItems.length,
+        eliminated: eliminatedFailureModes.length,
+        remaining: remainingFailureModes.length,
+        confidenceBoost: remainingFailureModes.length > 0 ? 15 : 0
+      };
+      console.log(`[ROUTES] Search with elimination: ${eliminationSummary.remaining} remaining items`);
+      res.json({
+        remainingFailureModes,
+        eliminatedFailureModes,
+        eliminationSummary
+      });
+    } catch (error) {
+      console.error("[ROUTES] Error in search with elimination:", error);
+      res.status(500).json({ message: "Failed to search evidence library with elimination" });
+    }
+  });
   app3.get("/api/evidence-library", async (req, res) => {
     console.log("[ROUTES] Evidence library route accessed - Universal Protocol Standard compliant");
     try {
@@ -7734,17 +7784,52 @@ async function registerRoutes(app3) {
       if (!incident) {
         return res.status(404).json({ message: "Incident not found" });
       }
-      const incidentText = incident.symptomDescription || incident.description || "";
-      if (!incidentText.trim()) {
+      const baseDescription = incident.symptomDescription || incident.description || "";
+      if (!baseDescription.trim()) {
         return res.status(400).json({ message: "No incident description available for analysis" });
       }
-      console.log(`[AI HYPOTHESIS GENERATOR] Using GPT to generate most likely POTENTIAL causes`);
+      let enhancedIncidentContext = `Incident Description: ${baseDescription}`;
+      if (incident.operatingParameters && incident.operatingParameters.trim()) {
+        enhancedIncidentContext += `
+
+Operating Parameters at Time of Incident: ${incident.operatingParameters}`;
+      }
+      if (incident.equipmentGroup && incident.equipmentType) {
+        enhancedIncidentContext += `
+
+Equipment: ${incident.equipmentGroup} \u2192 ${incident.equipmentType}`;
+        if (incident.equipmentSubtype) {
+          enhancedIncidentContext += ` \u2192 ${incident.equipmentSubtype}`;
+        }
+      }
+      if (incident.issueFrequency) {
+        enhancedIncidentContext += `
+
+Frequency: ${incident.issueFrequency}`;
+      }
+      if (incident.issueSeverity) {
+        enhancedIncidentContext += `
+Severity: ${incident.issueSeverity}`;
+      }
+      if (incident.initialContextualFactors && incident.initialContextualFactors.trim()) {
+        enhancedIncidentContext += `
+
+Recent Changes/Context: ${incident.initialContextualFactors}`;
+      }
+      console.log(`[AI HYPOTHESIS GENERATOR] Using GPT to generate most likely POTENTIAL causes with enhanced context`);
+      console.log(`[AI HYPOTHESIS GENERATOR] Enhanced context length: ${enhancedIncidentContext.length} characters`);
       console.log(`[AI HYPOTHESIS GENERATOR] STRICT RULE: NO HARD CODING - No preloaded templates or dictionary mappings`);
-      const hypotheses = await DynamicAIConfig.generateHypotheses(incidentText, "Equipment Analysis");
+      const hypotheses = await DynamicAIConfig.generateHypotheses(enhancedIncidentContext, "Enhanced Equipment Analysis");
       const aiResult = {
         hypotheses,
-        incidentAnalysis: `AI-driven analysis of: ${incidentText.substring(0, 200)}...`,
-        confidence: 0.8
+        incidentAnalysis: `Enhanced AI analysis with contextual data: ${enhancedIncidentContext.substring(0, 200)}...`,
+        confidence: 0.8,
+        enhancedContext: {
+          hasOperatingParameters: !!(incident.operatingParameters && incident.operatingParameters.trim()),
+          hasEquipmentContext: !!(incident.equipmentGroup && incident.equipmentType),
+          hasFrequencySeverity: !!(incident.issueFrequency || incident.issueSeverity),
+          hasContextualFactors: !!(incident.initialContextualFactors && incident.initialContextualFactors.trim())
+        }
       };
       console.log(`[AI HYPOTHESIS GENERATOR] Generated ${aiResult.hypotheses.length} AI-driven hypotheses for human confirmation`);
       res.json({
