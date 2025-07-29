@@ -358,22 +358,42 @@ export default function IncidentReporting() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {/* Basic Incident Information */}
+                {/* Incident Details - Field 1 */}
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Incident Details</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g., Pump P-101 seal leak" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Initial Observations - Field 2 */}
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Initial Observations</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field} 
+                          placeholder="Describe what was observed, when it was observed, and any initial symptoms..."
+                          rows={4}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Other incident detail fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Incident Title</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g., Pump P-101 seal leak" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
                   <FormField
                     control={form.control}
                     name="priority"
@@ -399,113 +419,87 @@ export default function IncidentReporting() {
                   />
                 </div>
 
-                {/* Enhanced AI Context Fields for Better Hypothesis Generation */}
-                <div className="space-y-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-blue-600" />
-                    <h3 className="text-lg font-semibold text-blue-900">Enhanced Context for AI Analysis</h3>
-                  </div>
-                  <p className="text-sm text-blue-700">
-                    These fields provide additional context to improve AI hypothesis generation quality.
-                  </p>
+                {/* Operating Parameters at Incident Time - Field 4 */}
+                <FormField
+                  control={form.control}
+                  name="operatingParameters"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Operating Parameters at Incident Time</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field} 
+                          placeholder="e.g., Temperature: 85°C, Pressure: 150 PSI, Flow: 200 GPM, RPM: 1750, Vibration: 2.5 mm/s"
+                          rows={2}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
+                {/* Issue Frequency and Issue Severity - Fields 5 & 6 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
-                    name="operatingParameters"
+                    name="issueFrequency"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Operating Parameters at Incident Time (Optional, but recommended)</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            {...field} 
-                            placeholder="e.g., Temperature: 85°C, Pressure: 150 PSI, Flow: 200 GPM, RPM: 1750, Vibration: 2.5 mm/s"
-                            rows={2}
-                          />
-                        </FormControl>
+                        <FormLabel>Issue Frequency</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="First">First Occurrence</SelectItem>
+                            <SelectItem value="Recurring">Recurring Issue</SelectItem>
+                            <SelectItem value="Unknown">Unknown</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="issueFrequency"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Issue Frequency</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select frequency" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="First">First Occurrence</SelectItem>
-                              <SelectItem value="Recurring">Recurring Issue</SelectItem>
-                              <SelectItem value="Unknown">Unknown</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="issueSeverity"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Issue Severity</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select severity" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Low">Low</SelectItem>
-                              <SelectItem value="Medium">Medium</SelectItem>
-                              <SelectItem value="High">High</SelectItem>
-                              <SelectItem value="Critical">Critical</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
                   <FormField
                     control={form.control}
-                    name="initialContextualFactors"
+                    name="issueSeverity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Recent Maintenance or Operational Changes (Optional)</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            {...field} 
-                            placeholder="e.g., Recent bearing replacement 2 weeks ago, process temperature increased last month, new operator training, environmental conditions changed"
-                            rows={2}
-                          />
-                        </FormControl>
+                        <FormLabel>Issue Severity</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select severity" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Low">Low</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="High">High</SelectItem>
+                            <SelectItem value="Critical">Critical</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
 
+                {/* Recent Maintenance or Operational Changes - Field 7 */}
                 <FormField
                   control={form.control}
-                  name="description"
+                  name="initialContextualFactors"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Incident Description</FormLabel>
+                      <FormLabel>Recent Maintenance or Operational Changes</FormLabel>
                       <FormControl>
                         <Textarea 
                           {...field} 
-                          placeholder="Describe what happened, when it was observed, and initial symptoms..."
-                          rows={4}
+                          placeholder="e.g., Recent bearing replacement 2 weeks ago, process temperature increased last month, new operator training, environmental conditions changed"
+                          rows={2}
                         />
                       </FormControl>
                       <FormMessage />
