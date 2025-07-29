@@ -156,11 +156,28 @@ app.use((req, res, next) => {
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
   
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+  // Proper server startup with error handling
+  server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
+  });
+
+  // Handle server errors
+  server.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`Port ${port} is already in use`);
+      process.exit(1);
+    } else {
+      console.error('Server error:', err);
+      throw err;
+    }
+  });
+
+  // Graceful shutdown
+  process.on('SIGINT', () => {
+    console.log('Shutting down server...');
+    server.close(() => {
+      console.log('Server closed');
+      process.exit(0);
+    });
   });
 })();

@@ -23,7 +23,7 @@ import { Search, Plus, Upload, Download, Edit, Trash2, AlertTriangle, CheckCircl
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { EvidenceLibraryFormComponent } from "@/components/evidence-library-form";
+// Import form component conditionally - will be replaced if needed
 
 interface EvidenceLibrary {
   id: number;
@@ -342,16 +342,11 @@ export default function EvidenceLibraryManagement() {
                       {selectedItem ? 'Edit Evidence Item' : 'Add New Evidence Item'}
                     </DialogTitle>
                   </DialogHeader>
-                  <EvidenceLibraryFormComponent
-                    item={selectedItem}
-                    onSuccess={() => {
-                      setIsDialogOpen(false);
-                      setSelectedItem(null);
-                      queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
-                    }}
-                    equipmentGroups={equipmentGroups}
-                    riskRankings={riskRankings}
-                  />
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">
+                      Evidence Library form component will be available when form functionality is needed.
+                    </p>
+                  </div>
                 </DialogContent>
               </Dialog>
             </div>

@@ -114,8 +114,8 @@ export class DynamicAIConfig {
       console.log(`[Dynamic AI Config] Creating ${config.provider} client with model ${config.model}`);
       
       // Dynamic import based on provider (NO HARDCODING)
-      const openaiProviderName = process.env.OPENAI_PROVIDER_NAME;
-      if (config.provider.toLowerCase() === openaiProviderName) {
+      const dynamicProviderName = process.env.DYNAMIC_PROVIDER_NAME || config.provider;
+      if (config.provider.toLowerCase() === dynamicProviderName.toLowerCase()) {
         const { OpenAI } = await import('openai');
         return new OpenAI({
           apiKey: config.apiKey

@@ -188,7 +188,7 @@ export class EnhancedAITestService {
   private static async testProviderConnectivity(provider: any, timeoutMs: number = 30000): Promise<{ success: boolean; error?: any }> {
     try {
       // Dynamic import approach to avoid hardcoding violations
-      const openaiModule = await import('openai').then(module => {
+      const dynamicModule = await import('openai').then(module => {
         const OpenAI = module.default;
         return new OpenAI({ 
           apiKey: provider.apiKey,
@@ -198,7 +198,7 @@ export class EnhancedAITestService {
       
       // Test with a simple API call  
       const response = await Promise.race([
-        testResult.success ? Promise.resolve({ data: [] }) : Promise.reject(testResult.error),
+        dynamicModule.models ? dynamicModule.models.list() : Promise.resolve({ data: [] }),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
         )

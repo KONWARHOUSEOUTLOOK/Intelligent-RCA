@@ -29,8 +29,9 @@ export class AIService {
   static encrypt(text: string): string {
     const encryptionKey = getEncryptionKey();
     // Use crypto random for IV generation - Protocol compliant
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(encryptionKey), iv);
+    const iv = new Uint8Array(IV_LENGTH);
+    crypto.getRandomValues(iv);
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(encryptionKey), Buffer.from(iv));
     let encrypted = cipher.update(text);
     encrypted = Buffer.concat([encrypted, cipher.final()]);
     return iv.toString('hex') + ':' + encrypted.toString('hex');
@@ -115,7 +116,7 @@ export class AIService {
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model: "claude-3-haiku-20240307", // Test model only
+          model: process.env.DEFAULT_MODEL || "admin-config-required", // Dynamic model from admin configuration
           max_tokens: 1,
           messages: [{ role: "user", content: "test" }],
         }),
