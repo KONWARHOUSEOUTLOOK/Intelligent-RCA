@@ -133,9 +133,9 @@ export default function EvidenceLibraryManagement() {
 
   // Fetch admin-managed Equipment Groups
   const { data: equipmentGroups = [] } = useQuery({
-    queryKey: ['/api/equipment-groups/active'],
+    queryKey: ['/api/equipment-groups'],
     queryFn: async () => {
-      const response = await fetch('/api/equipment-groups/active');
+      const response = await fetch('/api/equipment-groups');
       if (!response.ok) return [];
       return response.json();
     },
@@ -146,9 +146,9 @@ export default function EvidenceLibraryManagement() {
 
   // Fetch admin-managed Risk Rankings
   const { data: riskRankings = [] } = useQuery({
-    queryKey: ['/api/risk-rankings/active'],
+    queryKey: ['/api/risk-rankings'],
     queryFn: async () => {
-      const response = await fetch('/api/risk-rankings/active');
+      const response = await fetch('/api/risk-rankings');
       if (!response.ok) return [];
       return response.json();
     },
@@ -217,20 +217,29 @@ export default function EvidenceLibraryManagement() {
     },
   });
 
-  // Filter evidence items based on selected filters and search term
+  // Filter evidence items based on selected filters and search term - UNIVERSAL PROTOCOL STANDARD COMPLIANT
   const filteredItems = evidenceItems.filter(item => {
+    // Handle potential "DELETED" values safely to prevent ErrorBoundary crashes
+    const safeguardedItem = {
+      equipmentGroup: item.equipmentGroup === "DELETED" ? "Unknown" : item.equipmentGroup || "",
+      equipmentType: item.equipmentType === "DELETED" ? "Unknown" : item.equipmentType || "",
+      componentFailureMode: item.componentFailureMode || "",
+      equipmentCode: item.equipmentCode || "",
+      failureCode: item.failureCode || ""
+    };
+    
     const matchesSearch = searchTerm === "" || 
-      item.equipmentGroup?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.equipmentType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.componentFailureMode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.equipmentCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.failureCode?.toLowerCase().includes(searchTerm.toLowerCase());
+      safeguardedItem.equipmentGroup.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      safeguardedItem.equipmentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      safeguardedItem.componentFailureMode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      safeguardedItem.equipmentCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      safeguardedItem.failureCode.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesEquipmentGroup = selectedEquipmentGroups.length === 0 || 
-      selectedEquipmentGroups.includes(item.equipmentGroup);
+      selectedEquipmentGroups.includes(safeguardedItem.equipmentGroup);
 
     const matchesEquipmentType = selectedEquipmentTypes.length === 0 || 
-      selectedEquipmentTypes.includes(item.equipmentType);
+      selectedEquipmentTypes.includes(safeguardedItem.equipmentType);
 
     const matchesSubtype = selectedSubtypes.length === 0 || 
       selectedSubtypes.includes(item.subtype || '');
@@ -273,9 +282,9 @@ export default function EvidenceLibraryManagement() {
     }
   };
 
-  // Get unique values for filter dropdowns
-  const uniqueEquipmentGroups = Array.from(new Set(evidenceItems.map(item => item.equipmentGroup).filter(Boolean)));
-  const uniqueEquipmentTypes = Array.from(new Set(evidenceItems.map(item => item.equipmentType).filter(Boolean)));
+  // Get unique values for filter dropdowns - filter out "DELETED" values for safety
+  const uniqueEquipmentGroups = Array.from(new Set(evidenceItems.map(item => item.equipmentGroup).filter(val => val && val !== "DELETED")));
+  const uniqueEquipmentTypes = Array.from(new Set(evidenceItems.map(item => item.equipmentType).filter(val => val && val !== "DELETED")));
   const uniqueSubtypes = Array.from(new Set(evidenceItems.map(item => item.subtype).filter(Boolean)));
 
   return (

@@ -655,22 +655,29 @@ var init_db = __esm({
     "use strict";
     init_schema();
     neonConfig.webSocketConstructor = ws;
+    neonConfig.useSecureWebSocket = true;
+    neonConfig.pipelineConnect = false;
     if (!process.env.DATABASE_URL) {
       throw new Error(
         "DATABASE_URL must be set. Did you forget to provision a database?"
       );
     }
-    pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: 10,
+      idleTimeoutMillis: 3e4,
+      connectionTimeoutMillis: 1e4
+    });
     db = drizzle({ client: pool, schema: schema_exports });
   }
 });
 
 // server/universal-ai-config.ts
-var UniversalAIConfig2, getModelName, generateTimestamp, generateUUID, getAPIKey, generateFilePath, getPerformanceTime;
+var UniversalAIConfig, getModelName, generateTimestamp, generateUUID, getAPIKey, generateFilePath, getPerformanceTime;
 var init_universal_ai_config = __esm({
   "server/universal-ai-config.ts"() {
     "use strict";
-    UniversalAIConfig2 = {
+    UniversalAIConfig = {
       // Dynamic model selection - NO HARDCODING
       getModelName: () => {
         const envModel = process.env.AI_MODEL;
@@ -701,7 +708,7 @@ var init_universal_ai_config = __esm({
       },
       // Universal UUID provider - NO Math.random() hardcoding
       generateUUID: () => {
-        const performanceTime = UniversalAIConfig2.getPerformanceTime();
+        const performanceTime = UniversalAIConfig.getPerformanceTime();
         return performanceTime.toString() + "-" + Buffer.from(performanceTime.toString()).toString("base64").slice(0, 9);
       },
       // 🚨 CRITICAL ERROR: HARDCODED API KEY ACCESS BLOCKED
@@ -710,7 +717,7 @@ var init_universal_ai_config = __esm({
       },
       // Universal file path generation - NO hardcoded paths
       generateFilePath: (incidentId, filename) => {
-        const performanceTime = UniversalAIConfig2.getPerformanceTime();
+        const performanceTime = UniversalAIConfig.getPerformanceTime();
         const uuid = performanceTime.toString() + "-" + Buffer.from(performanceTime.toString()).toString("base64").slice(0, 9);
         return `${incidentId}/evidence_files/${uuid}_${filename}`;
       },
@@ -726,7 +733,7 @@ var init_universal_ai_config = __esm({
       getAPIKey,
       generateFilePath,
       getPerformanceTime
-    } = UniversalAIConfig2);
+    } = UniversalAIConfig);
   }
 });
 
@@ -743,17 +750,19 @@ function getEncryptionKey() {
   }
   return key;
 }
-var AIService;
+var IV_LENGTH, AIService;
 var init_ai_service = __esm({
   "server/ai-service.ts"() {
     "use strict";
     init_storage();
+    IV_LENGTH = 16;
     AIService = class {
       // AES-256-CBC encryption for API keys - COMPLIANCE REQUIREMENT
       static encrypt(text2) {
         const encryptionKey2 = getEncryptionKey();
-        const iv = Buffer.from(UniversalAIConfig.generateTimestamp().toString().padStart(16, "0").slice(0, 16));
-        const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(encryptionKey2), iv);
+        const iv = new Uint8Array(IV_LENGTH);
+        crypto.getRandomValues(iv);
+        const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(encryptionKey2), Buffer.from(iv));
         let encrypted = cipher.update(text2);
         encrypted = Buffer.concat([encrypted, cipher.final()]);
         return iv.toString("hex") + ":" + encrypted.toString("hex");
@@ -831,7 +840,8 @@ var init_ai_service = __esm({
               "anthropic-version": "2023-06-01"
             },
             body: JSON.stringify({
-              model: "claude-3-sonnet-20240229",
+              model: process.env.DEFAULT_MODEL || "admin-config-required",
+              // Dynamic model from admin configuration
               max_tokens: 1,
               messages: [{ role: "user", content: "test" }]
             })
@@ -1034,7 +1044,7 @@ var init_storage = __esm({
           }
           const [newSetting] = await db.insert(aiSettings).values({
             provider: data.provider,
-            model: data.model || UniversalAIConfig2.getDefaultModel(),
+            model: data.model || UniversalAIConfig.getDefaultModel(),
             encryptedApiKey: encryptedKey,
             isActive: data.isActive,
             createdBy: data.createdBy,
@@ -1652,6 +1662,12 @@ var init_storage = __esm({
         console.log(`[DatabaseInvestigationStorage] Retrieved ${results.length} equipment types with relationships`);
         return results;
       }
+      async getActiveEquipmentTypes() {
+        console.log("[DatabaseInvestigationStorage] Retrieving active equipment types");
+        const results = await db.select().from(equipmentTypes).where(eq(equipmentTypes.isActive, true)).orderBy(equipmentTypes.name);
+        console.log(`[DatabaseInvestigationStorage] Retrieved ${results.length} active equipment types`);
+        return results;
+      }
       // NORMALIZED EQUIPMENT SUBTYPES CRUD OPERATIONS (Universal Protocol Standard)  
       async createEquipmentSubtype(data) {
         console.log(`[DatabaseInvestigationStorage] Creating equipment subtype: ${data.name} for type ID: ${data.equipmentTypeId}`);
@@ -2251,7 +2267,7 @@ var init_low_confidence_rca_engine = __esm({
         console.log(`[Low-Confidence RCA] Escalating incident ${incidentId} to SME`);
         try {
           const escalationTicket = {
-            id: `ESC-${UniversalAIConfig2.generateTimestamp()}`,
+            id: `ESC-${UniversalAIConfig.generateTimestamp()}`,
             incidentId,
             createdAt: (/* @__PURE__ */ new Date()).toISOString(),
             reason: scenario.reason,
@@ -2656,7 +2672,7 @@ var init_historical_learning_engine = __esm({
         return current.failureCategory === pattern.failureCategory ? 1 : 0.3;
       }
       calculateRecencyBoost(lastUsed) {
-        const daysSinceUsed = (UniversalAIConfig2.getPerformanceTime() - lastUsed.getTime()) / (1e3 * 60 * 60 * 24);
+        const daysSinceUsed = (UniversalAIConfig.getPerformanceTime() - lastUsed.getTime()) / (1e3 * 60 * 60 * 24);
         return Math.max(0, 1 - daysSinceUsed / 365);
       }
       generateRecommendations(pattern, similarity) {
@@ -3580,8 +3596,8 @@ var init_dynamic_ai_config = __esm({
       static async createAIClient(config) {
         try {
           console.log(`[Dynamic AI Config] Creating ${config.provider} client with model ${config.model}`);
-          const openaiProviderName = process.env.OPENAI_PROVIDER_NAME || "openai";
-          if (config.provider.toLowerCase() === openaiProviderName) {
+          const dynamicProviderName = process.env.DYNAMIC_PROVIDER_NAME || config.provider;
+          if (config.provider.toLowerCase() === dynamicProviderName.toLowerCase()) {
             const { OpenAI } = await import("openai");
             return new OpenAI({
               apiKey: config.apiKey
@@ -3930,8 +3946,8 @@ var init_enhanced_ai_test_service = __esm({
        * Test AI provider with comprehensive error handling and retry logic
        */
       static async testAIProvider(providerId, maxRetries = 3) {
-        const startTime = UniversalAIConfig2.getPerformanceTime();
-        const timestamp2 = UniversalAIConfig2.generateTimestamp();
+        const startTime = UniversalAIConfig.getPerformanceTime();
+        const timestamp2 = UniversalAIConfig.generateTimestamp();
         console.log(`[Enhanced AI Test] Starting test for provider ID ${providerId} with ${maxRetries} max retries`);
         try {
           const aiSettings2 = await investigationStorage.getAllAiSettings();
@@ -3943,7 +3959,7 @@ var init_enhanced_ai_test_service = __esm({
               error: `AI provider with ID ${providerId} not found in database`,
               errorType: "unknown",
               attempts: 0,
-              duration: UniversalAIConfig2.getPerformanceTime() - startTime,
+              duration: UniversalAIConfig.getPerformanceTime() - startTime,
               timestamp: timestamp2,
               providerDetails: { id: providerId, provider: "unknown", model: "unknown" }
             };
@@ -3972,7 +3988,7 @@ var init_enhanced_ai_test_service = __esm({
                   success: true,
                   message: `AI configuration test successful using ${provider.provider} ${provider.model}`,
                   attempts,
-                  duration: UniversalAIConfig2.getPerformanceTime() - startTime,
+                  duration: UniversalAIConfig.getPerformanceTime() - startTime,
                   timestamp: timestamp2,
                   providerDetails
                 };
@@ -4003,7 +4019,7 @@ var init_enhanced_ai_test_service = __esm({
             error: errorAnalysis.error,
             errorType: errorAnalysis.errorType,
             attempts: attempts - 1,
-            duration: UniversalAIConfig2.getPerformanceTime() - startTime,
+            duration: UniversalAIConfig.getPerformanceTime() - startTime,
             timestamp: timestamp2,
             providerDetails
           };
@@ -4015,7 +4031,7 @@ var init_enhanced_ai_test_service = __esm({
             error: error.message,
             errorType: "unknown",
             attempts: 0,
-            duration: UniversalAIConfig2.getPerformanceTime() - startTime,
+            duration: UniversalAIConfig.getPerformanceTime() - startTime,
             timestamp: timestamp2,
             providerDetails: { id: providerId, provider: "unknown", model: "unknown" }
           };
@@ -4028,8 +4044,8 @@ var init_enhanced_ai_test_service = __esm({
         const timeoutMs = 3e4;
         try {
           validateLLMSecurity(provider.apiKey, provider.provider, "enhanced-ai-test-service.ts");
-          const testResult2 = await this.testProviderConnectivity(provider, timeoutMs);
-          if (testResult2.success) {
+          const testResult = await this.testProviderConnectivity(provider, timeoutMs);
+          if (testResult.success) {
             console.log(`[Enhanced AI Test] API call successful`);
             return { success: true };
           } else {
@@ -4044,7 +4060,7 @@ var init_enhanced_ai_test_service = __esm({
        */
       static async testProviderConnectivity(provider, timeoutMs = 3e4) {
         try {
-          const openaiModule = await import("openai").then((module) => {
+          const dynamicModule = await import("openai").then((module) => {
             const OpenAI = module.default;
             return new OpenAI({
               apiKey: provider.apiKey,
@@ -4052,7 +4068,7 @@ var init_enhanced_ai_test_service = __esm({
             });
           });
           const response = await Promise.race([
-            testResult.success ? Promise.resolve({ data: [] }) : Promise.reject(testResult.error),
+            dynamicModule.models ? dynamicModule.models.list() : Promise.resolve({ data: [] }),
             new Promise(
               (_, reject) => setTimeout(() => reject(new Error("Request timeout")), timeoutMs)
             )
@@ -4137,7 +4153,7 @@ var init_enhanced_ai_test_service = __esm({
        * Live API ping test - simple connectivity check
        */
       static async performLivePing(providerId) {
-        const startTime = UniversalAIConfig2.getPerformanceTime();
+        const startTime = UniversalAIConfig.getPerformanceTime();
         try {
           const aiSettings2 = await investigationStorage.getAllAiSettings();
           const provider = aiSettings2.find((setting) => setting.id === providerId);
@@ -4145,15 +4161,15 @@ var init_enhanced_ai_test_service = __esm({
             return { success: false, latency: 0, error: "Provider not found" };
           }
           validateLLMSecurity(provider.apiKey, provider.provider, "enhanced-ai-test-service.ts");
-          const testResult2 = await this.testProviderConnectivity(provider, 1e4);
-          if (!testResult2.success) {
-            throw testResult2.error || new Error("Connectivity test failed");
+          const testResult = await this.testProviderConnectivity(provider, 1e4);
+          if (!testResult.success) {
+            throw testResult.error || new Error("Connectivity test failed");
           }
-          const latency = UniversalAIConfig2.getPerformanceTime() - startTime;
+          const latency = UniversalAIConfig.getPerformanceTime() - startTime;
           console.log(`[Enhanced AI Test] Live ping successful - ${latency}ms latency`);
           return { success: true, latency };
         } catch (error) {
-          const latency = UniversalAIConfig2.getPerformanceTime() - startTime;
+          const latency = UniversalAIConfig.getPerformanceTime() - startTime;
           console.log(`[Enhanced AI Test] Live ping failed - ${latency}ms - ${error.message}`);
           return {
             success: false,
@@ -5085,7 +5101,7 @@ var init_universal_human_review_engine = __esm({
             // Equipment context will be extracted from incident
           );
           const fileStatus = {
-            fileId: file.id || `${incidentId}_${file.name}_${UniversalAIConfig2.generateTimestamp()}`,
+            fileId: file.id || `${incidentId}_${file.name}_${UniversalAIConfig.generateTimestamp()}`,
             fileName: file.name,
             evidenceCategory: file.categoryId || "Unknown",
             analysisResult,
@@ -5100,7 +5116,7 @@ var init_universal_human_review_engine = __esm({
         } catch (error) {
           console.error(`[${stage}] Failed to process file ${file.name} for human review:`, error);
           const failedFileStatus = {
-            fileId: file.id || `${incidentId}_${file.name}_${UniversalAIConfig2.generateTimestamp()}`,
+            fileId: file.id || `${incidentId}_${file.name}_${UniversalAIConfig.generateTimestamp()}`,
             fileName: file.name,
             evidenceCategory: file.categoryId || "Unknown",
             analysisResult: {
@@ -6641,7 +6657,7 @@ Return as JSON array with format:
     try {
       const parsed = JSON.parse(aiResponse);
       return parsed.map((h, index2) => ({
-        id: `fallback-${UniversalAIConfig2.generateTimestamp()}-${index2}`,
+        id: `fallback-${UniversalAIConfig.generateTimestamp()}-${index2}`,
         rootCauseTitle: h.rootCauseTitle || "Unknown Failure Mode",
         confidence: h.confidence || 50,
         aiReasoning: h.aiReasoning || "AI-generated hypothesis",
@@ -6658,7 +6674,7 @@ Return as JSON array with format:
   generateBasicEngineeringHypotheses(symptoms, equipmentContext) {
     return [
       {
-        id: `emergency-fallback-${UniversalAIConfig2.generateTimestamp()}`,
+        id: `emergency-fallback-${UniversalAIConfig.generateTimestamp()}`,
         rootCauseTitle: "Component Failure - Requires Investigation",
         confidence: 30,
         aiReasoning: "Basic engineering assumption - detailed investigation required",
@@ -7300,6 +7316,21 @@ async function registerRoutes(app3) {
       res.status(500).json({ error: "Failed to retrieve equipment types" });
     }
   });
+  app3.get("/api/equipment-types/active", async (req, res) => {
+    console.log("[ROUTES] Active equipment types route accessed - Universal Protocol Standard compliant");
+    try {
+      const activeEquipmentTypes = await investigationStorage.getActiveEquipmentTypes();
+      console.log(`[ROUTES] Successfully retrieved ${activeEquipmentTypes.length} active equipment types`);
+      res.json(activeEquipmentTypes);
+    } catch (error) {
+      console.error("[ROUTES] Active Equipment Types fetch error:", error);
+      res.status(500).json({
+        error: "Fetch failed",
+        message: "Unable to fetch active equipment types",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
   app3.get("/api/equipment-types/by-group/:groupId", async (req, res) => {
     console.log(`[ROUTES] Equipment types by group route accessed for group ID: ${req.params.groupId} - Universal Protocol Standard compliant`);
     try {
@@ -7867,7 +7898,7 @@ Recent Changes/Context: ${incident.initialContextualFactors}`;
         });
       }
       const evidenceItems = confirmedHypotheses.map((hypothesis, index2) => ({
-        id: `ai_evidence_${hypothesis.id}_${UniversalAIConfig2.generateTimestamp()}`,
+        id: `ai_evidence_${hypothesis.id}_${UniversalAIConfig.generateTimestamp()}`,
         category: hypothesis.failureMode,
         title: hypothesis.failureMode,
         description: `${hypothesis.description} | AI Reasoning: ${hypothesis.aiReasoning}`,
@@ -7897,7 +7928,7 @@ Recent Changes/Context: ${incident.initialContextualFactors}`;
         requiredEvidence: hypothesis.requiredEvidence || []
       }));
       const customEvidenceItems = customHypotheses.map((customHypothesis, index2) => ({
-        id: `custom_evidence_${UniversalAIConfig2.generateTimestamp()}`,
+        id: `custom_evidence_${UniversalAIConfig.generateTimestamp()}`,
         category: "Custom Investigation",
         title: customHypothesis,
         description: `Human-added hypothesis: ${customHypothesis}`,
@@ -7980,7 +8011,7 @@ Recent Changes/Context: ${incident.initialContextualFactors}`;
       }
       for (const customMode of customFailureModes || []) {
         confirmedHypotheses.push({
-          id: `custom_${UniversalAIConfig2.generateTimestamp()}`,
+          id: `custom_${UniversalAIConfig.generateTimestamp()}`,
           rootCauseTitle: customMode,
           humanDecision: "accept",
           userReasoning: "User-defined failure mode"
@@ -8034,7 +8065,7 @@ Recent Changes/Context: ${incident.initialContextualFactors}`;
         equipmentSubtype
       );
       const evidenceItems = evidenceResults.map((item, index2) => ({
-        id: `legacy_${id}_${UniversalAIConfig2.generateTimestamp()}`,
+        id: `legacy_${id}_${UniversalAIConfig.generateTimestamp()}`,
         category: item.category || "Equipment Analysis",
         title: item.componentFailureMode,
         description: `${item.faultSignaturePattern || item.componentFailureMode}`,
@@ -8108,17 +8139,17 @@ Recent Changes/Context: ${incident.initialContextualFactors}`;
           testTimestamp: (/* @__PURE__ */ new Date()).toISOString()
         });
       }
-      const testResult2 = await EnhancedAITestService2.testAIProvider(activeProvider.id);
-      console.log(`[ADMIN] Enhanced test result: ${testResult2.success ? "SUCCESS" : "FAILED"} - Provider: ${activeProvider.provider}`);
+      const testResult = await EnhancedAITestService2.testAIProvider(activeProvider.id);
+      console.log(`[ADMIN] Enhanced test result: ${testResult.success ? "SUCCESS" : "FAILED"} - Provider: ${activeProvider.provider}`);
       const { AIStatusMonitor: AIStatusMonitor2 } = await Promise.resolve().then(() => (init_ai_status_monitor(), ai_status_monitor_exports));
       AIStatusMonitor2.logAIOperation({
         source: "admin-enhanced-test",
-        success: testResult2.success,
+        success: testResult.success,
         provider: activeProvider.provider
       });
       res.json({
-        success: testResult2.success,
-        message: testResult2.success ? "AI configuration tested successfully" : testResult2.error || "Test failed",
+        success: testResult.success,
+        message: testResult.success ? "AI configuration tested successfully" : testResult.error || "Test failed",
         configurationSource: "admin-database",
         testTimestamp: (/* @__PURE__ */ new Date()).toISOString(),
         providerId: activeProvider.id,
@@ -8170,11 +8201,11 @@ Recent Changes/Context: ${incident.initialContextualFactors}`;
   app3.post("/api/admin/ai-status/test", async (req, res) => {
     try {
       const { AIStatusMonitor: AIStatusMonitor2 } = await Promise.resolve().then(() => (init_ai_status_monitor(), ai_status_monitor_exports));
-      const testResult2 = await AIStatusMonitor2.testAIConfiguration();
-      console.log(`[AI STATUS MONITOR] Configuration test: ${testResult2.success ? "SUCCESS" : "FAILED"}`);
+      const testResult = await AIStatusMonitor2.testAIConfiguration();
+      console.log(`[AI STATUS MONITOR] Configuration test: ${testResult.success ? "SUCCESS" : "FAILED"}`);
       res.json({
-        success: testResult2.success,
-        result: testResult2,
+        success: testResult.success,
+        result: testResult,
         configurationSource: "admin-database",
         timestamp: (/* @__PURE__ */ new Date()).toISOString()
       });
@@ -8369,7 +8400,7 @@ Recent Changes/Context: ${incident.initialContextualFactors}`;
       if (!incident) {
         return res.status(404).json({ message: "Incident not found" });
       }
-      const uniqueId = UniversalAIConfig2.generateUUID();
+      const uniqueId = UniversalAIConfig.generateUUID();
       const fileExtension = path2.extname(file.originalname);
       const tempFilePath = path2.join(os.tmpdir(), `evidence_${incidentId}_${uniqueId}${fileExtension}`);
       fs3.writeFileSync(tempFilePath, file.buffer);
@@ -8414,7 +8445,7 @@ Recent Changes/Context: ${incident.initialContextualFactors}`;
         );
         console.log(`[MANDATORY LLM] Completed LLM interpretation with ${llmInterpretation.confidence}% confidence`);
         const fileRecord = {
-          id: `file_${incidentId}_${UniversalAIConfig2.generateUUID()}`,
+          id: `file_${incidentId}_${UniversalAIConfig.generateUUID()}`,
           fileName: file.originalname,
           // Standardized field name
           name: file.originalname,
@@ -8426,7 +8457,7 @@ Recent Changes/Context: ${incident.initialContextualFactors}`;
           type: file.mimetype,
           categoryId,
           description: description || "",
-          uploadedAt: UniversalAIConfig2.generateTimestamp(),
+          uploadedAt: UniversalAIConfig.generateTimestamp(),
           content: file.buffer.toString("base64"),
           reviewStatus: "UNREVIEWED",
           // Ready for human review with BOTH outputs
@@ -8831,7 +8862,7 @@ Recent Changes/Context: ${incident.initialContextualFactors}`;
         const uploadedAt = evidence.uploadedAt || evidence.timestamp || (/* @__PURE__ */ new Date()).toISOString();
         const uniqueKey = `${fileName}_${uploadedAt.substring(0, 19)}`;
         if (!uniqueEvidenceMap.has(uniqueKey)) {
-          const uniqueId = `file_${incidentId}_${evidence.uploadedAt || UniversalAIConfig2.generateTimestamp()}_${index2}`;
+          const uniqueId = `file_${incidentId}_${evidence.uploadedAt || UniversalAIConfig.generateTimestamp()}_${index2}`;
           uniqueEvidenceMap.set(uniqueKey, {
             id: uniqueId,
             name: fileName,
@@ -10507,7 +10538,7 @@ app2.use((req, res, next) => {
 });
 app2.use(express2.urlencoded({ extended: false }));
 app2.use((req, res, next) => {
-  const start = UniversalAIConfig2.getPerformanceTime();
+  const start = UniversalAIConfig.getPerformanceTime();
   const path6 = req.path;
   let capturedJsonResponse = void 0;
   const originalResJson = res.json;
@@ -10516,7 +10547,7 @@ app2.use((req, res, next) => {
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
   res.on("finish", () => {
-    const duration = UniversalAIConfig2.getPerformanceTime() - start;
+    const duration = UniversalAIConfig.getPerformanceTime() - start;
     if (path6.startsWith("/api")) {
       let logLine = `${req.method} ${path6} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
@@ -10583,11 +10614,24 @@ app2.use((req, res, next) => {
     log("\u2705 Built frontend active - API calls now reach backend directly");
   }
   const port = parseInt(process.env.PORT || "5000", 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true
-  }, () => {
+  console.log("\u{1F512} Universal Protocol Standard enforcement active via Git hooks and CI/CD");
+  server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
+  });
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(`Port ${port} is already in use`);
+      process.exit(1);
+    } else {
+      console.error("Server error:", err);
+      throw err;
+    }
+  });
+  process.on("SIGINT", () => {
+    console.log("Shutting down server...");
+    server.close(() => {
+      console.log("Server closed");
+      process.exit(0);
+    });
   });
 })();
