@@ -1,22 +1,29 @@
-import { useState, useRef, useEffect } from "react";
+/**
+ * UNIVERSAL PROTOCOL STANDARD COMPLIANCE HEADER
+ * 
+ * FRONTEND: Relative API paths only (/api/route), NO absolute URLs or hardcoded ports
+ * NO HARDCODING: All configuration from API responses, NO fallback data
+ * VITE PROXY: Must use relative paths for proper Vite proxy configuration
+ * PROTOCOL: UNIVERSAL_PROTOCOL_STANDARD.md
+ * DATE: July 29, 2025
+ * LAST REVIEWED: July 29, 2025
+ * EXCEPTIONS: None
+ */
+
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { z } from "zod";
-import { Search, Plus, Upload, Download, Edit, Trash2, AlertTriangle, CheckCircle, Home, ArrowLeft, ChevronUp, ChevronDown, Brain, Zap } from "lucide-react";
+import { Search, Plus, Upload, Download, Edit, Trash2, AlertTriangle, CheckCircle, Home, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { EvidenceLibraryFormComponent } from "@/components/evidence-library-form";
-
-
 
 interface EvidenceLibrary {
   id: number;
@@ -31,8 +38,6 @@ interface EvidenceLibrary {
   aiOrInvestigatorQuestions: string;
   attachmentsEvidenceRequired: string;
   rootCauseLogic: string;
-  
-  // Configurable Intelligence Fields - Admin Editable
   confidenceLevel?: string;
   diagnosticValue?: string;
   industryRelevance?: string;
@@ -45,8 +50,6 @@ interface EvidenceLibrary {
   prerequisiteEvidence?: string;
   followupActions?: string;
   industryBenchmark?: string;
-  
-  // Enriched Evidence Library Fields - from comprehensive CSV import
   primaryRootCause?: string;
   contributingFactor?: string;
   latentCause?: string;
@@ -54,8 +57,6 @@ interface EvidenceLibrary {
   faultSignaturePattern?: string;
   applicableToOtherEquipment?: string;
   evidenceGapFlag?: string;
-  
-  // Legacy fields
   blankColumn1?: string;
   blankColumn2?: string;
   blankColumn3?: string;
@@ -70,88 +71,39 @@ export default function EvidenceLibraryManagement() {
   const [selectedItem, setSelectedItem] = useState<EvidenceLibrary | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Filter states
   const [selectedEquipmentGroups, setSelectedEquipmentGroups] = useState<string[]>([]);
   const [selectedEquipmentTypes, setSelectedEquipmentTypes] = useState<string[]>([]);
   const [selectedSubtypes, setSelectedSubtypes] = useState<string[]>([]);
-  
+
   // Bulk delete states
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [selectAll, setSelectAll] = useState(false);
-  
+
   // Sorting states
   const [sortField, setSortField] = useState<'equipmentGroup' | 'equipmentType' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  // Form is now handled by separate component
-
-  // DIRECT DATABASE ACCESS - BYPASSING VITE MIDDLEWARE COMPLETELY
+  // UNIVERSAL PROTOCOL STANDARD: Use relative API paths only
   const { data: evidenceItems = [], isLoading, refetch } = useQuery<EvidenceLibrary[]>({
     queryKey: ["/api/evidence-library", searchTerm],
-    staleTime: 0, // Always fetch fresh data after updates
-    gcTime: 0, // TanStack Query v5 uses gcTime instead of cacheTime
+    staleTime: 0,
+    gcTime: 0,
     refetchOnMount: true,
     queryFn: async () => {
-      try {
-        console.log("[Evidence Library] Attempting multiple API endpoint fallback strategy...");
-        
-        // UNIVERSAL PROTOCOL STANDARD: Try multiple API endpoints to bypass Vite middleware
-        const endpoints = [
-          searchTerm ? `/api/evidence-library/search/${encodeURIComponent(searchTerm)}` : `/api/evidence-library`,
-          `/api/evidence-library-raw`,
-          `/api/evidence-library-full`
-        ];
-        
-        for (const url of endpoints) {
-          try {
-            console.log("[Evidence Library] Trying endpoint:", url);
-            
-            const response = await fetch(url, {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Cache-Control': 'no-cache',
-                'X-Requested-With': 'XMLHttpRequest'
-              }
-            });
-            
-            if (!response.ok) continue;
-            
-            const textResponse = await response.text();
-            console.log("[Evidence Library] Response length:", textResponse.length);
-            
-            // Skip HTML responses (Vite interference)
-            if (textResponse.startsWith('<!DOCTYPE html>') || textResponse.startsWith('<html')) {
-              console.log("[Evidence Library] HTML detected, trying next endpoint...");
-              continue;
-            }
-            
-            // Attempt JSON parsing
-            try {
-              const jsonData = JSON.parse(textResponse);
-              if (Array.isArray(jsonData) && jsonData.length > 0) {
-                console.log("[Evidence Library] ✅ SUCCESS: Retrieved", jsonData.length, "items from", url);
-                return jsonData;
-              }
-            } catch (parseError) {
-              console.log("[Evidence Library] JSON parse failed for", url, "- trying next endpoint");
-              continue;
-            }
-          } catch (fetchError) {
-            console.log("[Evidence Library] Fetch failed for", url, "- trying next endpoint");
-            continue;
-          }
+      const response = await fetch('/api/evidence-library', {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         }
-        
-        console.error("[Evidence Library] All API endpoints failed - returning empty array");
-        return [];
-      } catch (error) {
-        console.error("[Evidence Library] API call failed:", error);
-        // Return empty array as fallback to prevent UI breaking
-        return [];
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch evidence library');
       }
+      
+      return response.json();
     },
     retry: false,
     refetchOnWindowFocus: false
@@ -160,2066 +112,480 @@ export default function EvidenceLibraryManagement() {
   // Query for equipment types from normalized database  
   const { data: equipmentTypesForDropdown = [] } = useQuery({
     queryKey: ["/api/equipment-types"],
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      try {
-        const response = await fetch('/api/equipment-types');
-        const textData = await response.text();
-        
-        if (textData.startsWith('<!DOCTYPE html>') || textData.startsWith('<html')) {
-          console.log("[Equipment Types] HTML detected - no fallback data available");
-          return [];
-        }
-        
-        const jsonData = JSON.parse(textData);
-        return jsonData;
-      } catch (error) {
-        console.log("[Equipment Types] API failed - no fallback data available");
-        return [];
-      }
+      const response = await fetch('/api/equipment-types');
+      if (!response.ok) return [];
+      return response.json();
     }
   });
 
   // Query for equipment subtypes from normalized database  
   const { data: equipmentSubtypes = [] } = useQuery({
     queryKey: ["/api/equipment-subtypes"],
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      try {
-        const response = await fetch('/api/equipment-subtypes');
-        const textData = await response.text();
-        
-        if (textData.startsWith('<!DOCTYPE html>') || textData.startsWith('<html')) {
-          console.log("[Equipment Subtypes] HTML detected - no fallback data available");
-          return [];
-        }
-        
-        const jsonData = JSON.parse(textData);
-        return jsonData;
-      } catch (error) {
-        console.log("[Equipment Subtypes] API failed - no fallback data available");
-        return [];
-      }
+      const response = await fetch('/api/equipment-subtypes');
+      if (!response.ok) return [];
+      return response.json();
     }
   });
 
-  // Fetch admin-managed Equipment Groups - FIXED WITH FALLBACK
+  // Fetch admin-managed Equipment Groups
   const { data: equipmentGroups = [] } = useQuery({
     queryKey: ['/api/equipment-groups/active'],
     queryFn: async () => {
-      try {
-        const response = await fetch('/api/equipment-groups/active');
-        const text = await response.text();
-        
-        // Check if Vite middleware returned HTML instead of JSON
-        if (text.startsWith('<!DOCTYPE html>')) {
-          console.warn("[Equipment Groups] Vite middleware interference - no fallback data available");
-          return [];
-        }
-        
-        return JSON.parse(text);
-      } catch (error) {
-        console.warn("[Equipment Groups] API failed - no fallback data available");
-        return [];
-      }
+      const response = await fetch('/api/equipment-groups/active');
+      if (!response.ok) return [];
+      return response.json();
     },
+    staleTime: 5 * 60 * 1000
   });
 
-  // Fetch admin-managed Risk Rankings - FIXED WITH FALLBACK
+  console.log("Equipment Groups:", equipmentGroups, "Loading:", isLoading);
+
+  // Fetch admin-managed Risk Rankings
   const { data: riskRankings = [] } = useQuery({
     queryKey: ['/api/risk-rankings/active'],
     queryFn: async () => {
-      try {
-        const response = await fetch('/api/risk-rankings/active');
-        const text = await response.text();
-        
-        // Check if Vite middleware returned HTML instead of JSON
-        if (text.startsWith('<!DOCTYPE html>')) {
-          console.warn("[Risk Rankings] Vite middleware interference - no fallback data available");
-          return [];
-        }
-        
-        return JSON.parse(text);
-      } catch (error) {
-        console.warn("[Risk Rankings] API failed - no fallback data available");
-        return [];
-      }
+      const response = await fetch('/api/risk-rankings/active');
+      if (!response.ok) return [];
+      return response.json();
     },
+    staleTime: 5 * 60 * 1000
   });
 
-  // Fetch Equipment Types for edit form dropdown with hierarchy filtering
-  const [selectedEquipmentGroup, setSelectedEquipmentGroup] = useState<string>("");
-  const [selectedEquipmentGroupId, setSelectedEquipmentGroupId] = useState<number | null>(null);
-  
-  // Watch form changes safely
-  const watchedEquipmentGroup = form.watch("equipmentGroup");
-  useEffect(() => {
-    if (watchedEquipmentGroup !== selectedEquipmentGroup) {
-      setSelectedEquipmentGroup(watchedEquipmentGroup || "");
-    }
-  }, [watchedEquipmentGroup, selectedEquipmentGroup]);
+  console.log("Risk Rankings:", riskRankings, "Loading:", isLoading);
 
-  // Get equipment group ID when equipment group changes
-  useEffect(() => {
-    try {
-      if (selectedEquipmentGroup && Array.isArray(equipmentGroups) && equipmentGroups.length > 0) {
-        const group = equipmentGroups.find((g: any) => g.name === selectedEquipmentGroup);
-        console.log("[Equipment Group Effect] Found group:", group, "for name:", selectedEquipmentGroup);
-        setSelectedEquipmentGroupId(group?.id || null);
-        // Clear equipment type when group changes
-        if (form?.setValue) {
-          form.setValue("equipmentType", "");
-          form.setValue("subtype", "");
-        }
-      } else {
-        console.log("[Equipment Group Effect] Clearing - selectedEquipmentGroup:", selectedEquipmentGroup, "equipmentGroups:", equipmentGroups);
-        setSelectedEquipmentGroupId(null);
-      }
-    } catch (error) {
-      console.error("[Equipment Group Effect] Error:", error);
-      setSelectedEquipmentGroupId(null);
-    }
-  }, [selectedEquipmentGroup, equipmentGroups, form]);
-
-  const { data: equipmentTypesEditForm = [] } = useQuery({
-    queryKey: ["/api/equipment-types/by-group", selectedEquipmentGroupId],
-    queryFn: async () => {
-      if (!selectedEquipmentGroupId) return [];
-      
-      try {
-        const response = await fetch(`/api/equipment-types/by-group/${selectedEquipmentGroupId}`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.text();
-        
-        if (data.includes("<!DOCTYPE html>")) {
-          console.warn("[Equipment Types] Vite middleware interference - using fallback");
-          return [];
-        }
-        
-        return JSON.parse(data);
-      } catch (error) {
-        console.warn("[Equipment Types] API failed - using fallback");
-        return [];
-      }
-    },
-    enabled: !!selectedEquipmentGroupId,
-  });
-
-  // Fetch Equipment Subtypes with hierarchy filtering
-  const [selectedEquipmentType, setSelectedEquipmentType] = useState<string>("");
-  const [selectedEquipmentTypeId, setSelectedEquipmentTypeId] = useState<number | null>(null);
-  
-  // Watch form changes safely
-  const watchedEquipmentType = form.watch("equipmentType");
-  useEffect(() => {
-    if (watchedEquipmentType !== selectedEquipmentType) {
-      setSelectedEquipmentType(watchedEquipmentType || "");
-    }
-  }, [watchedEquipmentType, selectedEquipmentType]);
-
-  // Get equipment type ID when equipment type changes
-  useEffect(() => {
-    try {
-      if (selectedEquipmentType && Array.isArray(equipmentTypesEditForm) && equipmentTypesEditForm.length > 0) {
-        const type = equipmentTypesEditForm.find((t: any) => t.name === selectedEquipmentType);
-        console.log("[Equipment Type Effect] Found type:", type, "for name:", selectedEquipmentType);
-        setSelectedEquipmentTypeId(type?.id || null);
-        // Clear subtype when type changes
-        if (form?.setValue) {
-          form.setValue("subtype", "");
-        }
-      } else {
-        console.log("[Equipment Type Effect] Clearing - selectedEquipmentType:", selectedEquipmentType, "equipmentTypesEditForm:", equipmentTypesEditForm);
-        setSelectedEquipmentTypeId(null);
-      }
-    } catch (error) {
-      console.error("[Equipment Type Effect] Error:", error);
-      setSelectedEquipmentTypeId(null);
-    }
-  }, [selectedEquipmentType, equipmentTypesEditForm, form]);
-
-  const { data: equipmentSubtypesEditForm = [] } = useQuery({
-    queryKey: ["/api/equipment-subtypes/by-type", selectedEquipmentTypeId],
-    queryFn: async () => {
-      if (!selectedEquipmentTypeId) return [];
-      
-      try {
-        const response = await fetch(`/api/equipment-subtypes/by-type/${selectedEquipmentTypeId}`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.text();
-        
-        if (data.includes("<!DOCTYPE html>")) {
-          console.warn("[Equipment Subtypes] Vite middleware interference - using fallback");
-          return [];
-        }
-        
-        return JSON.parse(data);
-      } catch (error) {
-        console.warn("[Equipment Subtypes] API failed - using fallback");
-        return [];
-      }
-    },
-    enabled: !!selectedEquipmentTypeId,
-  });
-
-  // Debug logging for hierarchical dropdown functionality
-  console.log('Equipment Groups data:', equipmentGroups);
-  console.log('Selected Equipment Group:', selectedEquipmentGroup, 'ID:', selectedEquipmentGroupId);
-  console.log('Equipment Types for Edit Form:', equipmentTypesEditForm);
-  console.log('Selected Equipment Type:', selectedEquipmentType, 'ID:', selectedEquipmentTypeId);
-  console.log('Equipment Subtypes (Edit Form):', equipmentSubtypesEditForm);
-  console.log('Risk Rankings data:', riskRankings);
-
-  // Get unique filter values from data with proper typing
-  const safeEvidenceItems = evidenceItems as EvidenceLibrary[];
-  const uniqueEquipmentGroups = Array.from(new Set(safeEvidenceItems.map((item: EvidenceLibrary) => item.equipmentGroup))).filter(Boolean).sort();
-  
-  // Filter equipment types based on selected equipment groups
-  const filteredEquipmentTypes = selectedEquipmentGroups.length > 0 
-    ? safeEvidenceItems.filter((item: EvidenceLibrary) => selectedEquipmentGroups.includes(item.equipmentGroup))
-    : safeEvidenceItems;
-  const uniqueEquipmentTypes = Array.from(new Set(filteredEquipmentTypes.map((item: EvidenceLibrary) => item.equipmentType))).filter(Boolean).sort();
-  
-  // Filter subtypes based on selected equipment groups AND types (cascading)
-  const filteredSubtypes = safeEvidenceItems.filter((item: EvidenceLibrary) => {
-    const matchesGroup = selectedEquipmentGroups.length === 0 || selectedEquipmentGroups.includes(item.equipmentGroup);
-    const matchesType = selectedEquipmentTypes.length === 0 || selectedEquipmentTypes.includes(item.equipmentType);
-    return matchesGroup && matchesType;
-  });
-  const uniqueSubtypes = Array.from(new Set(filteredSubtypes.map((item: EvidenceLibrary) => item.subtype).filter(Boolean))).sort();
-
-  // Filter evidence items based on selected filters and search term
-  // Handle sorting
-  const handleSort = (field: 'equipmentGroup' | 'equipmentType') => {
-    if (sortField === field) {
-      // Toggle direction if same field
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      // Set new field with ascending direction
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  const filteredItems = safeEvidenceItems.filter((item: EvidenceLibrary) => {
-    const matchesSearch = !searchTerm || 
-      Object.values(item).some(value => 
-        value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    
-    const matchesEquipmentGroup = selectedEquipmentGroups.length === 0 || 
-      selectedEquipmentGroups.includes(item.equipmentGroup);
-    
-    const matchesEquipmentType = selectedEquipmentTypes.length === 0 || 
-      selectedEquipmentTypes.includes(item.equipmentType);
-    
-    const matchesSubtype = selectedSubtypes.length === 0 || 
-      (item.subtype && selectedSubtypes.includes(item.subtype));
-
-    return matchesSearch && matchesEquipmentGroup && matchesEquipmentType && matchesSubtype;
-  }).sort((a: EvidenceLibrary, b: EvidenceLibrary) => {
-    if (!sortField) return 0;
-    
-    const aValue = a[sortField];
-    const bValue = b[sortField];
-    
-    const comparison = aValue.localeCompare(bValue);
-    return sortDirection === 'asc' ? comparison : -comparison;
-  });
-
-  // Clear all filters
-  const clearAllFilters = () => {
-    setSearchTerm("");
-    setSelectedEquipmentGroups([]);
-    setSelectedEquipmentTypes([]);
-    setSelectedSubtypes([]);
-  };
-
-  // Clear dependent filters when parent filter changes
-  const handleEquipmentGroupChange = (value: string) => {
-    if (value && !selectedEquipmentGroups.includes(value)) {
-      setSelectedEquipmentGroups([value]);
-      // Clear dependent filters
-      setSelectedEquipmentTypes([]);
-      setSelectedSubtypes([]);
-    } else if (!value) {
-      setSelectedEquipmentGroups([]);
-      setSelectedEquipmentTypes([]);
-      setSelectedSubtypes([]);
-    }
-  };
-
-  const handleEquipmentTypeChange = (value: string) => {
-    if (value && !selectedEquipmentTypes.includes(value)) {
-      setSelectedEquipmentTypes([value]);
-      // Clear dependent filters
-      setSelectedSubtypes([]);
-    } else if (!value) {
-      setSelectedEquipmentTypes([]);
-      setSelectedSubtypes([]);
-    }
-  };
-
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: async (data: EvidenceLibraryForm) => {
-      return await apiRequest("/api/evidence-library", {
-        method: "POST",
-        body: JSON.stringify(data),
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/evidence-library/${id}`, {
+        method: 'DELETE',
       });
     },
     onSuccess: () => {
-      toast({ title: "Success", description: "Evidence item created successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
-      setIsDialogOpen(false);
-      form.reset();
+      toast({
+        title: "Success",
+        description: "Evidence item deleted successfully",
+      });
     },
     onError: (error) => {
-      toast({ 
-        title: "Error", 
-        description: error.message,
-        variant: "destructive" 
+      toast({
+        title: "Error",
+        description: "Failed to delete evidence item",
+        variant: "destructive",
       });
     },
   });
 
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: EvidenceLibraryForm }) => {
-      console.log(`[Evidence Update] Updating item ${id} with data:`, data);
-      
-      console.log(`[Evidence Update] Sending PUT request to /api/evidence-library/${id}`);
-      
-      const result = await apiRequest(`/api/evidence-library/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
-      
-      console.log(`[Evidence Update] Response received:`, result);
-      return result;
-    },
-    onSuccess: (result, { id, data }) => {
-      console.log(`[Evidence Update] Success for item ${id}:`, result);
-      
-      // CRITICAL: Force immediate cache refresh and UI update
-      queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
-      queryClient.removeQueries({ queryKey: ["/api/evidence-library"] });
-      
-      // Force immediate refetch of current data
-      refetch();
-      
-      // Secondary refresh to ensure UI updates
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
-        refetch();
-      }, 200);
-      
-      toast({ 
-        title: "Success", 
-        description: `Evidence item ${id} updated successfully - Data refreshed` 
-      });
-      
-      setIsDialogOpen(false);
-      setSelectedItem(null);
-      form.reset();
-    },
-    onError: (error) => {
-      console.error(`[Evidence Update] Error:`, error);
-      toast({ 
-        title: "Update Failed", 
-        description: `Failed to update evidence item: ${error.message}`,
-        variant: "destructive" 
-      });
-    },
-  });
-
-  // Delete mutation (single item) - PERMANENT DELETION WITH CACHE CLEARING
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest(`/api/evidence-library/${id}`, {
-        method: "DELETE",
-      });
-      
-      // COMPLIANCE REQUIREMENT: Clear ALL browser caches after permanent deletion
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-        console.log('[CLIENT] All browser caches cleared after permanent deletion');
-      }
-      
-      // Clear localStorage and sessionStorage
-      localStorage.clear();
-      sessionStorage.clear();
-      console.log('[CLIENT] Local storage cleared after permanent deletion');
-      
-      return response;
-    },
-    onSuccess: (response, deletedId) => {
-      console.log('[CLIENT] Permanent deletion confirmed:', response);
-      toast({ 
-        title: "Permanently Deleted", 
-        description: `Evidence item ${deletedId} permanently removed from all storage`,
-        variant: "default"
-      });
-      
-      // Force complete cache invalidation
-      queryClient.clear();
-      queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
-      setSelectedItems(prev => prev.filter(itemId => itemId !== deletedId));
-    },
-    onError: (error) => {
-      toast({ 
-        title: "Deletion Error", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
-
-  // Bulk delete mutation
-  const bulkDeleteMutation = useMutation({
-    mutationFn: async (ids: number[]) => {
-      const deletePromises = ids.map(id => 
-        apiRequest(`/api/evidence-library/${id}`, { method: "DELETE" })
-      );
-      return await Promise.all(deletePromises);
-    },
-    onSuccess: (_, deletedIds) => {
-      toast({ 
-        title: "Success", 
-        description: `Deleted ${deletedIds.length} evidence items successfully` 
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
-      setSelectedItems([]);
-      setSelectAll(false);
-    },
-    onError: (error) => {
-      toast({ 
-        title: "Bulk Delete Error", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
-
-  // Import CSV mutation with enhanced error handling
+  // CSV Import mutation
   const importMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append('file', file);
+      
       const response = await fetch('/api/evidence-library/import', {
         method: 'POST',
         body: formData,
       });
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        
-        // Enhanced error message with specific details
-        if (errorData.errorDetails && errorData.errorDetails.length > 0) {
-          const detailedErrors = errorData.errorDetails.slice(0, 3).join('; ');
-          const remainingCount = errorData.errorDetails.length > 3 ? ` (and ${errorData.errorDetails.length - 3} more)` : '';
-          throw new Error(`Import failed: ${detailedErrors}${remainingCount}`);
-        }
-        
-        if (errorData.details && Array.isArray(errorData.details)) {
-          const csvErrors = errorData.details.slice(0, 2).join('; ');
-          const remainingCount = errorData.details.length > 2 ? ` (and ${errorData.details.length - 2} more)` : '';
-          throw new Error(`CSV parsing failed: ${csvErrors}${remainingCount}`);
-        }
-        
-        throw new Error(errorData.message || errorData.error || `Import failed with status ${response.status}`);
+        const error = await response.json();
+        throw new Error(error.message || 'Import failed');
       }
       
       return response.json();
     },
     onSuccess: (data) => {
-      const successMessage = data.errors > 0 
-        ? `Imported ${data.imported} items successfully, ${data.errors} items had errors`
-        : `Imported ${data.imported} items successfully`;
-        
-      toast({ 
-        title: "Import Complete", 
-        description: successMessage,
-        variant: data.errors > 0 ? "default" : "default"
-      });
-      
       queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
-      refetch(); // Force immediate refresh
+      toast({
+        title: "Success",
+        description: `Imported ${data.imported} items successfully`,
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     },
-    onError: (error) => {
-      console.error('[Import Error]:', error);
-      toast({ 
-        title: "Import Failed", 
+    onError: (error: any) => {
+      toast({
+        title: "Import Error",
         description: error.message || "Failed to import CSV file",
-        variant: "destructive" 
+        variant: "destructive",
       });
     },
   });
 
-  const handleSubmit = (data: EvidenceLibraryForm) => {
-    try {
-      console.log("[Submit Form] Form data received:", data);
-      console.log("[Submit Form] Selected item:", selectedItem);
-      
-      if (selectedItem) {
-        console.log("[Submit Form] Updating existing item with ID:", selectedItem.id);
-        updateMutation.mutate({ id: selectedItem.id, data });
-      } else {
-        console.log("[Submit Form] Creating new item");
-        createMutation.mutate(data);
-      }
-    } catch (error) {
-      console.error("[Submit Form] Error in handleSubmit:", error);
-      toast({
-        title: "Form Submission Error",
-        description: "Failed to submit form. Please check all fields and try again.",
-        variant: "destructive"
-      });
-    }
-  };
+  // Filter evidence items based on selected filters and search term
+  const filteredItems = evidenceItems.filter(item => {
+    const matchesSearch = searchTerm === "" || 
+      item.equipmentGroup?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.equipmentType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.componentFailureMode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.equipmentCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.failureCode?.toLowerCase().includes(searchTerm.toLowerCase());
 
-  const handleEdit = (item: EvidenceLibrary) => {
-    try {
-      console.log("[Edit Item] Starting edit for item:", item);
-      setSelectedItem(item);
-      
-      const resetData = {
-        equipmentGroup: item.equipmentGroup || "",
-        equipmentType: item.equipmentType || "",
-        subtype: item.subtype || "",
-        componentFailureMode: item.componentFailureMode || "",
-        equipmentCode: item.equipmentCode || "",
-        failureCode: item.failureCode || "",
-        riskRanking: item.riskRanking || "",
-        requiredTrendDataEvidence: item.requiredTrendDataEvidence || "",
-        aiOrInvestigatorQuestions: item.aiOrInvestigatorQuestions || "",
-        attachmentsEvidenceRequired: item.attachmentsEvidenceRequired || "",
-        rootCauseLogic: item.rootCauseLogic || "",
-        blankColumn1: item.blankColumn1 || "",
-        blankColumn2: item.blankColumn2 || "",
-        blankColumn3: item.blankColumn3 || "",
-        updatedBy: "admin",
-      };
-      
-      console.log("[Edit Item] Reset data prepared:", resetData);
-      form.reset(resetData);
-      console.log("[Edit Item] Form reset complete, opening dialog");
-      setIsDialogOpen(true);
-    } catch (error) {
-      console.error("[Edit Item] Error in handleEdit:", error);
-      toast({
-        title: "Edit Error",
-        description: "Failed to open edit form. Please try again.",
-        variant: "destructive"
-      });
+    const matchesEquipmentGroup = selectedEquipmentGroups.length === 0 || 
+      selectedEquipmentGroups.includes(item.equipmentGroup);
+
+    const matchesEquipmentType = selectedEquipmentTypes.length === 0 || 
+      selectedEquipmentTypes.includes(item.equipmentType);
+
+    const matchesSubtype = selectedSubtypes.length === 0 || 
+      selectedSubtypes.includes(item.subtype || '');
+
+    return matchesSearch && matchesEquipmentGroup && matchesEquipmentType && matchesSubtype;
+  });
+
+  // Sort filtered items
+  const sortedItems = sortField ? filteredItems.sort((a, b) => {
+    const aValue = a[sortField] || '';
+    const bValue = b[sortField] || '';
+    const comparison = aValue.localeCompare(bValue);
+    return sortDirection === 'asc' ? comparison : -comparison;
+  }) : filteredItems;
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      importMutation.mutate(file);
     }
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this evidence item?")) {
+    if (confirm('Are you sure you want to delete this evidence item?')) {
       deleteMutation.mutate(id);
     }
   };
 
-  const handleBulkDelete = () => {
-    if (selectedItems.length === 0) return;
-    if (confirm(`Are you sure you want to delete ${selectedItems.length} evidence items? This action cannot be undone.`)) {
-      bulkDeleteMutation.mutate(selectedItems);
-    }
+  const handleEdit = (item: EvidenceLibrary) => {
+    setSelectedItem(item);
+    setIsDialogOpen(true);
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    setSelectAll(checked);
-    if (checked) {
-      setSelectedItems(filteredItems.map((item: EvidenceLibrary) => item.id));
+  const handleSort = (field: 'equipmentGroup' | 'equipmentType') => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      setSelectedItems([]);
+      setSortField(field);
+      setSortDirection('asc');
     }
   };
 
-  const handleSelectItem = (id: number, checked: boolean) => {
-    if (checked) {
-      setSelectedItems(prev => [...prev, id]);
-    } else {
-      setSelectedItems(prev => prev.filter(itemId => itemId !== id));
-      setSelectAll(false);
-    }
-  };
-
-  const handleExport = () => {
-    const csv = [
-      "Equipment Group,Equipment Type,Subtype,Component / Failure Mode,Equipment Code,Failure Code,Risk Ranking,Required Trend Data / Evidence,AI or Investigator Questions,Attachments / Evidence Required,Root Cause Logic,Primary Root Cause,Contributing Factor,Latent Cause,Detection Gap,Fault Signature Pattern,Applicable to Other Equipment,Evidence Gap Flag,Confidence Level,Diagnostic Value,Industry Relevance,Evidence Priority,Time to Collect,Collection Cost,Analysis Complexity,Seasonal Factor,Related Failure Modes,Prerequisite Evidence,Followup Actions,Industry Benchmark,Blank Column 1,Blank Column 2,Blank Column 3",
-      ...safeEvidenceItems.map((item: EvidenceLibrary) => [
-        item.equipmentGroup,
-        item.equipmentType,
-        item.subtype || "",
-        item.componentFailureMode,
-        item.equipmentCode,
-        item.failureCode,
-        item.riskRanking,
-        item.requiredTrendDataEvidence,
-        item.aiOrInvestigatorQuestions,
-        item.attachmentsEvidenceRequired,
-        item.rootCauseLogic,
-        item.primaryRootCause || "",
-        item.contributingFactor || "",
-        item.latentCause || "",
-        item.detectionGap || "",
-        item.faultSignaturePattern || "",
-        item.applicableToOtherEquipment || "",
-        item.evidenceGapFlag || "",
-        item.confidenceLevel || "",
-        item.diagnosticValue || "",
-        item.industryRelevance || "",
-        item.evidencePriority || "",
-        item.timeToCollect || "",
-        item.collectionCost || "",
-        item.analysisComplexity || "",
-        item.seasonalFactor || "",
-        item.relatedFailureModes || "",
-        item.prerequisiteEvidence || "",
-        item.followupActions || "",
-        item.industryBenchmark || "",
-        item.blankColumn1 || "",
-        item.blankColumn2 || "",
-        item.blankColumn3 || ""
-      ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(","))
-    ].join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `evidence-library-${performance.now().toString().replace('.', '-')}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.type === "text/csv") {
-      importMutation.mutate(file);
-    } else {
-      toast({
-        title: "Invalid File",
-        description: "Please select a valid CSV file",
-        variant: "destructive",
-      });
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const getRiskBadgeColor = (risk: string) => {
-    switch (risk) {
-      case "High": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      case "Medium": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-      case "Low": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-    }
-  };
+  // Get unique values for filter dropdowns
+  const uniqueEquipmentGroups = Array.from(new Set(evidenceItems.map(item => item.equipmentGroup).filter(Boolean)));
+  const uniqueEquipmentTypes = Array.from(new Set(evidenceItems.map(item => item.equipmentType).filter(Boolean)));
+  const uniqueSubtypes = Array.from(new Set(evidenceItems.map(item => item.subtype).filter(Boolean)));
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Navigation Header */}
-        <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex items-center space-x-4">
-            <Link href="/">
-              <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Home</span>
-              </Button>
-            </Link>
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                <Home className="w-4 h-4" />
-                <span>Dashboard</span>
-              </Button>
-            </Link>
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Evidence Library Management
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Link href="/">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Evidence Library Management</h1>
+            <p className="text-muted-foreground">
+              Manage and configure evidence requirements for root cause analysis
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            Evidence Library Management
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Manage comprehensive RCA templates and equipment failure modes
-          </p>
-        </div>
-
-        {/* Controls */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {/* Search and Actions Row */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
-                <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 flex-1">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                    <Input
-                      placeholder="Search equipment types, failure modes..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={clearAllFilters}
-                    disabled={!searchTerm && selectedEquipmentGroups.length === 0 && selectedEquipmentTypes.length === 0 && selectedSubtypes.length === 0}
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <Link href="/nlp-analysis">
-                    <Button variant="secondary" size="sm" className="flex items-center space-x-2">
-                      <Brain className="w-4 h-4" />
-                      <span>NLP Analysis</span>
-                    </Button>
-                  </Link>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".csv"
-                    onChange={handleImport}
-                    className="hidden"
-                  />
-                  <Button 
-                    variant="outline" 
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={importMutation.isPending}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Import CSV
-                  </Button>
-                  <Button variant="outline" onClick={handleExport}>
-                    <Download className="w-4 h-4 mr-2" />
-                    Export CSV
-                  </Button>
-                  {selectedItems.length > 0 && (
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleBulkDelete}
-                      disabled={bulkDeleteMutation.isPending}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete ({selectedItems.length})
-                    </Button>
-                  )}
-                  <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                    try {
-                      console.log("[Dialog] OnOpenChange called with:", open);
-                      setIsDialogOpen(open);
-                      if (!open) {
-                        console.log("[Dialog] Closing - clearing selected item");
-                        setSelectedItem(null);
-                      }
-                    } catch (error) {
-                      console.error("[Dialog] Error in onOpenChange:", error);
-                    }
-                  }}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        onClick={() => {
-                          try {
-                            console.log("[Add Item] Button clicked - preparing to open dialog");
-                            setSelectedItem(null);
-                            
-                            const defaultFormData = {
-                              equipmentGroup: "",
-                              equipmentType: "",
-                              subtype: "",
-                              componentFailureMode: "",
-                              equipmentCode: "",
-                              failureCode: "",
-                              riskRanking: "",
-                              requiredTrendDataEvidence: "",
-                              aiOrInvestigatorQuestions: "",
-                              attachmentsEvidenceRequired: "",
-                              rootCauseLogic: "",
-                              blankColumn1: "",
-                              blankColumn2: "",
-                              blankColumn3: "",
-                              updatedBy: "admin",
-                            };
-                            
-                            console.log("[Add Item] Resetting form with:", defaultFormData);
-                            form.reset(defaultFormData);
-                            console.log("[Add Item] Form reset complete - opening dialog");
-                            
-                            // Use setTimeout to ensure form reset completes before dialog opens
-                            setTimeout(() => {
-                              setIsDialogOpen(true);
-                              console.log("[Add Item] Dialog opened");
-                            }, 10);
-                          } catch (error) {
-                            console.error("[Add Item] Critical error:", error);
-                            toast({
-                              title: "Error Opening Form",
-                              description: "Failed to open add form. Please refresh the page and try again.",
-                              variant: "destructive"
-                            });
-                          }
-                        }}
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Item
-                      </Button>
-                    </DialogTrigger>
-                  </Dialog>
-                </div>
-              </div>
-
-              {/* Filter Dropdowns Row */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <Select 
-                    value={selectedEquipmentGroups.length > 0 ? selectedEquipmentGroups[0] : ""} 
-                    onValueChange={handleEquipmentGroupChange}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={`Equipment Group (${uniqueEquipmentGroups.length} available)`} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {uniqueEquipmentGroups.map((group) => (
-                        <SelectItem key={group} value={group}>
-                          {group}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex-1">
-                  <Select 
-                    value={selectedEquipmentTypes.length > 0 ? selectedEquipmentTypes[0] : ""} 
-                    onValueChange={handleEquipmentTypeChange}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={`Equipment Type (${uniqueEquipmentTypes.length} available)`} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {uniqueEquipmentTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex-1">
-                  <Select 
-                    value={selectedSubtypes.length > 0 ? selectedSubtypes[0] : ""} 
-                    onValueChange={(value) => {
-                      if (value && !selectedSubtypes.includes(value)) {
-                        setSelectedSubtypes([value]);
-                      } else if (!value) {
-                        setSelectedSubtypes([]);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={`Subtype (${uniqueSubtypes.length} available)`} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {uniqueSubtypes.map((subtype) => (
-                        <SelectItem key={subtype} value={subtype || ""}>
-                          {subtype}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Active Filters Display */}
-              {(selectedEquipmentGroups.length > 0 || selectedEquipmentTypes.length > 0 || selectedSubtypes.length > 0) && (
-                <div className="flex flex-wrap gap-2">
-                  {selectedEquipmentGroups.map((group) => (
-                    <Badge key={group} variant="secondary" className="flex items-center gap-1">
-                      Equipment Group: {group}
-                      <button 
-                        onClick={() => setSelectedEquipmentGroups(prev => prev.filter(g => g !== group))}
-                        className="ml-1 hover:bg-gray-200 rounded-full w-4 h-4 flex items-center justify-center text-xs"
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
-                  {selectedEquipmentTypes.map((type) => (
-                    <Badge key={type} variant="secondary" className="flex items-center gap-1">
-                      Equipment Type: {type}
-                      <button 
-                        onClick={() => setSelectedEquipmentTypes(prev => prev.filter(t => t !== type))}
-                        className="ml-1 hover:bg-gray-200 rounded-full w-4 h-4 flex items-center justify-center text-xs"
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
-                  {selectedSubtypes.map((subtype) => (
-                    <Badge key={subtype} variant="secondary" className="flex items-center gap-1">
-                      Subtype: {subtype}
-                      <button 
-                        onClick={() => setSelectedSubtypes(prev => prev.filter(s => s !== subtype))}
-                        className="ml-1 hover:bg-gray-200 rounded-full w-4 h-4 flex items-center justify-center text-xs"
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
+      {/* Main Content */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              Evidence Library
+              {isLoading ? (
+                <Badge variant="secondary">Loading...</Badge>
+              ) : (
+                <Badge variant="outline">
+                  {filteredItems.length} of {evidenceItems.length} items
+                </Badge>
               )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Dialog for Adding/Editing Items */}
-        <Dialog 
-          open={isDialogOpen} 
-          onOpenChange={(open) => {
-            console.log("[Dialog] OnOpenChange called with:", open);
-            setIsDialogOpen(open);
-            if (!open) {
-              console.log("[Dialog] Closing - clearing selected item");
-              setSelectedItem(null);
-            }
-          }}
-        >
-          <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-center">
-                {selectedItem ? "Edit Evidence Item" : "Add Evidence Item"}
-              </DialogTitle>
-            </DialogHeader>
-            
-            {/* Use separate form component to prevent ErrorBoundary issues */}
-            <EvidenceLibraryFormComponent
-              initialData={selectedItem}
-              onSubmit={handleSubmit}
-              onCancel={() => {
-                setIsDialogOpen(false);
-                setSelectedItem(null);
-              }}
-              isSubmitting={createMutation.isPending || updateMutation.isPending}
-            />
-          </DialogContent>
-        </Dialog>
-                        
-                        {/* FIELD IMPORTANCE LEGEND - ALWAYS VISIBLE AT TOP */}
-                        <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 p-4 rounded-lg mb-4 border-2 border-blue-400 shadow-md sticky top-0 z-10">
-                          <h3 className="text-lg font-bold mb-3 text-blue-800 dark:text-blue-300">📚 FIELD IMPORTANCE GUIDE - PLEASE READ</h3>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
-                            <div className="space-y-2">
-                              <h4 className="font-semibold text-gray-800 dark:text-gray-200">Field Priority Levels:</h4>
-                              <div className="flex items-center gap-2">
-                                <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">🔍 Critical</span>
-                                <span className="text-gray-700 dark:text-gray-300">Essential for accurate analysis</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">⚠️ Important</span>
-                                <span className="text-gray-700 dark:text-gray-300">Significantly impacts results</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">🔧 System</span>
-                                <span className="text-gray-700 dark:text-gray-300">System-level considerations</span>
-                              </div>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <h4 className="font-semibold text-gray-800 dark:text-gray-200">Database Operations:</h4>
-                              <div className="bg-white/70 dark:bg-gray-800/70 p-3 rounded border-l-4 border-red-400">
-                                <p className="text-sm text-red-700 dark:text-red-300 font-semibold">
-                                  🔑 Equipment Code = UNIQUE KEY
-                                </p>
-                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                  Only field used for CSV updates. All others can have duplicates.
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="bg-red-100 dark:bg-red-900/20 p-3 rounded border-2 border-red-400 dark:border-red-600">
-                            <p className="text-sm text-red-800 dark:text-red-200 font-bold text-center">
-                              ⚠️ IMPORTANT: Every field below has detailed explanations with colored badges and purpose descriptions ⚠️
-                            </p>
-                            <p className="text-xs text-red-600 dark:text-red-300 text-center mt-1">
-                              Look for explanation boxes under each field
-                            </p>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="equipmentGroup"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Equipment Group</FormLabel>
-                                <FormControl>
-                                  <Select onValueChange={field.onChange} value={field.value}>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select Equipment Group" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {Array.isArray(equipmentGroups) && equipmentGroups.length > 0 
-                                        ? equipmentGroups.map((group: any) => (
-                                            <SelectItem key={group.id || group} value={group.name || group}>
-                                              {group.name || group}
-                                            </SelectItem>
-                                          ))
-                                        : (
-                                            <SelectItem value="" disabled>
-                                              No equipment groups available - Please add equipment groups in Admin Settings
-                                            </SelectItem>
-                                          )
-                                      }
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="equipmentType"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Equipment Type</FormLabel>
-                                <FormControl>
-                                  <Select onValueChange={field.onChange} value={field.value} disabled={!selectedEquipmentGroupId}>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder={
-                                        !selectedEquipmentGroupId 
-                                          ? "First select Equipment Group above" 
-                                          : Array.isArray(equipmentTypesEditForm) && equipmentTypesEditForm.length > 0
-                                            ? "Select Equipment Type"
-                                            : "No equipment types available for this group"
-                                      } />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {!selectedEquipmentGroupId ? (
-                                        <SelectItem value="" disabled>
-                                          Please select Equipment Group first
-                                        </SelectItem>
-                                      ) : Array.isArray(equipmentTypesEditForm) && equipmentTypesEditForm.length > 0 ? (
-                                        equipmentTypesEditForm.map((type: any) => (
-                                          <SelectItem key={type.id || type} value={type.name || type}>
-                                            {type.name || type}
-                                          </SelectItem>
-                                        ))
-                                      ) : (
-                                        <SelectItem value="" disabled>
-                                          No equipment types available for this group - Please add equipment types in Admin Settings
-                                        </SelectItem>
-                                      )}
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="subtype"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Equipment Subtype</FormLabel>
-                                <FormControl>
-                                  <Select onValueChange={field.onChange} value={field.value} disabled={!selectedEquipmentTypeId}>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder={
-                                        !selectedEquipmentTypeId 
-                                          ? "First select Equipment Type above" 
-                                          : Array.isArray(equipmentSubtypesEditForm) && equipmentSubtypesEditForm.length > 0
-                                            ? "Select Equipment Subtype"
-                                            : "No equipment subtypes available for this type"
-                                      } />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {!selectedEquipmentTypeId ? (
-                                        <SelectItem value="" disabled>
-                                          Please select Equipment Type first
-                                        </SelectItem>
-                                      ) : Array.isArray(equipmentSubtypesEditForm) && equipmentSubtypesEditForm.length > 0 ? (
-                                        equipmentSubtypesEditForm.map((subtype: any) => (
-                                          <SelectItem key={subtype.id || subtype} value={subtype.name || subtype}>
-                                            {subtype.name || subtype}
-                                          </SelectItem>
-                                        ))
-                                      ) : (
-                                        <SelectItem value="" disabled>
-                                          No equipment subtypes available for this type - Please add equipment subtypes in Admin Settings
-                                        </SelectItem>
-                                      )}
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="componentFailureMode"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Failure Mode</FormLabel>
-                                <FormControl>
-                                  <Input {...field} placeholder="e.g., Seal Leak, Bearing Failure" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="equipmentCode"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="flex items-center">
-                                  Equipment Code 
-                                  <span className="ml-1 text-red-500 font-bold">*UNIQUE*</span>
-                                  <span className="ml-2 text-xs text-gray-500" title="Unique identifier for equipment - used for updates and imports">🔑</span>
-                                </FormLabel>
-                                <FormControl>
-                                  <Input {...field} placeholder="e.g., PMP-CEN-001 (Must be unique - used for updates)" />
-                                </FormControl>
-                                <FormMessage />
-                                <div className="text-xs text-red-700 bg-red-50 p-3 rounded border-l-4 border-red-400 mt-2">
-                                  <strong>🔑 CRITICAL IMPORTANCE:</strong> This is the ONLY unique field in the database. All CSV imports and updates use Equipment Code as the primary key. All other fields can have duplicates across records.
-                                </div>
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="failureCode"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Failure Code</FormLabel>
-                                <FormControl>
-                                  <Input {...field} placeholder="e.g., F-001" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="riskRanking"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Risk Ranking</FormLabel>
-                                <FormControl>
-                                  <Select onValueChange={field.onChange} value={field.value}>
-                                    <SelectTrigger>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {Array.isArray(riskRankings) && riskRankings.length > 0 
-                                        ? riskRankings.map((ranking: any) => (
-                                            <SelectItem key={ranking.id || ranking} value={ranking.label || ranking}>
-                                              {ranking.label || ranking}
-                                            </SelectItem>
-                                          ))
-                                        : ["Critical", "High", "Medium", "Low"].map((ranking) => (
-                                            <SelectItem key={ranking} value={ranking}>
-                                              {ranking}
-                                            </SelectItem>
-                                          ))
-                                      }
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <FormField
-                          control={form.control}
-                          name="requiredTrendDataEvidence"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Required Trend Data / Evidence</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  {...field} 
-                                  placeholder="e.g., Vibration, Seal Pot Level, Leak Temp, DCS log"
-                                  rows={2}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="aiOrInvestigatorQuestions"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>AI or Investigator Questions</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  {...field} 
-                                  placeholder="e.g., When did leak start? Temp/vibration spike? Recent seal work?"
-                                  rows={2}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="attachmentsEvidenceRequired"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Attachments / Evidence Required</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  {...field} 
-                                  placeholder="e.g., Vibration plot, leak photo, maintenance records"
-                                  rows={2}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="rootCauseLogic"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Root Cause Logic</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  {...field} 
-                                  placeholder="e.g., Root: Seal aged/damaged. Contributing: Lubrication, misalignment."
-                                  rows={3}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {/* Configurable Intelligence Fields Section */}
-                        <div className="border-t pt-6 mt-6">
-                          <h3 className="text-lg font-semibold mb-4 text-blue-700 dark:text-blue-400">
-                            🧠 Configurable Intelligence Fields
-                          </h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            Admin-configurable fields that drive AI analysis behavior. Configure how the system analyzes this failure mode.
-                          </p>
-
-                          {/* Intelligence Grid Row 1 */}
-                          <div className="grid grid-cols-3 gap-4 mb-4">
-                            <FormField
-                              control={form.control}
-                              name="confidenceLevel"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="flex items-center gap-2">
-                                    Confidence Level
-                                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full" title="Expected analysis confidence when this evidence is collected">📊 Intelligence</span>
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select confidence" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="High">High (90%+ confidence)</SelectItem>
-                                        <SelectItem value="Medium">Medium (70-89% confidence)</SelectItem>
-                                        <SelectItem value="Low">Low (50-69% confidence)</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="diagnosticValue"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="flex items-center gap-2">
-                                    Diagnostic Value
-                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full" title="How critical this evidence is for accurate diagnosis">🎯 Priority</span>
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select value" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Critical">Critical (Must collect)</SelectItem>
-                                        <SelectItem value="Important">Important (Should collect)</SelectItem>
-                                        <SelectItem value="Useful">Useful (Could collect)</SelectItem>
-                                        <SelectItem value="Optional">Optional (If available)</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="industryRelevance"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="flex items-center">
-                                    Industry Relevance
-                                    <span className="ml-2 text-xs text-gray-500" title="Which industries this failure mode applies to">🏭</span>
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select industry" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="All">All Industries</SelectItem>
-                                        <SelectItem value="Petrochemical">Petrochemical</SelectItem>
-                                        <SelectItem value="Power">Power Generation</SelectItem>
-                                        <SelectItem value="Manufacturing">Manufacturing</SelectItem>
-                                        <SelectItem value="Mining">Mining</SelectItem>
-                                        <SelectItem value="Marine">Marine</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          {/* Intelligence Grid Row 2 */}
-                          <div className="grid grid-cols-4 gap-4 mb-4">
-                            <FormField
-                              control={form.control}
-                              name="evidencePriority"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="flex items-center">
-                                    Evidence Priority
-                                    <span className="ml-2 text-xs text-gray-500" title="Collection priority order (1=highest, 4=lowest)">📋</span>
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input 
-                                      {...field} 
-                                      placeholder="e.g., 1-2 days, Critical, High priority"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="timeToCollect"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="flex items-center">
-                                    Time to Collect
-                                    <span className="ml-2 text-xs text-gray-500" title="Expected time required to collect this evidence">⏱️</span>
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Time" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Immediate">Immediate</SelectItem>
-                                        <SelectItem value="Hours">Few Hours</SelectItem>
-                                        <SelectItem value="Days">Few Days</SelectItem>
-                                        <SelectItem value="Weeks">Few Weeks</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="collectionCost"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="flex items-center">
-                                    Collection Cost
-                                    <span className="ml-2 text-xs text-gray-500" title="Expected cost to collect this evidence">💰</span>
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Cost" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Low">Low ($0-1K)</SelectItem>
-                                        <SelectItem value="Medium">Medium ($1K-10K)</SelectItem>
-                                        <SelectItem value="High">High ($10K-50K)</SelectItem>
-                                        <SelectItem value="Very High">Very High ($50K+)</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="analysisComplexity"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Analysis Complexity</FormLabel>
-                                  <FormControl>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Complexity" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Simple">Simple</SelectItem>
-                                        <SelectItem value="Moderate">Moderate</SelectItem>
-                                        <SelectItem value="Complex">Complex</SelectItem>
-                                        <SelectItem value="Expert Required">Expert Required</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          {/* Intelligence Grid Row 3 */}
-                          <div className="grid grid-cols-2 gap-4 mb-4">
-                            <FormField
-                              control={form.control}
-                              name="seasonalFactor"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Seasonal Factor</FormLabel>
-                                  <FormControl>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Seasonal pattern" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="None">No Seasonal Pattern</SelectItem>
-                                        <SelectItem value="Summer">Summer Related</SelectItem>
-                                        <SelectItem value="Winter">Winter Related</SelectItem>
-                                        <SelectItem value="Shutdown">Shutdown Period</SelectItem>
-                                        <SelectItem value="Startup">Startup Period</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="relatedFailureModes"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Related Failure Modes</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} placeholder="e.g., BRG-001, SEAL-002, VIB-003" />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          {/* Intelligence Text Areas */}
-                          <div className="grid grid-cols-1 gap-4 mb-4">
-                            <FormField
-                              control={form.control}
-                              name="prerequisiteEvidence"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Prerequisite Evidence</FormLabel>
-                                  <FormControl>
-                                    <Textarea 
-                                      {...field} 
-                                      placeholder="Evidence required before collecting this evidence (e.g., 'Collect vibration data before oil analysis')"
-                                      rows={2}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="followupActions"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Follow-up Actions</FormLabel>
-                                  <FormControl>
-                                    <Textarea 
-                                      {...field} 
-                                      placeholder="What to do after collecting this evidence (e.g., 'Send oil sample to lab for ferrography analysis')"
-                                      rows={2}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="industryBenchmark"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Industry Benchmark / Standards</FormLabel>
-                                  <FormControl>
-                                    <Textarea 
-                                      {...field} 
-                                      placeholder="Industry standards or benchmarks (e.g., 'ISO 10816 vibration limits, API 682 seal standards')"
-                                      rows={2}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Enriched Evidence Library Fields Section */}
-                        <div className="border-t pt-6 mt-6">
-                          <h3 className="text-lg font-semibold mb-4 text-green-700 dark:text-green-400">
-                            🔬 Enriched Evidence Library Fields
-                          </h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            Advanced RCA analysis fields for comprehensive failure mode understanding and cross-equipment applicability.
-                          </p>
-
-                          {/* Enriched Fields Grid Row 1 */}
-                          <div className="grid grid-cols-2 gap-4 mb-4">
-                            <FormField
-                              control={form.control}
-                              name="primaryRootCause"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="flex items-center gap-2">
-                                    Primary Root Cause
-                                    <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full" title="The primary engineering cause that leads to this failure mode">🔍 Critical</span>
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Textarea 
-                                      {...field} 
-                                      placeholder="Primary engineering root cause for this failure mode (e.g., 'Material degradation due to corrosive environment')"
-                                      rows={2}
-                                      className="border-2 border-red-200 focus:border-red-400"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                  <div className="text-xs text-red-600 bg-red-50 p-2 rounded mt-1">
-                                    <strong>🎯 PURPOSE:</strong> This field identifies the primary engineering cause that directly leads to this failure mode. Essential for accurate root cause analysis.
-                                  </div>
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="contributingFactor"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="flex items-center gap-2">
-                                    Contributing Factor
-                                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full" title="Secondary factors that increase likelihood of the primary root cause">⚠️ Important</span>
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Textarea 
-                                      {...field} 
-                                      placeholder="Key contributing factors (e.g., 'High operating temperature, inadequate maintenance intervals')"
-                                      rows={2}
-                                      className="border-2 border-orange-200 focus:border-orange-400"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                  <div className="text-xs text-orange-600 bg-orange-50 p-2 rounded mt-1">
-                                    <strong>🔗 PURPOSE:</strong> Secondary factors that work together with the primary root cause to enable this failure mode.
-                                  </div>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          {/* Enriched Fields Grid Row 2 */}
-                          <div className="grid grid-cols-2 gap-4 mb-4">
-                            <FormField
-                              control={form.control}
-                              name="latentCause"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="flex items-center gap-2">
-                                    Latent Cause
-                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full" title="Underlying system/design issues that enable failures">🔧 System</span>
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Textarea 
-                                      {...field} 
-                                      placeholder="Underlying latent causes (e.g., 'Design limitations, inadequate material selection')"
-                                      rows={2}
-                                      className="border-2 border-blue-200 focus:border-blue-400"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                  <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded mt-1">
-                                    <strong>🏗️ PURPOSE:</strong> Underlying system, design, or organizational issues that create conditions for failure.
-                                  </div>
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="detectionGap"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="flex items-center gap-2">
-                                    Detection Gap
-                                    <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full" title="Monitoring and detection limitations">🚨 Detection</span>
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Textarea 
-                                      {...field} 
-                                      placeholder="Early detection opportunities missed (e.g., 'Vibration monitoring not implemented, temperature trend ignored')"
-                                      rows={2}
-                                      className="border-2 border-yellow-200 focus:border-yellow-400"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                  <div className="text-xs text-yellow-600 bg-yellow-50 p-2 rounded mt-1">
-                                    <strong>🔍 PURPOSE:</strong> Identifies monitoring and detection gaps that prevent early warning of this failure mode.
-                                  </div>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          {/* Enriched Fields Grid Row 3 */}
-                          <div className="grid grid-cols-1 gap-4 mb-4">
-                            <FormField
-                              control={form.control}
-                              name="faultSignaturePattern"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Fault Signature Pattern</FormLabel>
-                                  <FormControl>
-                                    <Textarea 
-                                      {...field} 
-                                      placeholder="Characteristic patterns and symptoms (e.g., 'Gradual vibration increase over 6 months, sudden temperature spike at failure')"
-                                      rows={2}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          {/* Enriched Fields Grid Row 4 */}
-                          <div className="grid grid-cols-2 gap-4 mb-4">
-                            <FormField
-                              control={form.control}
-                              name="applicableToOtherEquipment"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Applicable to Other Equipment</FormLabel>
-                                  <FormControl>
-                                    <Textarea 
-                                      {...field} 
-                                      placeholder="Cross-equipment applicability (e.g., 'Similar failure modes in compressors, fans, agitators')"
-                                      rows={2}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="evidenceGapFlag"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Evidence Gap Flag</FormLabel>
-                                  <FormControl>
-                                    <Textarea 
-                                      {...field} 
-                                      placeholder="Common evidence collection gaps (e.g., 'Historical maintenance records often incomplete')"
-                                      rows={2}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="blankColumn1"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Blank Column 1</FormLabel>
-                                <FormControl>
-                                  <Input {...field} placeholder="Optional field" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="blankColumn2"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Blank Column 2</FormLabel>
-                                <FormControl>
-                                  <Input {...field} placeholder="Optional field" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="blankColumn3"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Blank Column 3</FormLabel>
-                                <FormControl>
-                                  <Input {...field} placeholder="Optional field" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <div className="flex justify-end space-x-2 pt-4">
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            onClick={() => {
-                              setIsDialogOpen(false);
-                              setSelectedItem(null);
-                              form.reset();
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                          <Button 
-                            type="submit"
-                            disabled={createMutation.isPending || updateMutation.isPending}
-                          >
-                            {selectedItem ? "Update" : "Create"}
-                          </Button>
-
-
-        {/* Evidence Library Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
-              Evidence Library ({Array.isArray(filteredItems) ? filteredItems.length : 0} of {Array.isArray(evidenceItems) ? evidenceItems.length : 0} items)
             </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8">Loading evidence library...</div>
-            ) : !Array.isArray(filteredItems) || filteredItems.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                {(searchTerm || selectedEquipmentGroups.length > 0 || selectedEquipmentTypes.length > 0 || selectedSubtypes.length > 0)
-                  ? "No evidence items match your current filters. Try adjusting your search or filters."
-                  : "No evidence items found. Add some items to get started."}
+            <div className="flex items-center space-x-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="csv-import"
+              />
+              <label htmlFor="csv-import">
+                <Button variant="outline" size="sm" asChild>
+                  <span>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import CSV
+                  </span>
+                </Button>
+              </label>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => setSelectedItem(null)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Evidence
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {selectedItem ? 'Edit Evidence Item' : 'Add New Evidence Item'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <EvidenceLibraryFormComponent
+                    item={selectedItem}
+                    onSuccess={() => {
+                      setIsDialogOpen(false);
+                      setSelectedItem(null);
+                      queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
+                    }}
+                    equipmentGroups={equipmentGroups}
+                    riskRankings={riskRankings}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {/* Search and Filters */}
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search equipment, failure modes, codes..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-            ) : (
-              <div>
-                <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded mb-2 text-sm">
-                  ⚠️ SCROLL BAR TEST: Look for a bright RED horizontal scroll bar at the bottom of the table below
-                </div>
-                <div 
-                  className="border rounded-lg table-container-with-scroll"
-                  style={{
-                    overflowX: 'scroll',
-                    overflowY: 'visible',
-                    width: '100%'
+            </div>
+
+            {/* Filter Dropdowns */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Select value="" onValueChange={(value) => {
+                if (value) {
+                  setSelectedEquipmentGroups([...selectedEquipmentGroups, value]);
+                }
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by Equipment Group" />
+                </SelectTrigger>
+                <SelectContent>
+                  {uniqueEquipmentGroups.map((group) => (
+                    <SelectItem key={group} value={group}>
+                      {group}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value="" onValueChange={(value) => {
+                if (value) {
+                  setSelectedEquipmentTypes([...selectedEquipmentTypes, value]);
+                }
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by Equipment Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {uniqueEquipmentTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value="" onValueChange={(value) => {
+                if (value) {
+                  setSelectedSubtypes([...selectedSubtypes, value]);
+                }
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by Subtype" />
+                </SelectTrigger>
+                <SelectContent>
+                  {uniqueSubtypes.map((subtype) => (
+                    <SelectItem key={subtype} value={subtype}>
+                      {subtype}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Applied Filters */}
+            {(selectedEquipmentGroups.length > 0 || selectedEquipmentTypes.length > 0 || selectedSubtypes.length > 0) && (
+              <div className="flex flex-wrap gap-2">
+                {selectedEquipmentGroups.map((group) => (
+                  <Badge key={group} variant="secondary" className="flex items-center gap-1">
+                    {group}
+                    <button
+                      onClick={() => setSelectedEquipmentGroups(selectedEquipmentGroups.filter(g => g !== group))}
+                      className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+                {selectedEquipmentTypes.map((type) => (
+                  <Badge key={type} variant="secondary" className="flex items-center gap-1">
+                    {type}
+                    <button
+                      onClick={() => setSelectedEquipmentTypes(selectedEquipmentTypes.filter(t => t !== type))}
+                      className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+                {selectedSubtypes.map((subtype) => (
+                  <Badge key={subtype} variant="secondary" className="flex items-center gap-1">
+                    {subtype}
+                    <button
+                      onClick={() => setSelectedSubtypes(selectedSubtypes.filter(s => s !== subtype))}
+                      className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedEquipmentGroups([]);
+                    setSelectedEquipmentTypes([]);
+                    setSelectedSubtypes([]);
                   }}
                 >
-                  <style>{`
-                  .table-container-with-scroll {
-                    overflow-x: scroll !important;
-                    scrollbar-width: thick !important;
-                    scrollbar-color: #DC2626 #FEF2F2 !important;
-                  }
-                  
-                  .table-container-with-scroll::-webkit-scrollbar {
-                    height: 20px !important;
-                    background: #FEF2F2 !important;
-                    border-radius: 0 !important;
-                  }
-                  
-                  .table-container-with-scroll::-webkit-scrollbar-track {
-                    background: #FEE2E2 !important;
-                    border-radius: 0 !important;
-                  }
-                  
-                  .table-container-with-scroll::-webkit-scrollbar-thumb {
-                    background: #DC2626 !important;
-                    border-radius: 0 !important;
-                    border: none !important;
-                    min-width: 50px !important;
-                  }
-                  
-                  .table-container-with-scroll::-webkit-scrollbar-thumb:hover {
-                    background: #B91C1C !important;
-                  }
-                  
-                  .force-wide-table {
-                    min-width: 4000px !important;
-                    width: 4000px !important;
-                  }
-                  `}</style>
-                  <Table className="force-wide-table">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="sticky left-0 bg-white dark:bg-gray-800 border-r z-10 w-12">
-                          <input
-                            type="checkbox"
-                            checked={selectAll && filteredItems.length > 0}
-                            onChange={(e) => handleSelectAll(e.target.checked)}
-                            className="rounded"
-                          />
-                        </TableHead>
-                        <TableHead className="w-32 min-w-[8rem]">
-                          <Button 
-                            variant="ghost" 
-                            className="h-auto p-0 font-medium hover:bg-transparent"
-                            onClick={() => handleSort('equipmentGroup')}
-                          >
-                            Equipment Group
-                            {sortField === 'equipmentGroup' && (
-                              sortDirection === 'asc' ? <ChevronUp className="ml-1 w-4 h-4" /> : <ChevronDown className="ml-1 w-4 h-4" />
-                            )}
-                          </Button>
-                        </TableHead>
-                        <TableHead className="w-32 min-w-[8rem]">
-                          <Button 
-                            variant="ghost" 
-                            className="h-auto p-0 font-medium hover:bg-transparent"
-                            onClick={() => handleSort('equipmentType')}
-                          >
-                            Equipment Type
-                            {sortField === 'equipmentType' && (
-                              sortDirection === 'asc' ? <ChevronUp className="ml-1 w-4 h-4" /> : <ChevronDown className="ml-1 w-4 h-4" />
-                            )}
-                          </Button>
-                        </TableHead>
-                        <TableHead className="w-28 min-w-[7rem]">Subtype</TableHead>
-                        <TableHead className="w-40 min-w-[10rem]">Component / Failure Mode</TableHead>
-                        <TableHead className="w-32 min-w-[8rem]">Equipment Code</TableHead>
-                        <TableHead className="w-24 min-w-[6rem]">Failure Code</TableHead>
-                        <TableHead className="w-24 min-w-[6rem]">Risk Ranking</TableHead>
-                        <TableHead className="w-48 min-w-[12rem]">Required Trend Data / Evidence</TableHead>
-                        <TableHead className="w-48 min-w-[12rem]">AI or Investigator Questions</TableHead>
-                        <TableHead className="w-48 min-w-[12rem]">Attachments / Evidence Required</TableHead>
-                        <TableHead className="w-48 min-w-[12rem]">Root Cause Logic</TableHead>
-                        <TableHead className="w-32 min-w-[8rem]">Primary Root Cause</TableHead>
-                        <TableHead className="w-32 min-w-[8rem]">Contributing Factor</TableHead>
-                        <TableHead className="w-32 min-w-[8rem]">Latent Cause</TableHead>
-                        <TableHead className="w-32 min-w-[8rem]">Detection Gap</TableHead>
-                        <TableHead className="w-32 min-w-[8rem]">Fault Signature Pattern</TableHead>
-                        <TableHead className="w-32 min-w-[8rem]">Applicable to Other Equipment</TableHead>
-                        <TableHead className="w-32 min-w-[8rem]">Evidence Gap Flag</TableHead>
-                        <TableHead className="w-24 min-w-[6rem]">Confidence Level</TableHead>
-                        <TableHead className="w-24 min-w-[6rem]">Diagnostic Value</TableHead>
-                        <TableHead className="w-24 min-w-[6rem]">Industry Relevance</TableHead>
-                        <TableHead className="w-24 min-w-[6rem]">Evidence Priority</TableHead>
-                        <TableHead className="w-24 min-w-[6rem]">Time to Collect</TableHead>
-                        <TableHead className="w-24 min-w-[6rem]">Collection Cost</TableHead>
-                        <TableHead className="w-24 min-w-[6rem]">Analysis Complexity</TableHead>
-                        <TableHead className="sticky right-0 bg-white dark:bg-gray-800 border-l z-10 w-24">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {(Array.isArray(filteredItems) ? filteredItems : []).map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="sticky left-0 bg-white dark:bg-gray-800 border-r z-10">
-                            <input
-                              type="checkbox"
-                              checked={selectedItems.includes(item.id)}
-                              onChange={(e) => handleSelectItem(item.id, e.target.checked)}
-                              className="rounded"
-                            />
-                          </TableCell>
-                          <TableCell className="truncate">{item.equipmentGroup}</TableCell>
-                          <TableCell className="truncate">{item.equipmentType}</TableCell>
-                          <TableCell className="truncate">{item.subtype || '-'}</TableCell>
-                          <TableCell className="truncate">{item.componentFailureMode}</TableCell>
-                          <TableCell className="truncate">{item.equipmentCode}</TableCell>
-                          <TableCell className="truncate">{item.failureCode}</TableCell>
-                          <TableCell>
-                            <Badge className={getRiskBadgeColor(item.riskRanking)}>
-                              {item.riskRanking}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate" title={item.requiredTrendDataEvidence || ''}>
-                              {item.requiredTrendDataEvidence || '-'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate" title={item.aiOrInvestigatorQuestions || ''}>
-                              {item.aiOrInvestigatorQuestions || '-'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate" title={item.attachmentsEvidenceRequired || ''}>
-                              {item.attachmentsEvidenceRequired || '-'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate" title={item.rootCauseLogic || ''}>
-                              {item.rootCauseLogic || '-'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate" title={item.primaryRootCause || ''}>
-                              {item.primaryRootCause || '-'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate" title={item.contributingFactor || ''}>
-                              {item.contributingFactor || '-'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate" title={item.latentCause || ''}>
-                              {item.latentCause || '-'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate" title={item.detectionGap || ''}>
-                              {item.detectionGap || '-'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate" title={item.faultSignaturePattern || ''}>
-                              {item.faultSignaturePattern || '-'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate" title={item.applicableToOtherEquipment || ''}>
-                              {item.applicableToOtherEquipment || '-'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate" title={item.evidenceGapFlag || ''}>
-                              {item.evidenceGapFlag || '-'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={item.confidenceLevel === 'High' ? 'default' : item.confidenceLevel === 'Medium' ? 'secondary' : 'outline'}>
-                              {item.confidenceLevel || 'Medium'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={item.diagnosticValue === 'Critical' ? 'destructive' : item.diagnosticValue === 'Important' ? 'default' : 'secondary'}>
-                              {item.diagnosticValue || 'Important'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate">
-                              {item.industryRelevance || 'All'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {item.evidencePriority ? `P${item.evidencePriority}` : 'P3'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate">
-                              {item.timeToCollect || 'Days'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={item.collectionCost === 'High' || item.collectionCost === 'Very High' ? 'destructive' : 'secondary'}>
-                              {item.collectionCost || 'Medium'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="truncate">
-                              {item.analysisComplexity || 'Moderate'}
-                            </div>
-                          </TableCell>
-                          <TableCell className="sticky right-0 bg-white dark:bg-gray-800 border-l z-10">
-                            <div className="flex space-x-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEdit(item)}
-                                title="Edit"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDelete(item.id)}
-                                title="Delete"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                  Clear All
+                </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          </div>
+
+          {/* Evidence Library Table */}
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('equipmentGroup')}
+                  >
+                    Equipment Group
+                    {sortField === 'equipmentGroup' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('equipmentType')}
+                  >
+                    Equipment Type
+                    {sortField === 'equipmentType' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </TableHead>
+                  <TableHead>Subtype</TableHead>
+                  <TableHead>Component / Failure Mode</TableHead>
+                  <TableHead>Equipment Code</TableHead>
+                  <TableHead>Failure Code</TableHead>
+                  <TableHead>Risk Ranking</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <span>Loading evidence library...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : sortedItems.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="flex flex-col items-center space-y-3">
+                        <AlertTriangle className="h-12 w-12 text-muted-foreground" />
+                        <div>
+                          <h3 className="font-medium">No evidence items found</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {searchTerm || selectedEquipmentGroups.length > 0 || selectedEquipmentTypes.length > 0 || selectedSubtypes.length > 0
+                              ? "Try adjusting your search or filters"
+                              : "Add evidence items to get started"}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  sortedItems.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">{item.equipmentGroup}</TableCell>
+                      <TableCell>{item.equipmentType}</TableCell>
+                      <TableCell>{item.subtype || '-'}</TableCell>
+                      <TableCell>{item.componentFailureMode}</TableCell>
+                      <TableCell>{item.equipmentCode}</TableCell>
+                      <TableCell>
+                        <code className="bg-muted px-2 py-1 rounded text-sm">
+                          {item.failureCode}
+                        </code>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            item.riskRanking?.toLowerCase() === 'critical' ? 'destructive' :
+                            item.riskRanking?.toLowerCase() === 'high' ? 'destructive' :
+                            item.riskRanking?.toLowerCase() === 'medium' ? 'default' : 'secondary'
+                          }
+                        >
+                          {item.riskRanking}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(item)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(item.id)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
