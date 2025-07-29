@@ -27,12 +27,16 @@ import EvidenceLibraryForm from "@/components/evidence-library-form";
 
 interface EvidenceLibrary {
   id: number;
+  equipmentGroupId?: number;
+  equipmentTypeId?: number;
+  equipmentSubtypeId?: number;
   equipmentGroup: string;
   equipmentType: string;
   subtype?: string;
   componentFailureMode: string;
   equipmentCode: string;
   failureCode: string;
+  riskRankingId?: number;
   riskRanking: string;
   requiredTrendDataEvidence: string;
   aiOrInvestigatorQuestions: string;
@@ -41,7 +45,7 @@ interface EvidenceLibrary {
   confidenceLevel?: string;
   diagnosticValue?: string;
   industryRelevance?: string;
-  evidencePriority?: number;
+  evidencePriority?: string;
   timeToCollect?: string;
   collectionCost?: string;
   analysisComplexity?: string;
@@ -57,12 +61,15 @@ interface EvidenceLibrary {
   faultSignaturePattern?: string;
   applicableToOtherEquipment?: string;
   evidenceGapFlag?: string;
+  eliminatedIfTheseFailuresConfirmed?: string;
+  whyItGetsEliminated?: string;
   blankColumn1?: string;
   blankColumn2?: string;
   blankColumn3?: string;
   isActive: boolean;
   lastUpdated: string;
   updatedBy?: string;
+  createdAt?: string;
 }
 
 export default function EvidenceLibraryManagement() {
@@ -635,20 +642,48 @@ export default function EvidenceLibraryManagement() {
                       <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </TableHead>
+                  <TableHead>ID</TableHead>
                   <TableHead>Component / Failure Mode</TableHead>
                   <TableHead>Equipment Code</TableHead>
                   <TableHead>Failure Code</TableHead>
                   <TableHead>Risk Ranking</TableHead>
+                  <TableHead>Required Trend Data Evidence</TableHead>
+                  <TableHead>AI/Investigator Questions</TableHead>
+                  <TableHead>Attachments Evidence Required</TableHead>
+                  <TableHead>Root Cause Logic</TableHead>
                   <TableHead>Primary Root Cause</TableHead>
                   <TableHead>Contributing Factor</TableHead>
+                  <TableHead>Latent Cause</TableHead>
+                  <TableHead>Detection Gap</TableHead>
+                  <TableHead>Fault Signature Pattern</TableHead>
+                  <TableHead>Applicable to Other Equipment</TableHead>
+                  <TableHead>Evidence Gap Flag</TableHead>
                   <TableHead>Confidence Level</TableHead>
+                  <TableHead>Diagnostic Value</TableHead>
+                  <TableHead>Industry Relevance</TableHead>
+                  <TableHead>Evidence Priority</TableHead>
+                  <TableHead>Time to Collect</TableHead>
+                  <TableHead>Collection Cost</TableHead>
+                  <TableHead>Analysis Complexity</TableHead>
+                  <TableHead>Seasonal Factor</TableHead>
+                  <TableHead>Related Failure Modes</TableHead>
+                  <TableHead>Prerequisite Evidence</TableHead>
+                  <TableHead>Followup Actions</TableHead>
+                  <TableHead>Industry Benchmark</TableHead>
+                  <TableHead>Eliminated If These Failures Confirmed</TableHead>
+                  <TableHead>Why It Gets Eliminated</TableHead>
+                  <TableHead>Blank Column 1</TableHead>
+                  <TableHead>Blank Column 2</TableHead>
+                  <TableHead>Blank Column 3</TableHead>
+                  <TableHead>Last Updated</TableHead>
+                  <TableHead>Updated By</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={12} className="text-center py-8">
+                    <TableCell colSpan={36} className="text-center py-8">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                         <span>Loading evidence library...</span>
@@ -657,7 +692,7 @@ export default function EvidenceLibraryManagement() {
                   </TableRow>
                 ) : sortedItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={12} className="text-center py-8">
+                    <TableCell colSpan={36} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-3">
                         <AlertTriangle className="h-12 w-12 text-muted-foreground" />
                         <div>
@@ -685,6 +720,7 @@ export default function EvidenceLibraryManagement() {
                       <TableCell className="font-medium">{item.equipmentGroup === "DELETED" ? "Unknown" : item.equipmentGroup}</TableCell>
                       <TableCell>{item.equipmentType === "DELETED" ? "Unknown" : item.equipmentType}</TableCell>
                       <TableCell>{item.subtype || '-'}</TableCell>
+                      <TableCell className="font-mono text-sm bg-blue-50 px-2 py-1">{item.id}</TableCell>
                       <TableCell>{item.componentFailureMode}</TableCell>
                       <TableCell>{item.equipmentCode}</TableCell>
                       <TableCell>
@@ -703,6 +739,10 @@ export default function EvidenceLibraryManagement() {
                           {item.riskRanking}
                         </Badge>
                       </TableCell>
+                      <TableCell className="max-w-60 truncate">{item.requiredTrendDataEvidence || '-'}</TableCell>
+                      <TableCell className="max-w-60 truncate">{item.aiOrInvestigatorQuestions || '-'}</TableCell>
+                      <TableCell className="max-w-60 truncate">{item.attachmentsEvidenceRequired || '-'}</TableCell>
+                      <TableCell className="max-w-60 truncate">{item.rootCauseLogic || '-'}</TableCell>
                       <TableCell className="max-w-40 truncate">
                         {item.primaryRootCause ? (
                           <span title={item.primaryRootCause}>{item.primaryRootCause}</span>
@@ -717,6 +757,11 @@ export default function EvidenceLibraryManagement() {
                           <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
+                      <TableCell className="max-w-40 truncate">{item.latentCause || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.detectionGap || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.faultSignaturePattern || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.applicableToOtherEquipment || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.evidenceGapFlag || '-'}</TableCell>
                       <TableCell>
                         {item.confidenceLevel ? (
                           <Badge variant="outline">{item.confidenceLevel}</Badge>
@@ -724,6 +769,24 @@ export default function EvidenceLibraryManagement() {
                           <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
+                      <TableCell className="max-w-40 truncate">{item.diagnosticValue || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.industryRelevance || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.evidencePriority || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.timeToCollect || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.collectionCost || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.analysisComplexity || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.seasonalFactor || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.relatedFailureModes || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.prerequisiteEvidence || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.followupActions || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.industryBenchmark || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{(item as any).eliminatedIfTheseFailuresConfirmed || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{(item as any).whyItGetsEliminated || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.blankColumn1 || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.blankColumn2 || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.blankColumn3 || '-'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{new Date(item.lastUpdated).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{item.updatedBy || 'system'}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
                           <Button
