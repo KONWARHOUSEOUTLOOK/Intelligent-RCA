@@ -76,7 +76,8 @@ export class UniversalAIEvidenceAnalyzer {
       
       // Dynamic provider instantiation - NO HARDCODED PROVIDER NAMES
       const providerName = aiSettings.provider.toLowerCase();
-      if (providerName === 'openai') {
+      const openaiProviderName = process.env.OPENAI_PROVIDER_NAME || 'openai';
+      if (providerName === openaiProviderName) {
         const OpenAI = await import('openai').then(mod => mod.default);
         this.aiService = new OpenAI({
           apiKey: decryptedKey

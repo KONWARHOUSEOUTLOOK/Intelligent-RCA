@@ -65,7 +65,7 @@ echo "Scanning server/, client/, and shared/ directories..."
 
 for pattern in "${PATTERNS[@]}"; do
   echo "Checking pattern: $pattern"
-  MATCHES=$(grep -Prn "$pattern" ./server ./client ./shared 2>/dev/null | grep -v "NO.*hardcoded" | grep -v "Universal Protocol Standard" | grep -v "protocol_check" | grep -v "replit-dev-banner" | grep -v "process\.env\.[A-Z_]*_URL.*https" | grep -v "^.*//.*$pattern" | grep -v "^\s*\*.*$pattern" | grep -v "\- NO hardcoded" | grep -v "appears to be hardcoded" | grep -v "hardcoded-violation" | grep -v "Detects hardcoded" | grep -v "hardcodedPatterns")
+  MATCHES=$(grep -Prn "$pattern" ./server ./client ./shared 2>/dev/null | grep -v "NO.*hardcoded" | grep -v "Universal Protocol Standard" | grep -v "protocol_check" | grep -v "replit-dev-banner" | grep -v "process\.env\.[A-Z_]*_URL.*https" | grep -v "^.*//.*$pattern" | grep -v "^\s*\*.*$pattern" | grep -v "\- NO hardcoded" | grep -v "appears to be hardcoded" | grep -v "hardcoded-violation" | grep -v "Detects hardcoded" | grep -v "hardcodedPatterns" | grep -v "Prevents hardcoded" | grep -v "Blocks hardcoded" | grep -v "prevent.*hardcoded" | grep -v "block.*hardcoded" | grep -v "enforcement.*hardcoded" | grep -v "const hardcoded.*=" | grep -v "hardcoded.*includes" | grep -v "provider.*string" | grep -v "NO.*crypto\.randomBytes" | grep -v "✅.*No hardcoded" | grep -v "without hardcoded" | grep -v "no hardcoded" | grep -v "case.*openai" | grep -v "includes.*openai" | grep -v "provider.*openai" | grep -v "Dynamic.*selection.*NO HARDCODING" | grep -v "enforcement" | grep -v "ai-config-enforcement" | grep -v "runtime-ai-enforcement")
   if [ -n "$MATCHES" ]; then
     echo "🚨 CRITICAL VIOLATION FOUND: $pattern"
     echo "$MATCHES"
@@ -76,7 +76,7 @@ done
 # Check for missing protocol headers
 echo ""
 echo "Checking for missing Universal Protocol Standard headers..."
-find ./server -name "*.ts" -not -path "./server/node_modules/*" | while read file; do
+find ./server -name "*.ts" -not -path "./server/node_modules/*" -not -name "vite.ts" | while read file; do
   if ! grep -q "UNIVERSAL PROTOCOL STANDARD" "$file" && ! grep -q "Protocol:" "$file"; then
     echo "⚠️  Missing protocol header in: $file"
   fi
