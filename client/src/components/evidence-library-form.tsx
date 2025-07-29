@@ -89,13 +89,17 @@ export default function EvidenceLibraryForm({ item, onSuccess, onCancel }: Evide
     },
   });
 
+  // CRITICAL FIX: Equipment Types filtered by selected Equipment Group
+  const selectedEquipmentGroupId = form.watch('equipmentGroupId');
   const { data: equipmentTypes = [] } = useQuery({
-    queryKey: ['/api/equipment-types'],
+    queryKey: ['/api/equipment-types/by-group', selectedEquipmentGroupId],
     queryFn: async () => {
-      const response = await fetch('/api/equipment-types');
+      if (!selectedEquipmentGroupId) return [];
+      const response = await fetch(`/api/equipment-types/by-group/${selectedEquipmentGroupId}`);
       if (!response.ok) return [];
       return response.json();
     },
+    enabled: !!selectedEquipmentGroupId,
   });
 
   // CRITICAL FIX: Add Risk Rankings query to eliminate hardcoded values
@@ -149,7 +153,7 @@ export default function EvidenceLibraryForm({ item, onSuccess, onCancel }: Evide
     },
   });
 
-  // CRITICAL FIX: Add Equipment Subtypes query filtered by selected equipment type
+  // CRITICAL FIX: Equipment Subtypes filtered by selected Equipment Type
   const selectedEquipmentTypeId = form.watch('equipmentTypeId');
   const { data: equipmentSubtypes = [] } = useQuery({
     queryKey: ['/api/equipment-subtypes/by-type', selectedEquipmentTypeId],

@@ -602,9 +602,10 @@ export default function EvidenceLibraryManagement() {
             )}
           </div>
 
-          {/* Evidence Library Table */}
-          <div className="border rounded-lg">
-            <Table>
+          {/* Evidence Library Table - HORIZONTAL SCROLL FOR 44 COLUMNS */}
+          <div className="border rounded-lg overflow-x-auto">
+            <div className="min-w-[200%]">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
@@ -677,7 +678,7 @@ export default function EvidenceLibraryManagement() {
                   <TableHead>Blank Column 3</TableHead>
                   <TableHead>Last Updated</TableHead>
                   <TableHead>Updated By</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="w-32">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -692,7 +693,7 @@ export default function EvidenceLibraryManagement() {
                   </TableRow>
                 ) : sortedItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={36} className="text-center py-8">
+                    <TableCell colSpan={32} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-3">
                         <AlertTriangle className="h-12 w-12 text-muted-foreground" />
                         <div>
@@ -780,8 +781,8 @@ export default function EvidenceLibraryManagement() {
                       <TableCell className="max-w-40 truncate">{item.prerequisiteEvidence || '-'}</TableCell>
                       <TableCell className="max-w-40 truncate">{item.followupActions || '-'}</TableCell>
                       <TableCell className="max-w-40 truncate">{item.industryBenchmark || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{(item as any).eliminatedIfTheseFailuresConfirmed || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{(item as any).whyItGetsEliminated || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.eliminatedIfTheseFailuresConfirmed || '-'}</TableCell>
+                      <TableCell className="max-w-40 truncate">{item.whyItGetsEliminated || '-'}</TableCell>
                       <TableCell className="max-w-40 truncate">{item.blankColumn1 || '-'}</TableCell>
                       <TableCell className="max-w-40 truncate">{item.blankColumn2 || '-'}</TableCell>
                       <TableCell className="max-w-40 truncate">{item.blankColumn3 || '-'}</TableCell>
@@ -811,6 +812,7 @@ export default function EvidenceLibraryManagement() {
                 )}
               </TableBody>
             </Table>
+            </div>
           </div>
         </CardContent>
       </Card>
