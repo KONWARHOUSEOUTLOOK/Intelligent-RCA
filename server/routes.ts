@@ -156,8 +156,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const evidenceItems = await investigationStorage.getAllEvidenceLibrary();
       console.log(`[ROUTES] Exporting ${evidenceItems.length} evidence library items to CSV`);
       
-      // Create CSV headers
+      // CRITICAL: COMPLETE MASTER SCHEMA HEADERS - ALL 29 FIELDS (NO OMISSIONS ALLOWED)
       const headers = [
+        // Core Equipment Fields
         'Equipment Group',
         'Equipment Type', 
         'Subtype',
@@ -165,14 +166,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'Equipment Code',
         'Failure Code',
         'Risk Ranking',
+        
+        // Core Analysis Fields
         'Required Trend Data Evidence',
         'AI / Investigator Questions',
         'Attachments Evidence Required',
-        'Root Cause Logic'
+        'Root Cause Logic',
+        
+        // MASTER SCHEMA: RCA Analysis Fields (CRITICAL - NO OMISSIONS)
+        'Primary Root Cause',
+        'Contributing Factor',
+        'Latent Cause',
+        'Detection Gap',
+        'Fault Signature Pattern',
+        'Applicable to Other Equipment',
+        'Evidence Gap Flag',
+        
+        // MASTER SCHEMA: Evaluation & Priority Fields (CRITICAL - NO OMISSIONS)
+        'Confidence Level',
+        'Diagnostic Value',
+        'Industry Relevance',
+        'Evidence Priority',
+        'Time to Collect',
+        'Collection Cost',
+        'Analysis Complexity',
+        'Seasonal Factor',
+        
+        // MASTER SCHEMA: Related Information Fields (CRITICAL - NO OMISSIONS)
+        'Related Failure Modes',
+        'Prerequisite Evidence',
+        'Followup Actions',
+        'Industry Benchmark'
       ];
       
-      // Create CSV rows
+      // CRITICAL: COMPLETE MASTER SCHEMA ROWS - ALL 29 FIELDS (NO OMISSIONS ALLOWED)
       const rows = evidenceItems.map(item => [
+        // Core Equipment Fields
         item.equipmentGroup || '',
         item.equipmentType || '',
         item.subtype || '',
@@ -180,10 +209,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         item.equipmentCode || '',
         item.failureCode || '',
         item.riskRanking || '',
+        
+        // Core Analysis Fields  
         item.requiredTrendDataEvidence || '',
         item.aiOrInvestigatorQuestions || '',
         item.attachmentsEvidenceRequired || '',
-        item.rootCauseLogic || ''
+        item.rootCauseLogic || '',
+        
+        // MASTER SCHEMA: RCA Analysis Fields (CRITICAL - NO OMISSIONS)
+        item.primaryRootCause || '',
+        item.contributingFactor || '',
+        item.latentCause || '',
+        item.detectionGap || '',
+        item.faultSignaturePattern || '',
+        item.applicableToOtherEquipment || '',
+        item.evidenceGapFlag || '',
+        
+        // MASTER SCHEMA: Evaluation & Priority Fields (CRITICAL - NO OMISSIONS)
+        item.confidenceLevel || '',
+        item.diagnosticValue || '',
+        item.industryRelevance || '',
+        item.evidencePriority || '',
+        item.timeToCollect || '',
+        item.collectionCost || '',
+        item.analysisComplexity || '',
+        item.seasonalFactor || '',
+        
+        // MASTER SCHEMA: Related Information Fields (CRITICAL - NO OMISSIONS)
+        item.relatedFailureModes || '',
+        item.prerequisiteEvidence || '',
+        item.followupActions || '',
+        item.industryBenchmark || ''
       ]);
       
       // Combine headers and rows

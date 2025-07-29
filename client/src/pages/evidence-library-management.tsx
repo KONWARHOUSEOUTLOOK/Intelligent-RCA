@@ -639,13 +639,16 @@ export default function EvidenceLibraryManagement() {
                   <TableHead>Equipment Code</TableHead>
                   <TableHead>Failure Code</TableHead>
                   <TableHead>Risk Ranking</TableHead>
+                  <TableHead>Primary Root Cause</TableHead>
+                  <TableHead>Contributing Factor</TableHead>
+                  <TableHead>Confidence Level</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8">
+                    <TableCell colSpan={12} className="text-center py-8">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                         <span>Loading evidence library...</span>
@@ -654,7 +657,7 @@ export default function EvidenceLibraryManagement() {
                   </TableRow>
                 ) : sortedItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8">
+                    <TableCell colSpan={12} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-3">
                         <AlertTriangle className="h-12 w-12 text-muted-foreground" />
                         <div>
@@ -699,6 +702,27 @@ export default function EvidenceLibraryManagement() {
                         >
                           {item.riskRanking}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-40 truncate">
+                        {item.primaryRootCause ? (
+                          <span title={item.primaryRootCause}>{item.primaryRootCause}</span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="max-w-40 truncate">
+                        {item.contributingFactor ? (
+                          <span title={item.contributingFactor}>{item.contributingFactor}</span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {item.confidenceLevel ? (
+                          <Badge variant="outline">{item.confidenceLevel}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">

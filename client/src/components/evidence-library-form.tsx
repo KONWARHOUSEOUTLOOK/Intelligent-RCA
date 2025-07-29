@@ -24,18 +24,47 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
+// CRITICAL: COMPLETE MASTER SCHEMA - ALL 29 FIELDS REQUIRED (NO OMISSIONS ALLOWED)
 const evidenceFormSchema = z.object({
+  // Core Equipment Fields (Dynamic FK relationships)
   equipmentGroupId: z.string().min(1, "Equipment Group is required"),
   equipmentTypeId: z.string().min(1, "Equipment Type is required"),
-  equipmentSubtypeId: z.string().optional(), // FIXED: Use subtypeId for FK relationship
+  equipmentSubtypeId: z.string().optional(),
   componentFailureMode: z.string().min(1, "Component/Failure Mode is required"),
   equipmentCode: z.string().min(1, "Equipment Code is required"),
   failureCode: z.string().min(1, "Failure Code is required"),
-  riskRankingId: z.string().min(1, "Risk Ranking is required"), // FIXED: Use riskRankingId for FK relationship
+  riskRankingId: z.string().min(1, "Risk Ranking is required"),
+  
+  // Core Analysis Fields
   requiredTrendDataEvidence: z.string().min(1, "Required trend data evidence is required"),
   aiOrInvestigatorQuestions: z.string().min(1, "AI/Investigator questions is required"),
   attachmentsEvidenceRequired: z.string().min(1, "Attachments evidence required is required"),
   rootCauseLogic: z.string().min(1, "Root cause logic is required"),
+  
+  // MASTER SCHEMA: RCA Analysis Fields (ALL REQUIRED - NO OMISSIONS)
+  primaryRootCause: z.string().optional(),
+  contributingFactor: z.string().optional(),
+  latentCause: z.string().optional(),
+  detectionGap: z.string().optional(),
+  faultSignaturePattern: z.string().optional(),
+  applicableToOtherEquipment: z.string().optional(),
+  evidenceGapFlag: z.string().optional(),
+  
+  // MASTER SCHEMA: Evaluation & Priority Fields (ALL REQUIRED - NO OMISSIONS)
+  confidenceLevel: z.string().optional(),
+  diagnosticValue: z.string().optional(),
+  industryRelevance: z.string().optional(),
+  evidencePriority: z.string().optional(),
+  timeToCollect: z.string().optional(),
+  collectionCost: z.string().optional(),
+  analysisComplexity: z.string().optional(),
+  seasonalFactor: z.string().optional(),
+  
+  // MASTER SCHEMA: Related Information Fields (ALL REQUIRED - NO OMISSIONS)
+  relatedFailureModes: z.string().optional(),
+  prerequisiteEvidence: z.string().optional(),
+  followupActions: z.string().optional(),
+  industryBenchmark: z.string().optional(),
 });
 
 type EvidenceFormData = z.infer<typeof evidenceFormSchema>;
@@ -82,17 +111,41 @@ export default function EvidenceLibraryForm({ item, onSuccess, onCancel }: Evide
   const form = useForm<EvidenceFormData>({
     resolver: zodResolver(evidenceFormSchema),
     defaultValues: {
+      // Core Equipment Fields
       equipmentGroupId: item?.equipmentGroupId?.toString() || "",
       equipmentTypeId: item?.equipmentTypeId?.toString() || "",
-      equipmentSubtypeId: item?.equipmentSubtypeId?.toString() || "", // FIXED: Use FK ID
+      equipmentSubtypeId: item?.equipmentSubtypeId?.toString() || "",
       componentFailureMode: item?.componentFailureMode || "",
       equipmentCode: item?.equipmentCode || "",
       failureCode: item?.failureCode || "",
-      riskRankingId: item?.riskRankingId?.toString() || "", // FIXED: Use FK ID
+      riskRankingId: item?.riskRankingId?.toString() || "",
+      
+      // Core Analysis Fields
       requiredTrendDataEvidence: item?.requiredTrendDataEvidence || "",
       aiOrInvestigatorQuestions: item?.aiOrInvestigatorQuestions || "",
       attachmentsEvidenceRequired: item?.attachmentsEvidenceRequired || "",
       rootCauseLogic: item?.rootCauseLogic || "",
+      
+      // COMPLETE MASTER SCHEMA FIELDS (ALL 18 ADDITIONAL FIELDS)
+      primaryRootCause: item?.primaryRootCause || "",
+      contributingFactor: item?.contributingFactor || "",
+      latentCause: item?.latentCause || "",
+      detectionGap: item?.detectionGap || "",
+      faultSignaturePattern: item?.faultSignaturePattern || "",
+      applicableToOtherEquipment: item?.applicableToOtherEquipment || "",
+      evidenceGapFlag: item?.evidenceGapFlag || "",
+      confidenceLevel: item?.confidenceLevel || "",
+      diagnosticValue: item?.diagnosticValue || "",
+      industryRelevance: item?.industryRelevance || "",
+      evidencePriority: item?.evidencePriority || "",
+      timeToCollect: item?.timeToCollect || "",
+      collectionCost: item?.collectionCost || "",
+      analysisComplexity: item?.analysisComplexity || "",
+      seasonalFactor: item?.seasonalFactor || "",
+      relatedFailureModes: item?.relatedFailureModes || "",
+      prerequisiteEvidence: item?.prerequisiteEvidence || "",
+      followupActions: item?.followupActions || "",
+      industryBenchmark: item?.industryBenchmark || "",
     },
   });
 
@@ -121,8 +174,28 @@ export default function EvidenceLibraryForm({ item, onSuccess, onCancel }: Evide
           ...data,
           equipmentGroupId: parseInt(data.equipmentGroupId),
           equipmentTypeId: parseInt(data.equipmentTypeId),
-          equipmentSubtypeId: data.equipmentSubtypeId ? parseInt(data.equipmentSubtypeId) : null, // FIXED: Handle optional FK
-          riskRankingId: parseInt(data.riskRankingId), // FIXED: Use FK ID
+          equipmentSubtypeId: data.equipmentSubtypeId ? parseInt(data.equipmentSubtypeId) : null,
+          riskRankingId: parseInt(data.riskRankingId),
+          // CRITICAL: Include ALL 18 additional master schema fields
+          primaryRootCause: data.primaryRootCause || null,
+          contributingFactor: data.contributingFactor || null,
+          latentCause: data.latentCause || null,
+          detectionGap: data.detectionGap || null,
+          faultSignaturePattern: data.faultSignaturePattern || null,
+          applicableToOtherEquipment: data.applicableToOtherEquipment || null,
+          evidenceGapFlag: data.evidenceGapFlag || null,
+          confidenceLevel: data.confidenceLevel || null,
+          diagnosticValue: data.diagnosticValue || null,
+          industryRelevance: data.industryRelevance || null,
+          evidencePriority: data.evidencePriority || null,
+          timeToCollect: data.timeToCollect || null,
+          collectionCost: data.collectionCost || null,
+          analysisComplexity: data.analysisComplexity || null,
+          seasonalFactor: data.seasonalFactor || null,
+          relatedFailureModes: data.relatedFailureModes || null,
+          prerequisiteEvidence: data.prerequisiteEvidence || null,
+          followupActions: data.followupActions || null,
+          industryBenchmark: data.industryBenchmark || null,
         }),
       });
     },
@@ -399,6 +472,312 @@ export default function EvidenceLibraryForm({ item, onSuccess, onCancel }: Evide
             </FormItem>
           )}
         />
+
+        {/* ========== MASTER SCHEMA: RCA ANALYSIS FIELDS (CRITICAL - NO OMISSIONS) ========== */}
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-semibold mb-4 text-blue-600">RCA Analysis Fields</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Primary Root Cause */}
+            <FormField
+              control={form.control}
+              name="primaryRootCause"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Primary Root Cause</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Primary root cause identified" rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Contributing Factor */}
+            <FormField
+              control={form.control}
+              name="contributingFactor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contributing Factor</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Contributing factors to the failure" rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Latent Cause */}
+            <FormField
+              control={form.control}
+              name="latentCause"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Latent Cause</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Underlying latent causes" rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Detection Gap */}
+            <FormField
+              control={form.control}
+              name="detectionGap"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Detection Gap</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Gaps in detection methods" rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Fault Signature Pattern */}
+            <FormField
+              control={form.control}
+              name="faultSignaturePattern"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fault Signature Pattern</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Characteristic fault signature patterns" rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Applicable to Other Equipment */}
+            <FormField
+              control={form.control}
+              name="applicableToOtherEquipment"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Applicable to Other Equipment</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Applicability to similar equipment" rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Evidence Gap Flag */}
+            <FormField
+              control={form.control}
+              name="evidenceGapFlag"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Evidence Gap Flag</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Evidence gaps identified" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* ========== MASTER SCHEMA: EVALUATION & PRIORITY FIELDS (CRITICAL - NO OMISSIONS) ========== */}
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-semibold mb-4 text-green-600">Evaluation & Priority Fields</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Confidence Level */}
+            <FormField
+              control={form.control}
+              name="confidenceLevel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confidence Level</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Confidence level (e.g., High, Medium, Low)" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Diagnostic Value */}
+            <FormField
+              control={form.control}
+              name="diagnosticValue"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Diagnostic Value</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Diagnostic value rating" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Industry Relevance */}
+            <FormField
+              control={form.control}
+              name="industryRelevance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Industry Relevance</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Industry relevance assessment" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Evidence Priority */}
+            <FormField
+              control={form.control}
+              name="evidencePriority"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Evidence Priority</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Priority level for evidence collection" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Time to Collect */}
+            <FormField
+              control={form.control}
+              name="timeToCollect"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Time to Collect</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Estimated time to collect evidence" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Collection Cost */}
+            <FormField
+              control={form.control}
+              name="collectionCost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Collection Cost</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Estimated cost for evidence collection" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Analysis Complexity */}
+            <FormField
+              control={form.control}
+              name="analysisComplexity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Analysis Complexity</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Complexity level of analysis required" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Seasonal Factor */}
+            <FormField
+              control={form.control}
+              name="seasonalFactor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Seasonal Factor</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Seasonal factors affecting evidence" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* ========== MASTER SCHEMA: RELATED INFORMATION FIELDS (CRITICAL - NO OMISSIONS) ========== */}
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-semibold mb-4 text-purple-600">Related Information Fields</h3>
+          <div className="grid grid-cols-1 gap-6">
+            
+            {/* Related Failure Modes */}
+            <FormField
+              control={form.control}
+              name="relatedFailureModes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Related Failure Modes</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Related failure modes and patterns" rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Prerequisite Evidence */}
+            <FormField
+              control={form.control}
+              name="prerequisiteEvidence"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Prerequisite Evidence</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Evidence required before analysis" rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Followup Actions */}
+            <FormField
+              control={form.control}
+              name="followupActions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Followup Actions</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Recommended followup actions" rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Industry Benchmark */}
+            <FormField
+              control={form.control}
+              name="industryBenchmark"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Industry Benchmark</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Industry benchmarks and standards" rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
 
         {/* Form Actions */}
         <div className="flex justify-end space-x-4 pt-6">
