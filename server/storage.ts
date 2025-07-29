@@ -493,7 +493,6 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
       .leftJoin(equipmentTypes, eq(evidenceLibrary.equipmentTypeId, equipmentTypes.id))
       .leftJoin(equipmentSubtypes, eq(evidenceLibrary.equipmentSubtypeId, equipmentSubtypes.id))
       .leftJoin(riskRankings, eq(evidenceLibrary.riskRankingId, riskRankings.id))
-      .where(eq(evidenceLibrary.isActive, true))
       .orderBy(sql`COALESCE(${equipmentGroups.name}, ${evidenceLibrary.equipmentGroup})`, sql`COALESCE(${equipmentTypes.name}, ${evidenceLibrary.equipmentType})`);
     
     console.log(`[DatabaseInvestigationStorage] NORMALIZED EVIDENCE LIBRARY: Retrieved ${results.length} evidence items with foreign key resolution`);

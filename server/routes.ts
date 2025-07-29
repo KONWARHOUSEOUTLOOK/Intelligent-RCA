@@ -108,33 +108,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // WORKING EVIDENCE LIBRARY ROUTE - UNIVERSAL PROTOCOL STANDARD COMPLIANT
+  // EVIDENCE LIBRARY ROUTE WITH ALL 44 DATABASE COLUMNS - UNIVERSAL PROTOCOL STANDARD COMPLIANT
   app.get("/api/evidence-library", async (req, res) => {
-    console.log("[ROUTES] Evidence library route accessed - Universal Protocol Standard compliant");
+    console.log("[ROUTES] Evidence library route accessed - Universal Protocol Standard compliant with ALL 44 columns");
     try {
       const evidenceItems = await investigationStorage.getAllEvidenceLibrary();
       console.log(`[ROUTES] Successfully retrieved ${evidenceItems.length} evidence library items from database`);
       
-      // Transform to camelCase format expected by frontend
+      // Transform to include ALL 44 database columns (no field omissions)
       const transformedItems = evidenceItems.map(item => ({
         id: item.id,
+        equipmentGroupId: item.equipmentGroupId,
+        equipmentTypeId: item.equipmentTypeId,
+        equipmentSubtypeId: item.equipmentSubtypeId,
         equipmentGroup: item.equipmentGroup,
         equipmentType: item.equipmentType,
         subtype: item.subtype,
         componentFailureMode: item.componentFailureMode,
         equipmentCode: item.equipmentCode,
         failureCode: item.failureCode,
+        riskRankingId: item.riskRankingId,
         riskRanking: item.riskRanking,
         requiredTrendDataEvidence: item.requiredTrendDataEvidence,
         aiOrInvestigatorQuestions: item.aiOrInvestigatorQuestions,
         attachmentsEvidenceRequired: item.attachmentsEvidenceRequired,
         rootCauseLogic: item.rootCauseLogic,
+        
+        // ALL RCA-SPECIFIC FIELDS - NO HARDCODING, ALL DATABASE-DRIVEN
+        primaryRootCause: item.primaryRootCause,
+        contributingFactor: item.contributingFactor,
+        latentCause: item.latentCause,
+        detectionGap: item.detectionGap,
+        confidenceLevel: item.confidenceLevel,
+        faultSignaturePattern: item.faultSignaturePattern,
+        applicableToOtherEquipment: item.applicableToOtherEquipment,
+        evidenceGapFlag: item.evidenceGapFlag,
+        eliminatedIfTheseFailuresConfirmed: item.eliminatedIfTheseFailuresConfirmed,
+        whyItGetsEliminated: item.whyItGetsEliminated,
+        blankColumn1: item.blankColumn1,
+        blankColumn2: item.blankColumn2,
+        blankColumn3: item.blankColumn3,
+        
+        // CONFIGURABLE INTELLIGENCE FIELDS - ADMIN EDITABLE (NO HARDCODING)
+        diagnosticValue: item.diagnosticValue,
+        industryRelevance: item.industryRelevance,
+        evidencePriority: item.evidencePriority,
+        timeToCollect: item.timeToCollect,
+        collectionCost: item.collectionCost,
+        analysisComplexity: item.analysisComplexity,
+        seasonalFactor: item.seasonalFactor,
+        relatedFailureModes: item.relatedFailureModes,
+        prerequisiteEvidence: item.prerequisiteEvidence,
+        followupActions: item.followupActions,
+        industryBenchmark: item.industryBenchmark,
+        
+        // SYSTEM FIELDS - NO SOFT DELETE (REMOVED isActive FROM FILTERING)
         isActive: item.isActive,
         lastUpdated: item.lastUpdated?.toISOString(),
-        updatedBy: item.updatedBy || 'system'
+        updatedBy: item.updatedBy || 'system',
+        createdAt: item.createdAt?.toISOString()
       }));
       
-      console.log(`[ROUTES] Returning ${transformedItems.length} transformed evidence library items`);
+      console.log(`[ROUTES] Returning ${transformedItems.length} items with ALL 44 database columns`);
       res.json(transformedItems);
       
     } catch (error) {
@@ -4431,8 +4466,8 @@ JSON array only:`;
     }
   });
 
-  // Evidence Library API Routes - UNIVERSAL PROTOCOL STANDARD COMPLIANT WITH VITE BYPASS
-  app.get("/api/evidence-library", async (req: Request, res: Response) => {
+  // DUPLICATE ROUTE REMOVED - MAIN ROUTE NOW AT LINE 115 WITH ALL 44 COLUMNS
+  // app.get("/api/evidence-library", async (req: Request, res: Response) => {
     console.log("[Evidence Library] Universal Protocol Standard compliant route processing");
     
     // CRITICAL FIX: Force response headers to bypass Vite middleware interference
@@ -4446,50 +4481,58 @@ JSON array only:`;
       const evidenceItems = await investigationStorage.getAllEvidenceLibrary();
       console.log(`[Evidence Library] Retrieved ${evidenceItems.length} evidence library records from database`);
       
-      // UNIVERSAL PROTOCOL STANDARD: Evidence Library items with ALL enriched RCA fields
+      // UNIVERSAL PROTOCOL STANDARD: Evidence Library items with ALL 44 DATABASE COLUMNS
       const transformedItems = evidenceItems.map(item => ({
         id: item.id,
+        equipmentGroupId: item.equipmentGroupId,
+        equipmentTypeId: item.equipmentTypeId,
+        equipmentSubtypeId: item.equipmentSubtypeId,
         equipmentGroup: item.equipmentGroup,
         equipmentType: item.equipmentType,
         subtype: item.subtype,
         componentFailureMode: item.componentFailureMode,
         equipmentCode: item.equipmentCode,
         failureCode: item.failureCode,
+        riskRankingId: item.riskRankingId,
         riskRanking: item.riskRanking,
         requiredTrendDataEvidence: item.requiredTrendDataEvidence,
         aiOrInvestigatorQuestions: item.aiOrInvestigatorQuestions,
         attachmentsEvidenceRequired: item.attachmentsEvidenceRequired,
         rootCauseLogic: item.rootCauseLogic,
 
-        // RCA-specific fields - Universal Protocol Standard compliant (no hardcoding)
-        primaryRootCause: item.primaryRootCause || null,
-        contributingFactor: item.contributingFactor || null,
-        latentCause: item.latentCause || null,
-        detectionGap: item.detectionGap || null,
-        confidenceLevel: item.confidenceLevel || null,
-        faultSignaturePattern: item.faultSignaturePattern || null,
-        applicableToOtherEquipment: item.applicableToOtherEquipment || null,
-        evidenceGapFlag: item.evidenceGapFlag || null,
-        eliminatedIfTheseFailuresConfirmed: item.eliminatedIfTheseFailuresConfirmed || null,
-        whyItGetsEliminated: item.whyItGetsEliminated || null,
+        // ALL RCA-SPECIFIC FIELDS - NO HARDCODING, ALL DATABASE-DRIVEN
+        primaryRootCause: item.primaryRootCause,
+        contributingFactor: item.contributingFactor,
+        latentCause: item.latentCause,
+        detectionGap: item.detectionGap,
+        confidenceLevel: item.confidenceLevel,
+        faultSignaturePattern: item.faultSignaturePattern,
+        applicableToOtherEquipment: item.applicableToOtherEquipment,
+        evidenceGapFlag: item.evidenceGapFlag,
+        eliminatedIfTheseFailuresConfirmed: item.eliminatedIfTheseFailuresConfirmed,
+        whyItGetsEliminated: item.whyItGetsEliminated,
+        blankColumn1: item.blankColumn1,
+        blankColumn2: item.blankColumn2,
+        blankColumn3: item.blankColumn3,
 
-        // Configurable Intelligence Fields - Admin editable (no hardcoding)  
-        diagnosticValue: item.diagnosticValue || null,
-        industryRelevance: item.industryRelevance || null,
-        evidencePriority: item.evidencePriority || null,
-        timeToCollect: item.timeToCollect || null,
-        collectionCost: item.collectionCost || null,
-        analysisComplexity: item.analysisComplexity || null,
-        seasonalFactor: item.seasonalFactor || null,
-        relatedFailureModes: item.relatedFailureModes || null,
-        prerequisiteEvidence: item.prerequisiteEvidence || null,
-        followupActions: item.followupActions || null,
-        industryBenchmark: item.industryBenchmark || null,
+        // CONFIGURABLE INTELLIGENCE FIELDS - ADMIN EDITABLE (NO HARDCODING)
+        diagnosticValue: item.diagnosticValue,
+        industryRelevance: item.industryRelevance,
+        evidencePriority: item.evidencePriority,
+        timeToCollect: item.timeToCollect,
+        collectionCost: item.collectionCost,
+        analysisComplexity: item.analysisComplexity,
+        seasonalFactor: item.seasonalFactor,
+        relatedFailureModes: item.relatedFailureModes,
+        prerequisiteEvidence: item.prerequisiteEvidence,
+        followupActions: item.followupActions,
+        industryBenchmark: item.industryBenchmark,
 
-        // Metadata fields
+        // SYSTEM FIELDS - NO SOFT DELETE (REMOVED isActive FROM FILTERING)
         isActive: item.isActive,
         lastUpdated: item.lastUpdated?.toISOString(),
-        updatedBy: item.updatedBy || 'system'
+        updatedBy: item.updatedBy || 'system',
+        createdAt: item.createdAt?.toISOString()
       }));
       
       console.log(`[Evidence Library] Sending ${transformedItems.length} Universal Protocol Standard compliant evidence items`);
