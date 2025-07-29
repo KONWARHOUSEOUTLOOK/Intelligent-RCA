@@ -23,7 +23,7 @@ import { Search, Plus, Upload, Download, Edit, Trash2, AlertTriangle, CheckCircl
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-// Import form component conditionally - will be replaced if needed
+import EvidenceLibraryForm from "@/components/evidence-library-form";
 
 interface EvidenceLibrary {
   id: number;
@@ -82,7 +82,7 @@ export default function EvidenceLibraryManagement() {
   const [selectAll, setSelectAll] = useState(false);
 
   // Sorting states
-  const [sortField, setSortField] = useState<'equipmentGroup' | 'equipmentType' | null>(null);
+  const [sortField, setSortField] = useState<'equipmentGroup' | 'equipmentType' | 'subtype' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // UNIVERSAL PROTOCOL STANDARD: Use relative API paths only
@@ -249,11 +249,20 @@ export default function EvidenceLibraryManagement() {
 
   // Sort filtered items
   const sortedItems = sortField ? filteredItems.sort((a, b) => {
-    const aValue = a[sortField] || '';
-    const bValue = b[sortField] || '';
+    const aValue = (a[sortField] || '').toString();
+    const bValue = (b[sortField] || '').toString();
     const comparison = aValue.localeCompare(bValue);
     return sortDirection === 'asc' ? comparison : -comparison;
   }) : filteredItems;
+
+  const handleSort = (field: 'equipmentGroup' | 'equipmentType' | 'subtype') => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -273,19 +282,98 @@ export default function EvidenceLibraryManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleSort = (field: 'equipmentGroup' | 'equipmentType') => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+  // Bulk selection handlers
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedItems([]);
+      setSelectAll(false);
     } else {
-      setSortField(field);
-      setSortDirection('asc');
+      setSelectedItems(sortedItems.map(item => item.id));
+      setSelectAll(true);
     }
   };
 
+  const handleItemSelect = (id: number) => {
+    if (selectedItems.includes(id)) {
+      setSelectedItems(selectedItems.filter(item => item !== id));
+      if (selectAll) setSelectAll(false);
+    } else {
+      const newSelected = [...selectedItems, id];
+      setSelectedItems(newSelected);
+      if (newSelected.length === sortedItems.length) {
+        setSelectAll(true);
+      }
+    }
+  };
+
+  // Bulk delete mutation
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      const promises = ids.map(id => 
+        apiRequest(`/api/evidence-library/${id}`, { method: 'DELETE' })
+      );
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
+      setSelectedItems([]);
+      setSelectAll(false);
+      toast({
+        title: "Success",
+        description: `Deleted ${selectedItems.length} evidence items successfully`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete selected evidence items",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleBulkDelete = () => {
+    if (selectedItems.length === 0) return;
+    if (confirm(`Are you sure you want to delete ${selectedItems.length} selected evidence items?`)) {
+      bulkDeleteMutation.mutate(selectedItems);
+    }
+  };
+
+  // Export function
+  const handleExport = async () => {
+    try {
+      const response = await fetch('/api/evidence-library/export/csv');
+      if (!response.ok) throw new Error('Export failed');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `evidence-library-export-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Success",
+        description: "Evidence Library exported successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to export Evidence Library",
+        variant: "destructive",
+      });
+    }
+  };
+
+
+
   // Get unique values for filter dropdowns - filter out "DELETED" values for safety
-  const uniqueEquipmentGroups = Array.from(new Set(evidenceItems.map(item => item.equipmentGroup).filter(val => val && val !== "DELETED")));
-  const uniqueEquipmentTypes = Array.from(new Set(evidenceItems.map(item => item.equipmentType).filter(val => val && val !== "DELETED")));
-  const uniqueSubtypes = Array.from(new Set(evidenceItems.map(item => item.subtype).filter(Boolean)));
+  const uniqueEquipmentGroups = Array.from(new Set(evidenceItems.map(item => item.equipmentGroup).filter((val): val is string => val !== null && val !== undefined && val !== "DELETED")));
+  const uniqueEquipmentTypes = Array.from(new Set(evidenceItems.map(item => item.equipmentType).filter((val): val is string => val !== null && val !== undefined && val !== "DELETED")));
+  const uniqueSubtypes = Array.from(new Set(evidenceItems.map(item => item.subtype).filter((val): val is string => val !== null && val !== undefined)));
 
   return (
     <div className="space-y-6">
@@ -338,6 +426,25 @@ export default function EvidenceLibraryManagement() {
                   </span>
                 </Button>
               </label>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleExport}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </Button>
+              {selectedItems.length > 0 && (
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  disabled={bulkDeleteMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Selected ({selectedItems.length})
+                </Button>
+              )}
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button onClick={() => setSelectedItem(null)}>
@@ -351,11 +458,17 @@ export default function EvidenceLibraryManagement() {
                       {selectedItem ? 'Edit Evidence Item' : 'Add New Evidence Item'}
                     </DialogTitle>
                   </DialogHeader>
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">
-                      Evidence Library form component will be available when form functionality is needed.
-                    </p>
-                  </div>
+                  <EvidenceLibraryForm
+                    item={selectedItem}
+                    onSuccess={() => {
+                      setIsDialogOpen(false);
+                      setSelectedItem(null);
+                    }}
+                    onCancel={() => {
+                      setIsDialogOpen(false);
+                      setSelectedItem(null);
+                    }}
+                  />
                 </DialogContent>
               </Dialog>
             </div>
@@ -487,6 +600,14 @@ export default function EvidenceLibraryManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      className="rounded border-gray-300"
+                    />
+                  </TableHead>
                   <TableHead 
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort('equipmentGroup')}
@@ -505,7 +626,15 @@ export default function EvidenceLibraryManagement() {
                       <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </TableHead>
-                  <TableHead>Subtype</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('subtype')}
+                  >
+                    Subtype
+                    {sortField === 'subtype' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </TableHead>
                   <TableHead>Component / Failure Mode</TableHead>
                   <TableHead>Equipment Code</TableHead>
                   <TableHead>Failure Code</TableHead>
@@ -516,7 +645,7 @@ export default function EvidenceLibraryManagement() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
+                    <TableCell colSpan={9} className="text-center py-8">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                         <span>Loading evidence library...</span>
@@ -525,7 +654,7 @@ export default function EvidenceLibraryManagement() {
                   </TableRow>
                 ) : sortedItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
+                    <TableCell colSpan={9} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-3">
                         <AlertTriangle className="h-12 w-12 text-muted-foreground" />
                         <div>
@@ -542,8 +671,16 @@ export default function EvidenceLibraryManagement() {
                 ) : (
                   sortedItems.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.equipmentGroup}</TableCell>
-                      <TableCell>{item.equipmentType}</TableCell>
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.includes(item.id)}
+                          onChange={() => handleItemSelect(item.id)}
+                          className="rounded border-gray-300"
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{item.equipmentGroup === "DELETED" ? "Unknown" : item.equipmentGroup}</TableCell>
+                      <TableCell>{item.equipmentType === "DELETED" ? "Unknown" : item.equipmentType}</TableCell>
                       <TableCell>{item.subtype || '-'}</TableCell>
                       <TableCell>{item.componentFailureMode}</TableCell>
                       <TableCell>{item.equipmentCode}</TableCell>

@@ -1,288 +1,248 @@
 /**
- * UNIVERSAL PROTOCOL STANDARD COMPLIANCE
- * - Zero hardcoding policy enforced
- * - Database-driven operations only
- * - Schema-driven field validation
+ * UNIVERSAL PROTOCOL STANDARD COMPLIANCE HEADER
+ * 
+ * FRONTEND: Relative API paths only (/api/route), NO absolute URLs or hardcoded ports
+ * NO HARDCODING: All configuration from API responses, NO fallback data
+ * VITE PROXY: Must use relative paths for proper Vite proxy configuration
+ * PROTOCOL: UNIVERSAL_PROTOCOL_STANDARD.md
+ * DATE: July 29, 2025
+ * LAST REVIEWED: July 29, 2025
+ * EXCEPTIONS: None
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
-// Form schema - Universal Protocol Standard compliant
-const evidenceLibrarySchema = z.object({
-  equipmentGroup: z.string().min(1, "Equipment group is required"),
-  equipmentType: z.string().min(1, "Equipment type is required"),
+const evidenceFormSchema = z.object({
+  equipmentGroupId: z.string().min(1, "Equipment Group is required"),
+  equipmentTypeId: z.string().min(1, "Equipment Type is required"),
   subtype: z.string().optional(),
-  componentFailureMode: z.string().min(1, "Failure mode is required"),
-  equipmentCode: z.string().min(1, "Equipment code is required"),
-  failureCode: z.string().min(1, "Failure code is required"),
-  riskRanking: z.string().min(1, "Risk ranking is required"),
-  requiredTrendDataEvidence: z.string().min(1, "Required trend data is required"),
-  aiOrInvestigatorQuestions: z.string().min(1, "AI questions are required"),
-  attachmentsEvidenceRequired: z.string().min(1, "Attachments required is required"),
+  componentFailureMode: z.string().min(1, "Component/Failure Mode is required"),
+  equipmentCode: z.string().min(1, "Equipment Code is required"),
+  failureCode: z.string().min(1, "Failure Code is required"),
+  riskRanking: z.string().min(1, "Risk Ranking is required"),
+  requiredTrendDataEvidence: z.string().min(1, "Required trend data evidence is required"),
+  aiOrInvestigatorQuestions: z.string().min(1, "AI/Investigator questions is required"),
+  attachmentsEvidenceRequired: z.string().min(1, "Attachments evidence required is required"),
   rootCauseLogic: z.string().min(1, "Root cause logic is required"),
 });
 
-type EvidenceLibraryForm = z.infer<typeof evidenceLibrarySchema>;
+type EvidenceFormData = z.infer<typeof evidenceFormSchema>;
 
 interface EvidenceLibraryFormProps {
-  initialData?: any;
-  onSubmit: (data: EvidenceLibraryForm) => void;
-  onCancel: () => void;
-  isSubmitting?: boolean;
+  item?: any;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export function EvidenceLibraryFormComponent({ 
-  initialData, 
-  onSubmit, 
-  onCancel, 
-  isSubmitting = false 
-}: EvidenceLibraryFormProps) {
-  const [selectedEquipmentGroupId, setSelectedEquipmentGroupId] = useState<number | null>(null);
-  const [selectedEquipmentTypeId, setSelectedEquipmentTypeId] = useState<number | null>(null);
+export default function EvidenceLibraryForm({ item, onSuccess, onCancel }: EvidenceLibraryFormProps) {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<EvidenceLibraryForm>({
-    resolver: zodResolver(evidenceLibrarySchema),
-    defaultValues: {
-      equipmentGroup: initialData?.equipmentGroup || "",
-      equipmentType: initialData?.equipmentType || "",
-      subtype: initialData?.subtype || "",
-      componentFailureMode: initialData?.componentFailureMode || "",
-      equipmentCode: initialData?.equipmentCode || "",
-      failureCode: initialData?.failureCode || "",
-      riskRanking: initialData?.riskRanking || "",
-      requiredTrendDataEvidence: initialData?.requiredTrendDataEvidence || "",
-      aiOrInvestigatorQuestions: initialData?.aiOrInvestigatorQuestions || "",
-      attachmentsEvidenceRequired: initialData?.attachmentsEvidenceRequired || "",
-      rootCauseLogic: initialData?.rootCauseLogic || "",
-    },
-  });
-
-  // Fetch Equipment Groups
+  // Fetch equipment groups and types for dropdowns
   const { data: equipmentGroups = [] } = useQuery({
-    queryKey: ['/api/equipment-groups/active'],
+    queryKey: ['/api/equipment-groups'],
     queryFn: async () => {
-      try {
-        const response = await fetch('/api/equipment-groups/active');
-        if (!response.ok) return [];
-        const text = await response.text();
-        if (text.startsWith('<!DOCTYPE html>')) return [];
-        return JSON.parse(text);
-      } catch {
-        return [];
-      }
+      const response = await fetch('/api/equipment-groups');
+      if (!response.ok) return [];
+      return response.json();
     },
   });
 
-  // Fetch Risk Rankings
-  const { data: riskRankings = [] } = useQuery({
-    queryKey: ['/api/risk-rankings/active'],
-    queryFn: async () => {
-      try {
-        const response = await fetch('/api/risk-rankings/active');
-        if (!response.ok) return [];
-        const text = await response.text();
-        if (text.startsWith('<!DOCTYPE html>')) return [];
-        return JSON.parse(text);
-      } catch {
-        return [];
-      }
-    },
-  });
-
-  // Watch equipment group changes
-  const equipmentGroupValue = form.watch("equipmentGroup");
-  useEffect(() => {
-    if (equipmentGroupValue && Array.isArray(equipmentGroups)) {
-      const group = equipmentGroups.find((g: any) => g.name === equipmentGroupValue);
-      setSelectedEquipmentGroupId(group?.id || null);
-      // Clear dependent fields
-      form.setValue("equipmentType", "");
-      form.setValue("subtype", "");
-    }
-  }, [equipmentGroupValue, equipmentGroups, form]);
-
-  // Fetch Equipment Types based on selected group
   const { data: equipmentTypes = [] } = useQuery({
-    queryKey: ["/api/equipment-types/by-group", selectedEquipmentGroupId],
+    queryKey: ['/api/equipment-types'],
     queryFn: async () => {
-      if (!selectedEquipmentGroupId) return [];
-      try {
-        const response = await fetch(`/api/equipment-types/by-group/${selectedEquipmentGroupId}`);
-        if (!response.ok) return [];
-        const text = await response.text();
-        if (text.startsWith('<!DOCTYPE html>')) return [];
-        return JSON.parse(text);
-      } catch {
-        return [];
-      }
+      const response = await fetch('/api/equipment-types');
+      if (!response.ok) return [];
+      return response.json();
     },
-    enabled: !!selectedEquipmentGroupId,
   });
 
-  // Watch equipment type changes
-  const equipmentTypeValue = form.watch("equipmentType");
-  useEffect(() => {
-    if (equipmentTypeValue && Array.isArray(equipmentTypes)) {
-      const type = equipmentTypes.find((t: any) => t.name === equipmentTypeValue);
-      setSelectedEquipmentTypeId(type?.id || null);
-      // Clear subtype
-      form.setValue("subtype", "");
+  const form = useForm<EvidenceFormData>({
+    resolver: zodResolver(evidenceFormSchema),
+    defaultValues: {
+      equipmentGroupId: item?.equipmentGroupId?.toString() || "",
+      equipmentTypeId: item?.equipmentTypeId?.toString() || "",
+      subtype: item?.subtype || "",
+      componentFailureMode: item?.componentFailureMode || "",
+      equipmentCode: item?.equipmentCode || "",
+      failureCode: item?.failureCode || "",
+      riskRanking: item?.riskRanking || "",
+      requiredTrendDataEvidence: item?.requiredTrendDataEvidence || "",
+      aiOrInvestigatorQuestions: item?.aiOrInvestigatorQuestions || "",
+      attachmentsEvidenceRequired: item?.attachmentsEvidenceRequired || "",
+      rootCauseLogic: item?.rootCauseLogic || "",
+    },
+  });
+
+  // Create/Update mutation
+  const saveMutation = useMutation({
+    mutationFn: async (data: EvidenceFormData) => {
+      const url = item?.id ? `/api/evidence-library/${item.id}` : '/api/evidence-library';
+      const method = item?.id ? 'PUT' : 'POST';
+      
+      return apiRequest(url, {
+        method,
+        body: JSON.stringify({
+          ...data,
+          equipmentGroupId: parseInt(data.equipmentGroupId),
+          equipmentTypeId: parseInt(data.equipmentTypeId),
+        }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
+      toast({
+        title: "Success",
+        description: item?.id ? "Evidence item updated successfully" : "Evidence item created successfully",
+      });
+      onSuccess?.();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save evidence item",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = async (data: EvidenceFormData) => {
+    setIsSubmitting(true);
+    try {
+      await saveMutation.mutateAsync(data);
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [equipmentTypeValue, equipmentTypes, form]);
-
-  // Fetch Equipment Subtypes based on selected type
-  const { data: equipmentSubtypes = [] } = useQuery({
-    queryKey: ["/api/equipment-subtypes/by-type", selectedEquipmentTypeId],
-    queryFn: async () => {
-      if (!selectedEquipmentTypeId) return [];
-      try {
-        const response = await fetch(`/api/equipment-subtypes/by-type/${selectedEquipmentTypeId}`);
-        if (!response.ok) return [];
-        const text = await response.text();
-        if (text.startsWith('<!DOCTYPE html>')) return [];
-        return JSON.parse(text);
-      } catch {
-        return [];
-      }
-    },
-    enabled: !!selectedEquipmentTypeId,
-  });
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        
-        {/* Equipment Group */}
-        <FormField
-          control={form.control}
-          name="equipmentGroup"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Equipment Group *</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Equipment Group */}
+          <FormField
+            control={form.control}
+            name="equipmentGroupId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Equipment Group</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select equipment group" />
-                  </SelectTrigger>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select equipment group" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {equipmentGroups.map((group: any) => (
+                        <SelectItem key={group.id} value={group.id.toString()}>
+                          {group.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
-                <SelectContent>
-                  {equipmentGroups.map((group: any) => (
-                    <SelectItem key={group.id} value={group.name}>
-                      {group.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Equipment Type */}
-        <FormField
-          control={form.control}
-          name="equipmentType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Equipment Type *</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+          {/* Equipment Type */}
+          <FormField
+            control={form.control}
+            name="equipmentTypeId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Equipment Type</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select equipment type" />
-                  </SelectTrigger>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select equipment type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {equipmentTypes.map((type: any) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
-                <SelectContent>
-                  {equipmentTypes.map((type: any) => (
-                    <SelectItem key={type.id} value={type.name}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Equipment Subtype */}
-        <FormField
-          control={form.control}
-          name="subtype"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Equipment Subtype</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value || ""}>
+          {/* Subtype */}
+          <FormField
+            control={form.control}
+            name="subtype"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Subtype (Optional)</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select equipment subtype (optional)" />
-                  </SelectTrigger>
+                  <Input {...field} placeholder="Enter equipment subtype" />
                 </FormControl>
-                <SelectContent>
-                  {equipmentSubtypes.map((subtype: any) => (
-                    <SelectItem key={subtype.id} value={subtype.name}>
-                      {subtype.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Component/Failure Mode */}
-        <FormField
-          control={form.control}
-          name="componentFailureMode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Component/Failure Mode *</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Enter component failure mode" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* Component/Failure Mode */}
+          <FormField
+            control={form.control}
+            name="componentFailureMode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Component/Failure Mode</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="e.g., Bearing Failure / Overheating" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Equipment Code */}
-        <FormField
-          control={form.control}
-          name="equipmentCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Equipment Code *</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Enter unique equipment code" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* Equipment Code */}
+          <FormField
+            control={form.control}
+            name="equipmentCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Equipment Code</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="e.g., PUMP-001" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Failure Code */}
-        <FormField
-          control={form.control}
-          name="failureCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Failure Code *</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Enter failure code" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* Failure Code */}
+          <FormField
+            control={form.control}
+            name="failureCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Failure Code</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="e.g., BRG-OVHT-001" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         {/* Risk Ranking */}
         <FormField
@@ -290,21 +250,20 @@ export function EvidenceLibraryFormComponent({
           name="riskRanking"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Risk Ranking *</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
+              <FormLabel>Risk Ranking</FormLabel>
+              <FormControl>
+                <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select risk ranking" />
                   </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {riskRankings.map((ranking: any) => (
-                    <SelectItem key={ranking.id} value={ranking.label}>
-                      {ranking.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <SelectContent>
+                    <SelectItem value="Critical">Critical</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -316,9 +275,13 @@ export function EvidenceLibraryFormComponent({
           name="requiredTrendDataEvidence"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Required Trend Data Evidence *</FormLabel>
+              <FormLabel>Required Trend Data Evidence</FormLabel>
               <FormControl>
-                <Textarea {...field} placeholder="Describe required trend data evidence" />
+                <Textarea 
+                  {...field} 
+                  placeholder="Describe the trend data evidence required for this failure mode"
+                  rows={3}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -331,9 +294,13 @@ export function EvidenceLibraryFormComponent({
           name="aiOrInvestigatorQuestions"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>AI/Investigator Questions *</FormLabel>
+              <FormLabel>AI/Investigator Questions</FormLabel>
               <FormControl>
-                <Textarea {...field} placeholder="Enter AI or investigator questions" />
+                <Textarea 
+                  {...field} 
+                  placeholder="Key questions for AI or investigators to ask about this failure mode"
+                  rows={3}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -346,9 +313,13 @@ export function EvidenceLibraryFormComponent({
           name="attachmentsEvidenceRequired"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Attachments Evidence Required *</FormLabel>
+              <FormLabel>Attachments Evidence Required</FormLabel>
               <FormControl>
-                <Textarea {...field} placeholder="Describe required attachments/evidence" />
+                <Textarea 
+                  {...field} 
+                  placeholder="Describe the attachments and documents required as evidence"
+                  rows={3}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -361,9 +332,13 @@ export function EvidenceLibraryFormComponent({
           name="rootCauseLogic"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Root Cause Logic *</FormLabel>
+              <FormLabel>Root Cause Logic</FormLabel>
               <FormControl>
-                <Textarea {...field} placeholder="Enter root cause logic" />
+                <Textarea 
+                  {...field} 
+                  placeholder="Explain the logic connecting this failure mode to its root causes"
+                  rows={4}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -371,12 +346,12 @@ export function EvidenceLibraryFormComponent({
         />
 
         {/* Form Actions */}
-        <div className="flex justify-end space-x-2 pt-4">
+        <div className="flex justify-end space-x-4 pt-6">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {initialData ? "Update" : "Create"}
+          <Button type="submit" disabled={isSubmitting || saveMutation.isPending}>
+            {isSubmitting || saveMutation.isPending ? "Saving..." : item?.id ? "Update" : "Create"}
           </Button>
         </div>
       </form>

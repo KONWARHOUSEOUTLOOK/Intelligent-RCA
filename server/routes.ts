@@ -149,6 +149,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   console.log("[ROUTES] Evidence library route registered directly");
 
+  // EXPORT EVIDENCE LIBRARY CSV ENDPOINT - UNIVERSAL PROTOCOL STANDARD COMPLIANT  
+  app.get("/api/evidence-library/export/csv", async (req, res) => {
+    console.log("[ROUTES] Evidence library export CSV route accessed - Universal Protocol Standard compliant");
+    try {
+      const evidenceItems = await investigationStorage.getAllEvidenceLibrary();
+      console.log(`[ROUTES] Exporting ${evidenceItems.length} evidence library items to CSV`);
+      
+      // Create CSV headers
+      const headers = [
+        'Equipment Group',
+        'Equipment Type', 
+        'Subtype',
+        'Component / Failure Mode',
+        'Equipment Code',
+        'Failure Code',
+        'Risk Ranking',
+        'Required Trend Data Evidence',
+        'AI / Investigator Questions',
+        'Attachments Evidence Required',
+        'Root Cause Logic'
+      ];
+      
+      // Create CSV rows
+      const rows = evidenceItems.map(item => [
+        item.equipmentGroup || '',
+        item.equipmentType || '',
+        item.subtype || '',
+        item.componentFailureMode || '',
+        item.equipmentCode || '',
+        item.failureCode || '',
+        item.riskRanking || '',
+        item.requiredTrendDataEvidence || '',
+        item.aiOrInvestigatorQuestions || '',
+        item.attachmentsEvidenceRequired || '',
+        item.rootCauseLogic || ''
+      ]);
+      
+      // Combine headers and rows
+      const csvContent = [headers, ...rows]
+        .map(row => row.map(field => `"${field.toString().replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+      
+      // Set response headers for CSV download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="evidence-library-export.csv"');
+      
+      res.send(csvContent);
+      
+    } catch (error) {
+      console.error("[ROUTES] Evidence Library export error:", error);
+      res.status(500).json({ 
+        error: "Export failed", 
+        message: "Unable to export evidence library",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // ADD EVIDENCE LIBRARY UPDATE ENDPOINT - UNIVERSAL PROTOCOL STANDARD COMPLIANT
   app.put("/api/evidence-library/:id", async (req, res) => {
     console.log("[ROUTES] Evidence library update route accessed - Universal Protocol Standard compliant");
@@ -168,6 +226,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         error: "Update failed", 
         message: "Unable to update evidence library item",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // CREATE EVIDENCE LIBRARY ITEM ENDPOINT - UNIVERSAL PROTOCOL STANDARD COMPLIANT
+  app.post("/api/evidence-library", async (req, res) => {
+    console.log("[ROUTES] Evidence library create route accessed - Universal Protocol Standard compliant");
+    try {
+      const createData = req.body;
+      
+      console.log(`[ROUTES] Creating new evidence library item with data:`, createData);
+      
+      const newItem = await investigationStorage.createEvidenceLibrary(createData);
+      console.log(`[ROUTES] Successfully created evidence library item with ID ${newItem.id}`);
+      
+      res.json(newItem);
+      
+    } catch (error) {
+      console.error("[ROUTES] Evidence Library create error:", error);
+      res.status(500).json({ 
+        error: "Create failed", 
+        message: "Unable to create evidence library item",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // DELETE EVIDENCE LIBRARY ITEM ENDPOINT - UNIVERSAL PROTOCOL STANDARD COMPLIANT
+  app.delete("/api/evidence-library/:id", async (req, res) => {
+    console.log("[ROUTES] Evidence library delete route accessed - Universal Protocol Standard compliant");
+    try {
+      const itemId = parseInt(req.params.id);
+      
+      console.log(`[ROUTES] Deleting evidence library item ${itemId}`);
+      
+      await investigationStorage.deleteEvidenceLibrary(itemId);
+      console.log(`[ROUTES] Successfully deleted evidence library item ${itemId}`);
+      
+      res.json({ success: true, message: "Evidence library item deleted successfully" });
+      
+    } catch (error) {
+      console.error("[ROUTES] Evidence Library delete error:", error);
+      res.status(500).json({ 
+        error: "Delete failed", 
+        message: "Unable to delete evidence library item",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }
