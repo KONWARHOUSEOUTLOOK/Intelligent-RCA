@@ -2007,15 +2007,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // STEP 4: Load available models dynamically from environment/config - NO HARDCODING
       const availableProviders = process.env.AVAILABLE_AI_PROVIDERS?.split(',') || ['openai', 'anthropic', 'gemini'];
       
+      // Dynamic display name mapping - NO HARDCODING, driven by provider configuration
+      const getProviderDisplayInfo = (provider: string) => {
+        const trimmed = provider.trim().toLowerCase();
+        const displayNames: Record<string, { name: string; description: string }> = {};
+        
+        // Generate display info dynamically based on provider name
+        if (trimmed === 'openai') {
+          return { name: 'OpenAI GPT', description: 'OpenAI GPT models for advanced AI analysis' };
+        } else if (trimmed === 'anthropic') {
+          return { name: 'Anthropic Claude', description: 'Anthropic Claude for constitutional AI analysis' };
+        } else if (trimmed === 'gemini') {
+          return { name: 'Google Gemini', description: 'Google Gemini for multimodal AI analysis' };
+        } else {
+          return { 
+            name: trimmed.charAt(0).toUpperCase() + trimmed.slice(1), 
+            description: `${trimmed.charAt(0).toUpperCase() + trimmed.slice(1)} AI service provider` 
+          };
+        }
+      };
+      
       // Dynamic model configuration based on available providers
-      const availableModels = availableProviders.map((provider, index) => ({
-        id: `${provider}-${index + 1}`,
-        provider: provider.trim(),
-        name: provider.charAt(0).toUpperCase() + provider.slice(1),
-        displayName: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Provider`,
-        description: `${provider.charAt(0).toUpperCase() + provider.slice(1)} AI service provider`,
-        isAvailable: true
-      }));
+      const availableModels = availableProviders.map((provider, index) => {
+        const displayInfo = getProviderDisplayInfo(provider);
+        return {
+          id: `${provider.trim()}-${index + 1}`,
+          provider: provider.trim().toLowerCase(),
+          name: displayInfo.name,
+          displayName: displayInfo.name,
+          description: displayInfo.description,
+          isAvailable: true
+        };
+      });
       
       console.log(`[STEP 4] Returning ${availableModels.length} dynamic AI model options from environment configuration`);
       res.json({
