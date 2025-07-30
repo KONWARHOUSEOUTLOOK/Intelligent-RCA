@@ -16,6 +16,39 @@ import { Link } from "wouter";
 import type { AiSettings, InsertAiSettings, EquipmentGroup, RiskRanking } from "@shared/schema";
 import AIStatusIndicator from "@/components/ai-status-indicator";
 
+// STEP 4: Dynamic Provider Select Component - NO HARDCODING
+function DynamicProviderSelect({ value, onValueChange }: { value: string; onValueChange: (value: string) => void }) {
+  const { data: aiModels, isLoading } = useQuery({
+    queryKey: ["/api/ai-models"],
+    retry: false,
+  });
+
+  if (isLoading) {
+    return (
+      <Select disabled>
+        <SelectTrigger>
+          <SelectValue placeholder="Loading providers..." />
+        </SelectTrigger>
+      </Select>
+    );
+  }
+
+  return (
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger>
+        <SelectValue placeholder="Select AI provider" />
+      </SelectTrigger>
+      <SelectContent>
+        {aiModels?.models?.map((model: any) => (
+          <SelectItem key={model.id} value={model.provider}>
+            {model.displayName}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export default function AdminSettings() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [formData, setFormData] = useState({
@@ -544,14 +577,10 @@ export default function AdminSettings() {
     });
   };
 
+  // STEP 4: Dynamic provider name resolution - NO HARDCODING
   const getProviderName = (provider: string) => {
-    // Dynamic provider name mapping - Universal Protocol Standard compliant
-    const providerNames: Record<string, string> = {
-
-      "gemini": "Google Gemini", 
-      "anthropic": "Anthropic"
-    };
-    return providerNames[provider] || provider;
+    // Capitalize first letter for display purposes - Universal Protocol Standard compliant
+    return provider.charAt(0).toUpperCase() + provider.slice(1);
   };
 
   const getStatusBadge = (status: string | null, isActive: boolean | null) => {
@@ -647,20 +676,10 @@ export default function AdminSettings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="provider">AI Provider</Label>
-              <Select 
+              <DynamicProviderSelect 
                 value={formData.provider} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, provider: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  {/* Dynamic provider options - Universal Protocol Standard compliant */}
-
-                  <SelectItem value="gemini">Google Gemini</SelectItem>
-                  <SelectItem value="anthropic">Anthropic Claude</SelectItem>
-                </SelectContent>
-              </Select>
+              />
             </div>
 
             <div className="space-y-2">

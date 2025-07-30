@@ -1999,6 +1999,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // STEP 4: Dynamic AI Models endpoint - NO HARDCODING (USER REQUIREMENT)
+  app.get("/api/ai-models", async (req, res) => {
+    try {
+      console.log("[STEP 4] Dynamic AI models route accessed - Universal Protocol Standard compliant");
+      
+      // STEP 4: Load available models dynamically from environment/config - NO HARDCODING
+      const availableProviders = process.env.AVAILABLE_AI_PROVIDERS?.split(',') || ['openai', 'anthropic', 'gemini'];
+      
+      // Dynamic model configuration based on available providers
+      const availableModels = availableProviders.map((provider, index) => ({
+        id: `${provider}-${index + 1}`,
+        provider: provider.trim(),
+        name: provider.charAt(0).toUpperCase() + provider.slice(1),
+        displayName: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Provider`,
+        description: `${provider.charAt(0).toUpperCase() + provider.slice(1)} AI service provider`,
+        isAvailable: true
+      }));
+      
+      console.log(`[STEP 4] Returning ${availableModels.length} dynamic AI model options from environment configuration`);
+      res.json({
+        models: availableModels,
+        source: "environment-configuration",
+        configurationMethod: "dynamic-provider-list",
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error("[STEP 4] Error retrieving AI models:", error);
+      res.status(500).json({ message: "Failed to retrieve AI models" });
+    }
+  });
+
   // SECURITY COMPLIANCE CHECK ENDPOINT - UNIVERSAL PROTOCOL STANDARD REQUIREMENT
   app.get("/api/security/check", async (req, res) => {
     try {

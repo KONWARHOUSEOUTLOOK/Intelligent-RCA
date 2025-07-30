@@ -43,6 +43,13 @@ const VIOLATION_PATTERNS = {
     pattern: /setTimeout\([^,]+,\s*(\d{4,})\)|setInterval\([^,]+,\s*(\d{4,})\)/g,
     severity: 'WARNING',
     description: 'Magic timeout number - use environment variable'
+  },
+  
+  // STEP 4: Hardcoded AI model names (CRITICAL)
+  hardcoded_ai_models: {
+    pattern: /SelectItem.*value.*["'](openai|anthropic|gemini|claude)["']|provider.*["'](gpt-\d|claude-\d|gemini-pro)["']/g,
+    severity: 'CRITICAL',
+    description: 'Hardcoded AI model/provider names - use dynamic AI models API'
   }
 };
 
