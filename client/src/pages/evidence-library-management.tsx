@@ -63,9 +63,7 @@ interface EvidenceLibrary {
   evidenceGapFlag?: string;
   eliminatedIfTheseFailuresConfirmed?: string;
   whyItGetsEliminated?: string;
-  blankColumn1?: string;
-  blankColumn2?: string;
-  blankColumn3?: string;
+  // BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP
   isActive: boolean;
   lastUpdated: string;
   updatedBy?: string;
@@ -673,9 +671,7 @@ export default function EvidenceLibraryManagement() {
                   <TableHead>Industry Benchmark</TableHead>
                   <TableHead>Eliminated If These Failures Confirmed</TableHead>
                   <TableHead>Why It Gets Eliminated</TableHead>
-                  <TableHead>Blank Column 1</TableHead>
-                  <TableHead>Blank Column 2</TableHead>
-                  <TableHead>Blank Column 3</TableHead>
+                  {/* BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP */}
                   <TableHead>Last Updated</TableHead>
                   <TableHead>Updated By</TableHead>
                   <TableHead className="w-32">Actions</TableHead>
@@ -783,9 +779,7 @@ export default function EvidenceLibraryManagement() {
                       <TableCell className="max-w-40 truncate">{item.industryBenchmark || '-'}</TableCell>
                       <TableCell className="max-w-40 truncate">{item.eliminatedIfTheseFailuresConfirmed || '-'}</TableCell>
                       <TableCell className="max-w-40 truncate">{item.whyItGetsEliminated || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.blankColumn1 || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.blankColumn2 || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.blankColumn3 || '-'}</TableCell>
+                      {/* BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP */}
                       <TableCell className="text-xs text-muted-foreground">{new Date(item.lastUpdated).toLocaleDateString()}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{item.updatedBy || 'system'}</TableCell>
                       <TableCell>

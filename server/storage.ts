@@ -480,9 +480,7 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
         evidenceGapFlag: evidenceLibrary.evidenceGapFlag,
         eliminatedIfTheseFailuresConfirmed: evidenceLibrary.eliminatedIfTheseFailuresConfirmed,
         whyItGetsEliminated: evidenceLibrary.whyItGetsEliminated,
-        blankColumn1: evidenceLibrary.blankColumn1,
-        blankColumn2: evidenceLibrary.blankColumn2,
-        blankColumn3: evidenceLibrary.blankColumn3,
+        // BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP
         isActive: evidenceLibrary.isActive,
         lastUpdated: evidenceLibrary.lastUpdated,
         updatedBy: evidenceLibrary.updatedBy,

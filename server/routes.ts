@@ -145,9 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         evidenceGapFlag: item.evidenceGapFlag,
         eliminatedIfTheseFailuresConfirmed: item.eliminatedIfTheseFailuresConfirmed,
         whyItGetsEliminated: item.whyItGetsEliminated,
-        blankColumn1: item.blankColumn1,
-        blankColumn2: item.blankColumn2,
-        blankColumn3: item.blankColumn3,
+        // BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP
         
         // CONFIGURABLE INTELLIGENCE FIELDS - ADMIN EDITABLE (NO HARDCODING)
         diagnosticValue: item.diagnosticValue,

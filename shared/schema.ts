@@ -139,10 +139,7 @@ export const evidenceLibrary = pgTable("evidence_library", {
   eliminatedIfTheseFailuresConfirmed: text("eliminated_if_these_failures_confirmed"), // Elimination conditions
   whyItGetsEliminated: text("why_it_gets_eliminated"), // Elimination reasoning
   
-  // Legacy fields (keeping for compatibility)
-  blankColumn1: varchar("blank_column_1"), // Blank Column 1
-  blankColumn2: varchar("blank_column_2"), // Blank Column 2
-  blankColumn3: varchar("blank_column_3"), // Blank Column 3
+  // BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP
   isActive: boolean("is_active").default(true),
   lastUpdated: timestamp("last_updated").defaultNow(),
   updatedBy: varchar("updated_by"),
