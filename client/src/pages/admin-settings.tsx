@@ -569,11 +569,10 @@ export default function AdminSettings() {
 
     saveSettingsMutation.mutate({
       provider: formData.provider,
-      encryptedApiKey: formData.apiKey,
+      apiKey: formData.apiKey,
       model: formData.model,
       isActive: formData.isActive,
-      createdBy: formData.createdBy,
-      testStatus: formData.testStatus
+      createdBy: formData.createdBy
     });
   };
 
