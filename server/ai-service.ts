@@ -35,7 +35,7 @@ export class AIService {
     // Use Node.js crypto for IV generation - Protocol compliant
     const iv = Buffer.alloc(IV_LENGTH);
     const randomValues = new Uint8Array(IV_LENGTH);
-    require('crypto').randomFillSync(randomValues);
+    crypto.randomFillSync(randomValues);
     for (let i = 0; i < IV_LENGTH; i++) {
       iv[i] = randomValues[i];
     }
