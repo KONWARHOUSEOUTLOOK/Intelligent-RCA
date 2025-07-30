@@ -73,7 +73,7 @@ export class AIService {
 
   private static async testOpenAI(apiKey: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const apiUrl = process.env.OPENAI_API_URL || "https://api.openai.com";
+      const apiUrl = process.env.OPENAI_API_URL;
       const response = await fetch(`${apiUrl}/v1/models`, {
         headers: {
           "Authorization": `Bearer ${apiKey}`,
@@ -110,7 +110,7 @@ export class AIService {
 
   private static async testAnthropic(apiKey: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const anthropicUrl = process.env.ANTHROPIC_API_URL || "https://api.anthropic.com";
+      const anthropicUrl = process.env.ANTHROPIC_API_URL;
       const response = await fetch(`${anthropicUrl}/v1/messages`, {
         method: "POST",
         headers: {

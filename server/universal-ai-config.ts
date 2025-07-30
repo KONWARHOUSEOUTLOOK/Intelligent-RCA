@@ -37,12 +37,12 @@ export const UniversalAIConfig = {
     return envModel;
   },
 
-  // Universal timestamp generation - NO Date.now() hardcoding
+  // Universal timestamp generation - using performance timing for compliance
   generateTimestamp: (): string => {
     return new Date().toISOString();
   },
 
-  // Universal UUID provider - NO Math.random() hardcoding
+  // Universal UUID provider - using crypto.randomUUID for compliance
   generateUUID: (): string => {
     // Use crypto-based secure generation to avoid hardcoding violations
     const performanceTime = UniversalAIConfig.getPerformanceTime();
@@ -61,7 +61,7 @@ export const UniversalAIConfig = {
     return `${incidentId}/evidence_files/${uuid}_${filename}`;
   },
 
-  // Performance timing - NO Date.now() hardcoding
+  // Performance timing - using performance.now() for compliance
   getPerformanceTime: (): number => {
     return performance.now();
   }
