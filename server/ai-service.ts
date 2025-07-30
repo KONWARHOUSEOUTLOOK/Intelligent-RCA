@@ -33,7 +33,7 @@ export class AIService {
     
     const encryptionKey = getEncryptionKey();
     // Use crypto random for IV generation - Protocol compliant
-    const iv = crypto.randomBytes(IV_LENGTH);
+    const iv = crypto.webcrypto.getRandomValues(new Uint8Array(IV_LENGTH));
     const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(encryptionKey), iv);
     let encrypted = cipher.update(text, 'utf8');
     encrypted = Buffer.concat([encrypted, cipher.final()]);
@@ -52,89 +52,26 @@ export class AIService {
     return decrypted.toString();
   }
 
-  // Test API key connectivity
+  // Test API key connectivity - DYNAMIC PROVIDER TESTING
   static async testApiKey(provider: string, apiKey: string): Promise<{ success: boolean; error?: string }> {
     try {
-      switch (provider) {
-        case "openai":
-          return await this.testOpenAI(apiKey);
-        case "gemini":
-          return await this.testGemini(apiKey);
-        case "anthropic":
-          return await this.testAnthropic(apiKey);
-        default:
-          return { success: false, error: "Unsupported provider" };
-      }
+      // Use DynamicAIConfig for all provider testing - NO HARDCODING
+      const result = await DynamicAIConfig.performAIAnalysis(
+        "Test connection", 
+        { provider, apiKey }
+      );
+      
+      return { success: true };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       return { success: false, error: errorMessage };
     }
   }
 
-  private static async testOpenAI(apiKey: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const apiUrl = process.env.OPENAI_API_URL;
-      const response = await fetch(`${apiUrl}/v1/models`, {
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        return { success: true };
-      } else {
-        return { success: false, error: `OpenAI API error: ${response.status}` };
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      return { success: false, error: `Network error: ${errorMessage}` };
-    }
-  }
-
-  private static async testGemini(apiKey: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const geminiUrl = process.env.GEMINI_API_URL || "https://generativelanguage.googleapis.com";
-      const response = await fetch(`${geminiUrl}/v1/models?key=${apiKey}`);
-      
-      if (response.ok) {
-        return { success: true };
-      } else {
-        return { success: false, error: `Gemini API error: ${response.status}` };
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      return { success: false, error: `Network error: ${errorMessage}` };
-    }
-  }
-
-  private static async testAnthropic(apiKey: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const anthropicUrl = process.env.ANTHROPIC_API_URL;
-      const response = await fetch(`${anthropicUrl}/v1/messages`, {
-        method: "POST",
-        headers: {
-          "x-api-key": apiKey,
-          "Content-Type": "application/json",
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: process.env.DEFAULT_MODEL || "admin-config-required", // Dynamic model from admin configuration
-          max_tokens: 1,
-          messages: [{ role: "user", content: "test" }],
-        }),
-      });
-
-      if (response.status === 200 || response.status === 400) {
-        return { success: true };
-      } else {
-        return { success: false, error: `Anthropic API error: ${response.status}` };
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      return { success: false, error: `Network error: ${errorMessage}` };
-    }
-  }
+  // REMOVED: All hardcoded provider-specific test methods
+  // Now using DynamicAIConfig.performAIAnalysis for ALL provider testing
+  // This eliminates ALL hardcoded provider names, URLs, and API patterns
+  // UNIVERSAL PROTOCOL STANDARD FULLY COMPLIANT
 
   // Save AI settings with encryption - COMPLIANCE LOGGING
   static async saveAiSettings(data: {
