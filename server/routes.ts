@@ -2079,29 +2079,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // STEP 4: Load available models dynamically from environment/config - NO HARDCODING
       const availableProviders = process.env.AVAILABLE_AI_PROVIDERS?.split(',') || [];
       
-      // Dynamic display name mapping - PURE DYNAMIC, NO HARDCODING
+      // COMPLETELY DYNAMIC DISPLAY NAME GENERATION - ZERO HARDCODING
       const getProviderDisplayInfo = (provider: string) => {
         const trimmed = provider.trim();
         const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
         
-        // DYNAMIC GENERATION: Build display names from provider string
-        const displayMapping: Record<string, string> = {
-          name: `${capitalized} AI Provider`,
-          description: `${capitalized} AI models for advanced analysis`
-        };
-        
-        // Add specific formatting for known patterns without hardcoding
-        if (trimmed.toLowerCase().includes('openai') || trimmed.toLowerCase() === 'openai') {
-          displayMapping.name = `${capitalized} GPT`;
-        } else if (trimmed.toLowerCase().includes('anthropic') || trimmed.toLowerCase() === 'anthropic') {
-          displayMapping.name = `${capitalized} Claude`;
-        } else if (trimmed.toLowerCase().includes('gemini') || trimmed.toLowerCase() === 'gemini') {
-          displayMapping.name = `Google ${capitalized}`;
-        }
-        
+        // PURE DYNAMIC GENERATION: Build display names purely from provider string
         return { 
-          name: displayMapping.name, 
-          description: displayMapping.description 
+          name: `${capitalized} AI`,
+          description: `${capitalized} AI models for advanced analysis`
         };
       };
       
