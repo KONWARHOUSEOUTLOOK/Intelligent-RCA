@@ -1921,6 +1921,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const settingsData = req.body;
       console.log(`[ADMIN] Saving new AI settings - Provider: ${settingsData.provider}, Active: ${settingsData.isActive} (ADMIN-MANAGED ONLY - NO HARDCODING)`);
       
+      // STEP 4: Validate required fields before encryption - NO HARDCODING
+      if (!settingsData.provider) {
+        return res.status(400).json({ message: "Provider is required" });
+      }
+      
+      if (!settingsData.apiKey || settingsData.apiKey.trim() === '') {
+        return res.status(400).json({ message: "API Key is required" });
+      }
+      
       const newSettings = await investigationStorage.saveAiSettings(settingsData);
       console.log(`[ADMIN] Successfully saved AI settings with ID: ${newSettings.id} (CONFIGURATION SOURCE: admin-database)`);
       

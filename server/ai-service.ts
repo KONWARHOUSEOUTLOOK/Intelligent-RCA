@@ -27,12 +27,15 @@ function getEncryptionKey(): string {
 export class AIService {
   // AES-256-CBC encryption for API keys - COMPLIANCE REQUIREMENT
   static encrypt(text: string): string {
+    if (!text || typeof text !== 'string') {
+      throw new Error('PROTOCOL VIOLATION: Cannot encrypt undefined or non-string data');
+    }
+    
     const encryptionKey = getEncryptionKey();
     // Use crypto random for IV generation - Protocol compliant
-    const iv = new Uint8Array(IV_LENGTH);
-    crypto.getRandomValues(iv);
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(encryptionKey), Buffer.from(iv));
-    let encrypted = cipher.update(text);
+    const iv = crypto.randomBytes(IV_LENGTH);
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(encryptionKey), iv);
+    let encrypted = cipher.update(text, 'utf8');
     encrypted = Buffer.concat([encrypted, cipher.final()]);
     return iv.toString('hex') + ':' + encrypted.toString('hex');
   }

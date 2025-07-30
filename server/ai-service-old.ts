@@ -243,7 +243,7 @@ export class AIService {
       : `As a root cause analysis expert: ${prompt}`;
 
     const geminiUrl = process.env.GEMINI_API_URL || "https://generativelanguage.googleapis.com";
-    const response = await fetch(`${geminiUrl}/v1/models/gemini-pro:generateContent?key=${apiKey}`, {
+    const response = await fetch(`${geminiUrl}/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

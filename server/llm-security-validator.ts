@@ -120,7 +120,6 @@ export class LLMSecurityValidator {
       case 'gemini':
       case 'google':
         return key.length > 20;
-      case 'claude':
       case 'anthropic':
         return key.startsWith('sk-ant-') || key.length > 20;
       default:
