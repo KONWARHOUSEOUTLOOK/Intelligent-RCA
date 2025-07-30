@@ -606,7 +606,10 @@ export default function EvidenceLibraryManagement() {
               📋 <strong>STEP 2 COMPLIANCE:</strong> Complete Master Schema Display - All 42 headers with 7000px table width forcing horizontal scroll
             </div>
             <div className="text-xs text-green-600 mb-2 bg-green-50 p-2 rounded border border-green-200">
-              ✅ <strong>SCROLL VERIFICATION:</strong> Table has 46 TableHead elements (41 API columns + 4 ID columns + 1 checkbox). Width: 7000px forces horizontal scrollbar.
+              ✅ <strong>SCROLL VERIFICATION:</strong> Table has 46 TableHead elements (41 API columns + 4 ID columns + 1 checkbox). Width: 8000px forces horizontal scrollbar.
+            </div>
+            <div className="text-xs text-red-600 mb-2 bg-red-50 p-2 rounded border border-red-200">
+              🧪 <strong>HORIZONTAL SCROLL TEST:</strong> If you can only see 7 columns, scroll right using the horizontal scrollbar below the table → → →
             </div>
             <div 
               className="evidence-table-container border rounded-lg shadow-lg" 
@@ -638,10 +641,10 @@ export default function EvidenceLibraryManagement() {
                 }
                 `}
               </style>
-              <Table style={{ minWidth: '7000px', tableLayout: 'fixed', width: '7000px' }}>
+              <Table style={{ minWidth: '8000px', tableLayout: 'fixed', width: '8000px' }}>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">
+                  <TableHead className="w-16 min-w-16">
                     <input
                       type="checkbox"
                       checked={selectAll}
@@ -650,7 +653,7 @@ export default function EvidenceLibraryManagement() {
                     />
                   </TableHead>
                   <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="cursor-pointer hover:bg-muted/50 min-w-32"
                     onClick={() => handleSort('equipmentGroup')}
                   >
                     Equipment Group
@@ -659,7 +662,7 @@ export default function EvidenceLibraryManagement() {
                     )}
                   </TableHead>
                   <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="cursor-pointer hover:bg-muted/50 min-w-32"
                     onClick={() => handleSort('equipmentType')}
                   >
                     Equipment Type
@@ -668,7 +671,7 @@ export default function EvidenceLibraryManagement() {
                     )}
                   </TableHead>
                   <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="cursor-pointer hover:bg-muted/50 min-w-28"
                     onClick={() => handleSort('subtype')}
                   >
                     Subtype
@@ -677,48 +680,49 @@ export default function EvidenceLibraryManagement() {
                     )}
                   </TableHead>
                   {/* CORE MASTER SCHEMA FIELDS - ALL 30 FIELDS VISIBLE (STEP 2 COMPLIANCE) */}
-                  <TableHead>Component / Failure Mode</TableHead>
-                  <TableHead>Equipment Code</TableHead>
-                  <TableHead>Failure Code</TableHead>
-                  <TableHead>Risk Ranking</TableHead>
-                  <TableHead>Required Trend Data Evidence</TableHead>
-                  <TableHead>AI/Investigator Questions</TableHead>
-                  <TableHead>Attachments Evidence Required</TableHead>
-                  <TableHead>Root Cause Logic</TableHead>
-                  <TableHead>Primary Root Cause</TableHead>
-                  <TableHead>Contributing Factor</TableHead>
-                  <TableHead>Latent Cause</TableHead>
-                  <TableHead>Detection Gap</TableHead>
-                  <TableHead>Confidence Level</TableHead>
-                  <TableHead>Fault Signature Pattern</TableHead>
-                  <TableHead>Applicable to Other Equipment</TableHead>
-                  <TableHead>Evidence Gap Flag</TableHead>
-                  <TableHead>Eliminated If These Failures Confirmed</TableHead>
-                  <TableHead>Why It Gets Eliminated</TableHead>
-                  <TableHead>Diagnostic Value</TableHead>
-                  <TableHead>Industry Relevance</TableHead>
-                  <TableHead>Evidence Priority</TableHead>
-                  <TableHead>Time to Collect</TableHead>
-                  <TableHead>Collection Cost</TableHead>
-                  <TableHead>Analysis Complexity</TableHead>
-                  <TableHead>Seasonal Factor</TableHead>
-                  <TableHead>Related Failure Modes</TableHead>
-                  <TableHead>Prerequisite Evidence</TableHead>
-                  <TableHead>Followup Actions</TableHead>
-                  <TableHead>Industry Benchmark</TableHead>
+                  <TableHead className="min-w-40">Component / Failure Mode</TableHead>
+                  <TableHead className="min-w-32">Equipment Code</TableHead>
+                  <TableHead className="min-w-32">Failure Code</TableHead>
+                  <TableHead className="min-w-28">Risk Ranking</TableHead>
+                  <TableHead className="min-w-48">Required Trend Data Evidence</TableHead>
+                  <TableHead className="min-w-48">AI/Investigator Questions</TableHead>
+                  <TableHead className="min-w-44">Attachments Evidence Required</TableHead>
+                  <TableHead className="min-w-40">Root Cause Logic</TableHead>
+                  <TableHead className="min-w-40">Primary Root Cause</TableHead>
+                  <TableHead className="min-w-36">Contributing Factor</TableHead>
+                  <TableHead className="min-w-32">Latent Cause</TableHead>
+                  <TableHead className="min-w-32">Detection Gap</TableHead>
+                  <TableHead className="min-w-32">Confidence Level</TableHead>
+                  <TableHead className="min-w-40">Fault Signature Pattern</TableHead>
+                  <TableHead className="min-w-44">Applicable to Other Equipment</TableHead>
+                  <TableHead className="min-w-36">Evidence Gap Flag</TableHead>
+                  <TableHead className="min-w-48">Eliminated If These Failures Confirmed</TableHead>
+                  <TableHead className="min-w-40">Why It Gets Eliminated</TableHead>
+                  <TableHead className="min-w-32">Diagnostic Value</TableHead>
+                  <TableHead className="min-w-36">Industry Relevance</TableHead>
+                  <TableHead className="min-w-32">Evidence Priority</TableHead>
+                  <TableHead className="min-w-32">Time to Collect</TableHead>
+                  <TableHead className="min-w-32">Collection Cost</TableHead>
+                  <TableHead className="min-w-36">Analysis Complexity</TableHead>
+                  <TableHead className="min-w-32">Seasonal Factor</TableHead>
+                  <TableHead className="min-w-40">Related Failure Modes</TableHead>
+                  <TableHead className="min-w-36">Prerequisite Evidence</TableHead>
+                  <TableHead className="min-w-32">Followup Actions</TableHead>
+                  <TableHead className="min-w-36">Industry Benchmark</TableHead>
                   {/* BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP */}
                   
                   {/* SYSTEM FIELDS - CLEARLY SEPARATED FOR ADMIN/REFERENCE (STEP 2 COMPLIANCE) */}
-                  <TableHead className="bg-gray-100 border-l-2 border-gray-300">System ID</TableHead>
-                  <TableHead className="bg-gray-100">Equipment Group ID</TableHead>
-                  <TableHead className="bg-gray-100">Equipment Type ID</TableHead>
-                  <TableHead className="bg-gray-100">Equipment Subtype ID</TableHead>
-                  <TableHead className="bg-gray-100">Risk Ranking ID</TableHead>
-                  <TableHead className="bg-gray-100">Is Active</TableHead>
-                  <TableHead className="bg-gray-100">Last Updated</TableHead>
-                  <TableHead className="bg-gray-100">Updated By</TableHead>
-                  <TableHead className="bg-gray-100">Created At</TableHead>
-                  <TableHead className="bg-gray-100 w-32">Actions</TableHead>
+                  <TableHead className="bg-gray-100 border-l-2 border-gray-300 min-w-24">System ID</TableHead>
+                  <TableHead className="bg-gray-100 min-w-28">Equipment Group ID</TableHead>
+                  <TableHead className="bg-gray-100 min-w-28">Equipment Type ID</TableHead>
+                  <TableHead className="bg-gray-100 min-w-32">Equipment Subtype ID</TableHead>
+                  <TableHead className="bg-gray-100 min-w-28">Risk Ranking ID</TableHead>
+                  <TableHead className="bg-gray-100 min-w-24">Is Active</TableHead>
+                  <TableHead className="bg-gray-100 min-w-32">Last Updated</TableHead>
+                  <TableHead className="bg-gray-100 min-w-28">Updated By</TableHead>
+                  <TableHead className="bg-gray-100 min-w-32">Created At</TableHead>
+                  <TableHead className="bg-gray-100 min-w-24">Actions</TableHead>
+
                 </TableRow>
               </TableHeader>
               <TableBody>
