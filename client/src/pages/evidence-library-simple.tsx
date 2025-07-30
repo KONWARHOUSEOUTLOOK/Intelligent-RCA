@@ -515,10 +515,10 @@ export default function EvidenceLibrarySimple() {
             className="evidence-table-container border rounded-lg shadow-lg"
             style={{
               width: '100%',
-              height: 'auto',
-              maxHeight: '80vh',
+              height: '80vh',
               overflowX: 'auto',
-              overflowY: 'auto'
+              overflowY: 'auto',
+              position: 'relative'
             }}
           >
             <Table style={{ 
@@ -526,9 +526,9 @@ export default function EvidenceLibrarySimple() {
               width: '20000px', 
               tableLayout: 'fixed'
             }}>
-              <TableHeader style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'white' }} className="shadow-sm">
+              <TableHeader className="bg-white border-b shadow-sm" style={{ position: 'sticky', top: 0, zIndex: 999 }}>
                 <TableRow>
-                  <TableHead style={{ width: '80px', minWidth: '80px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>
+                  <TableHead className="bg-white border-b" style={{ width: '80px', minWidth: '80px', position: 'sticky', top: 0, zIndex: 1000 }}>
                     <input
                       type="checkbox"
                       checked={selectAll}
@@ -536,48 +536,48 @@ export default function EvidenceLibrarySimple() {
                       className="rounded border-gray-300"
                     />
                   </TableHead>
-                  <TableHead style={{ width: '200px', minWidth: '200px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Equipment Group</TableHead>
-                  <TableHead style={{ width: '200px', minWidth: '200px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Equipment Type</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Subtype</TableHead>
-                  <TableHead style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Component/Failure Mode</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Equipment Code</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Failure Code</TableHead>
-                  <TableHead style={{ width: '150px', minWidth: '150px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Risk Ranking</TableHead>
-                  <TableHead style={{ width: '300px', minWidth: '300px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Required Trend Data</TableHead>
-                  <TableHead style={{ width: '300px', minWidth: '300px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>AI Questions</TableHead>
-                  <TableHead style={{ width: '280px', minWidth: '280px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Attachments Required</TableHead>
-                  <TableHead style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Root Cause Logic</TableHead>
-                  <TableHead style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Primary Root Cause</TableHead>
-                  <TableHead style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Contributing Factor</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Latent Cause</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Detection Gap</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Confidence Level</TableHead>
-                  <TableHead style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Fault Signature Pattern</TableHead>
-                  <TableHead style={{ width: '280px', minWidth: '280px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Applicable to Other Equipment</TableHead>
-                  <TableHead style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Evidence Gap Flag</TableHead>
-                  <TableHead style={{ width: '300px', minWidth: '300px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Eliminated If These Failures Confirmed</TableHead>
-                  <TableHead style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Why It Gets Eliminated</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Diagnostic Value</TableHead>
-                  <TableHead style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Industry Relevance</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Evidence Priority</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Time to Collect</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Collection Cost</TableHead>
-                  <TableHead style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Analysis Complexity</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Seasonal Factor</TableHead>
-                  <TableHead style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Related Failure Modes</TableHead>
-                  <TableHead style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Prerequisite Evidence</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Followup Actions</TableHead>
-                  <TableHead style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: 'white' }}>Industry Benchmark</TableHead>
-                  <TableHead style={{ width: '120px', minWidth: '120px', backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 11 }}>System ID</TableHead>
-                  <TableHead style={{ width: '150px', minWidth: '150px', backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 11 }}>Group ID</TableHead>
-                  <TableHead style={{ width: '150px', minWidth: '150px', backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 11 }}>Type ID</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 11 }}>Subtype ID</TableHead>
-                  <TableHead style={{ width: '150px', minWidth: '150px', backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 11 }}>Risk ID</TableHead>
-                  <TableHead style={{ width: '120px', minWidth: '120px', backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 11 }}>Active</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 11 }}>Updated</TableHead>
-                  <TableHead style={{ width: '150px', minWidth: '150px', backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 11 }}>Updated By</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px', backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 11 }}>Created</TableHead>
-                  <TableHead style={{ width: '120px', minWidth: '120px', backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 11 }}>Actions</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '200px', minWidth: '200px', position: 'sticky', top: 0, zIndex: 1000 }}>Equipment Group</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '200px', minWidth: '200px', position: 'sticky', top: 0, zIndex: 1000 }}>Equipment Type</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Subtype</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 1000 }}>Component/Failure Mode</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Equipment Code</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Failure Code</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '150px', minWidth: '150px', position: 'sticky', top: 0, zIndex: 1000 }}>Risk Ranking</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '300px', minWidth: '300px', position: 'sticky', top: 0, zIndex: 1000 }}>Required Trend Data</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '300px', minWidth: '300px', position: 'sticky', top: 0, zIndex: 1000 }}>AI Questions</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '280px', minWidth: '280px', position: 'sticky', top: 0, zIndex: 1000 }}>Attachments Required</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 1000 }}>Root Cause Logic</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 1000 }}>Primary Root Cause</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 1000 }}>Contributing Factor</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Latent Cause</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Detection Gap</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Confidence Level</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 1000 }}>Fault Signature Pattern</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '280px', minWidth: '280px', position: 'sticky', top: 0, zIndex: 1000 }}>Applicable to Other Equipment</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 1000 }}>Evidence Gap Flag</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '300px', minWidth: '300px', position: 'sticky', top: 0, zIndex: 1000 }}>Eliminated If These Failures Confirmed</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 1000 }}>Why It Gets Eliminated</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Diagnostic Value</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 1000 }}>Industry Relevance</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Evidence Priority</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Time to Collect</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Collection Cost</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 1000 }}>Analysis Complexity</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Seasonal Factor</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 1000 }}>Related Failure Modes</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 1000 }}>Prerequisite Evidence</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Followup Actions</TableHead>
+                  <TableHead className="bg-white border-b" style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 1000 }}>Industry Benchmark</TableHead>
+                  <TableHead className="bg-slate-100 border-b" style={{ width: '120px', minWidth: '120px', position: 'sticky', top: 0, zIndex: 1000 }}>System ID</TableHead>
+                  <TableHead className="bg-slate-100 border-b" style={{ width: '150px', minWidth: '150px', position: 'sticky', top: 0, zIndex: 1000 }}>Group ID</TableHead>
+                  <TableHead className="bg-slate-100 border-b" style={{ width: '150px', minWidth: '150px', position: 'sticky', top: 0, zIndex: 1000 }}>Type ID</TableHead>
+                  <TableHead className="bg-slate-100 border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Subtype ID</TableHead>
+                  <TableHead className="bg-slate-100 border-b" style={{ width: '150px', minWidth: '150px', position: 'sticky', top: 0, zIndex: 1000 }}>Risk ID</TableHead>
+                  <TableHead className="bg-slate-100 border-b" style={{ width: '120px', minWidth: '120px', position: 'sticky', top: 0, zIndex: 1000 }}>Active</TableHead>
+                  <TableHead className="bg-slate-100 border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Updated</TableHead>
+                  <TableHead className="bg-slate-100 border-b" style={{ width: '150px', minWidth: '150px', position: 'sticky', top: 0, zIndex: 1000 }}>Updated By</TableHead>
+                  <TableHead className="bg-slate-100 border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Created</TableHead>
+                  <TableHead className="bg-slate-100 border-b" style={{ width: '120px', minWidth: '120px', position: 'sticky', top: 0, zIndex: 1000 }}>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
