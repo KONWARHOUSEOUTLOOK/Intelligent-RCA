@@ -29,6 +29,7 @@ import {
   decimal,
   date,
   serial,
+  unique,
 } from "drizzle-orm/pg-core";
 import { sql } from 'drizzle-orm';
 import { createInsertSchema } from "drizzle-zod";
@@ -223,7 +224,10 @@ export const aiSettings = pgTable("ai_settings", {
   createdAt: timestamp("created_at").defaultNow(),
   lastTestedAt: timestamp("last_tested_at"), // when API key was last tested
   testStatus: varchar("test_status"), // 'success', 'failed', 'not_tested'
-});
+}, (table) => ({
+  // Prevent duplicate providers - UNIQUE constraint
+  uniqueProvider: unique("unique_provider_per_user").on(table.provider, table.createdBy),
+}));
 
 export const insertInvestigationSchema = createInsertSchema(investigations);
 export type InsertInvestigation = z.infer<typeof insertInvestigationSchema>;

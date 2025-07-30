@@ -343,6 +343,19 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
       const { AIService } = await import("./ai-service");
       const encryptedKey = AIService.encrypt(data.apiKey);
       
+      // Check for existing provider (prevent duplicates)
+      const existingProvider = await db
+        .select()
+        .from(aiSettings)
+        .where(and(
+          eq(aiSettings.provider, data.provider),
+          eq(aiSettings.createdBy, data.createdBy || 1)
+        ));
+      
+      if (existingProvider.length > 0) {
+        throw new Error(`Provider '${data.provider}' already exists. Please update the existing provider instead.`);
+      }
+      
       // Deactivate other settings if this one is active
       if (data.isActive) {
         await db
@@ -356,10 +369,10 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
         .insert(aiSettings)
         .values({
           provider: data.provider,
-          model: data.model || UniversalAIConfig.getDefaultModel(),
+          model: data.model || data.provider, // Use provider as default model
           encryptedApiKey: encryptedKey,
           isActive: data.isActive,
-          createdBy: data.createdBy,
+          createdBy: data.createdBy || 1,
           testStatus: 'not_tested'
         })
         .returning();
@@ -374,6 +387,33 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
       };
     } catch (error) {
       console.error("[DatabaseInvestigationStorage] Error saving AI settings:", error);
+      throw error;
+    }
+  }
+
+  async updateAiSettingsTestStatus(id: number, testStatus: string, error?: string): Promise<void> {
+    try {
+      await db
+        .update(aiSettings)
+        .set({ 
+          testStatus, 
+          lastTestedAt: new Date(),
+          ...(error && { testError: error })
+        })
+        .where(eq(aiSettings.id, id));
+      console.log(`[DatabaseInvestigationStorage] Updated test status for AI setting ${id}: ${testStatus}`);
+    } catch (error) {
+      console.error("[DatabaseInvestigationStorage] Error updating test status:", error);
+      throw error;
+    }
+  }
+
+  async deleteAiSettings(id: number): Promise<void> {
+    try {
+      await db.delete(aiSettings).where(eq(aiSettings.id, id));
+      console.log(`[DatabaseInvestigationStorage] Deleted AI setting ${id}`);
+    } catch (error) {
+      console.error("[DatabaseInvestigationStorage] Error deleting AI settings:", error);
       throw error;
     }
   }

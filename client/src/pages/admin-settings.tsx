@@ -399,10 +399,60 @@ export default function AdminSettings() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ai-settings"] });
       setFormData(prev => ({ ...prev, apiKey: "" })); // Clear form
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Save Failed",
-        description: "Failed to save AI settings. Please try again.",
+        description: error.errorType === 'duplicate_provider' 
+          ? error.message 
+          : "Failed to save AI settings. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Test specific AI provider mutation
+  const testProviderMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return await apiRequest(`/api/admin/ai-settings/${id}/test`, {
+        method: "POST",
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: data.success ? "Test Successful" : "Test Failed",
+        description: data.message,
+        variant: data.success ? "default" : "destructive",
+      });
+      // Refresh the providers list
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/ai-settings"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Test Failed",
+        description: "Failed to test AI provider",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete AI provider mutation
+  const deleteProviderMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return await apiRequest(`/api/admin/ai-settings/${id}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Provider Deleted",
+        description: "AI provider deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/ai-settings"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete AI provider",
         variant: "destructive",
       });
     },
@@ -785,30 +835,22 @@ export default function AdminSettings() {
                     <TableCell>
                       <div className="flex space-x-2">
                         <Button 
-                          variant="ghost" 
+                          variant="outline" 
                           size="sm"
-                          onClick={async () => {
-                            try {
-                              const response = await apiRequest("/api/admin/ai-status/test", {
-                                method: "POST"
-                              });
-                              toast({
-                                title: "Test Successful",
-                                description: "AI provider connection verified successfully",
-                              });
-                              queryClient.invalidateQueries({ queryKey: ["/api/admin/ai-settings"] });
-                            } catch (error) {
-                              toast({
-                                title: "Test Failed",
-                                description: "Unable to connect to AI provider.",
-                                variant: "destructive",
-                              });
-                            }
-                          }}
+                          onClick={() => testProviderMutation.mutate(setting.id)}
+                          disabled={testProviderMutation.isPending}
                         >
-                          Test
+                          <TestTube className="w-4 h-4 mr-1" />
+                          {testProviderMutation.isPending ? "Testing..." : "Test"}
                         </Button>
-                        <Button variant="ghost" size="sm">Remove</Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => deleteProviderMutation.mutate(setting.id)}
+                          disabled={deleteProviderMutation.isPending}
+                        >
+                          {deleteProviderMutation.isPending ? "Removing..." : "Remove"}
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

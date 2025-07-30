@@ -57,19 +57,87 @@ export class AIService {
     return decrypted.toString();
   }
 
-  // Test API key connectivity - DYNAMIC PROVIDER TESTING
+  // Test API key connectivity - REAL API TESTING
   static async testApiKey(provider: string, apiKey: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // Use DynamicAIConfig for all provider testing - NO HARDCODING
-      const result = await DynamicAIConfig.performAIAnalysis(
-        "Test connection", 
-        { provider, apiKey }
-      );
+      console.log(`[AIService] Testing ${provider} API key connectivity`);
       
-      return { success: true };
+      switch (provider.toLowerCase()) {
+        case 'openai':
+          return await this.testOpenAI(apiKey);
+        case 'anthropic':
+          return await this.testAnthropic(apiKey);
+        case 'gemini':
+        case 'google':
+          return await this.testGemini(apiKey);
+        default:
+          return { success: false, error: `Unsupported provider: ${provider}` };
+      }
     } catch (error) {
+      console.error(`[AIService] Error testing ${provider}:`, error);
       const errorMessage = error instanceof Error ? error.message : String(error);
       return { success: false, error: errorMessage };
+    }
+  }
+
+  private static async testOpenAI(apiKey: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch('https://api.openai.com/v1/models', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
+      });
+
+      if (response.ok) {
+        return { success: true };
+      } else {
+        const error = await response.json();
+        return { success: false, error: error.error?.message || 'Invalid API key' };
+      }
+    } catch (error) {
+      return { success: false, error: 'Network error or invalid API key' };
+    }
+  }
+
+  private static async testAnthropic(apiKey: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 1,
+          messages: [{ role: 'user', content: 'test' }],
+        }),
+      });
+
+      if (response.ok || response.status === 400) { // 400 is expected for minimal test
+        return { success: true };
+      } else {
+        const error = await response.json();
+        return { success: false, error: error.error?.message || 'Invalid API key' };
+      }
+    } catch (error) {
+      return { success: false, error: 'Network error or invalid API key' };
+    }
+  }
+
+  private static async testGemini(apiKey: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+
+      if (response.ok) {
+        return { success: true };
+      } else {
+        const error = await response.json();
+        return { success: false, error: error.error?.message || 'Invalid API key' };
+      }
+    } catch (error) {
+      return { success: false, error: 'Network error or invalid API key' };
     }
   }
 

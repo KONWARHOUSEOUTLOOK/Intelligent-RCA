@@ -1951,7 +1951,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('[ADMIN] Error saving AI settings:', error);
+      
+      // Handle duplicate provider error
+      if (error.message && error.message.includes('already exists')) {
+        return res.status(409).json({ 
+          message: error.message,
+          errorType: 'duplicate_provider'
+        });
+      }
+      
       res.status(500).json({ message: "Failed to save AI settings" });
+    }
+  });
+
+  // Test specific AI provider
+  app.post("/api/admin/ai-settings/:id/test", async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(`[ADMIN] Testing AI provider ${id}`);
+      
+      // Get the specific provider settings
+      const setting = await investigationStorage.getAiSettingsById(parseInt(id));
+      if (!setting) {
+        return res.status(404).json({ message: "AI provider not found" });
+      }
+      
+      // Test the API key with real connection
+      const { AIService } = await import("./ai-service");
+      const testResult = await AIService.testApiKey(setting.provider, setting.apiKey);
+      
+      // Update test status in database
+      const testStatus = testResult.success ? 'success' : 'failed';
+      await investigationStorage.updateAiSettingsTestStatus(
+        parseInt(id), 
+        testStatus, 
+        testResult.error
+      );
+      
+      res.json({
+        success: testResult.success,
+        message: testResult.success ? 'API key test successful' : `Test failed: ${testResult.error}`,
+        testStatus,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('[ADMIN] Error testing AI provider:', error);
+      res.status(500).json({ message: "Failed to test AI provider" });
+    }
+  });
+
+  // Delete AI provider
+  app.delete("/api/admin/ai-settings/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(`[ADMIN] Deleting AI provider ${id}`);
+      
+      await investigationStorage.deleteAiSettings(parseInt(id));
+      
+      res.json({
+        success: true,
+        message: 'AI provider deleted successfully'
+      });
+    } catch (error) {
+      console.error('[ADMIN] Error deleting AI provider:', error);
+      res.status(500).json({ message: "Failed to delete AI provider" });
     }
   });
 
