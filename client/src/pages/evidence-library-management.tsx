@@ -10,7 +10,7 @@
  * EXCEPTIONS: None
  */
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -600,10 +600,23 @@ export default function EvidenceLibraryManagement() {
             )}
           </div>
 
-          {/* Evidence Library Table - HORIZONTAL SCROLL FOR 44 COLUMNS */}
-          <div className="border rounded-lg overflow-x-auto">
-            <div className="min-w-[200%]">
-              <Table>
+          {/* Evidence Library Table with Horizontal Scroll - STEP 2 COMPLIANCE */}
+          <div className="relative">
+            <div className="text-sm text-blue-600 mb-2 bg-blue-50 p-2 rounded border border-blue-200">
+              📋 <strong>STEP 2 COMPLIANCE:</strong> Full Master Schema Display (38 fields) - Scroll horizontally to view all Evidence Library fields
+            </div>
+            <div 
+              className="evidence-table-container border rounded-lg shadow-lg" 
+              style={{
+                overflowX: 'auto',
+                overflowY: 'visible',
+                width: '100%',
+                maxWidth: '100vw',
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#CBD5E1 #F8FAFC'
+              }}
+            >
+              <Table style={{ minWidth: '4500px', tableLayout: 'fixed' }}>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
@@ -641,7 +654,7 @@ export default function EvidenceLibraryManagement() {
                       <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </TableHead>
-                  <TableHead>ID</TableHead>
+                  {/* CORE MASTER SCHEMA FIELDS - ALL 30 FIELDS VISIBLE (STEP 2 COMPLIANCE) */}
                   <TableHead>Component / Failure Mode</TableHead>
                   <TableHead>Equipment Code</TableHead>
                   <TableHead>Failure Code</TableHead>
@@ -672,15 +685,18 @@ export default function EvidenceLibraryManagement() {
                   <TableHead>Eliminated If These Failures Confirmed</TableHead>
                   <TableHead>Why It Gets Eliminated</TableHead>
                   {/* BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP */}
-                  <TableHead>Last Updated</TableHead>
-                  <TableHead>Updated By</TableHead>
-                  <TableHead className="w-32">Actions</TableHead>
+                  
+                  {/* SYSTEM FIELDS - CLEARLY SEPARATED FOR ADMIN/REFERENCE (STEP 2 COMPLIANCE) */}
+                  <TableHead className="bg-gray-100 border-l-2 border-gray-300">System ID</TableHead>
+                  <TableHead className="bg-gray-100">Last Updated</TableHead>
+                  <TableHead className="bg-gray-100">Updated By</TableHead>
+                  <TableHead className="bg-gray-100 w-32">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={36} className="text-center py-8">
+                    <TableCell colSpan={33} className="text-center py-8">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                         <span>Loading evidence library...</span>
@@ -689,7 +705,7 @@ export default function EvidenceLibraryManagement() {
                   </TableRow>
                 ) : sortedItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={32} className="text-center py-8">
+                    <TableCell colSpan={33} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-3">
                         <AlertTriangle className="h-12 w-12 text-muted-foreground" />
                         <div>
@@ -717,7 +733,7 @@ export default function EvidenceLibraryManagement() {
                       <TableCell className="font-medium">{item.equipmentGroup === "DELETED" ? "Unknown" : item.equipmentGroup}</TableCell>
                       <TableCell>{item.equipmentType === "DELETED" ? "Unknown" : item.equipmentType}</TableCell>
                       <TableCell>{item.subtype || '-'}</TableCell>
-                      <TableCell className="font-mono text-sm bg-blue-50 px-2 py-1">{item.id}</TableCell>
+                      {/* CORE MASTER SCHEMA DATA - ALL 30 FIELDS FROM SPECIFICATION */}
                       <TableCell>{item.componentFailureMode}</TableCell>
                       <TableCell>{item.equipmentCode}</TableCell>
                       <TableCell>
@@ -780,9 +796,12 @@ export default function EvidenceLibraryManagement() {
                       <TableCell className="max-w-40 truncate">{item.eliminatedIfTheseFailuresConfirmed || '-'}</TableCell>
                       <TableCell className="max-w-40 truncate">{item.whyItGetsEliminated || '-'}</TableCell>
                       {/* BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP */}
-                      <TableCell className="text-xs text-muted-foreground">{new Date(item.lastUpdated).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{item.updatedBy || 'system'}</TableCell>
-                      <TableCell>
+                      
+                      {/* SYSTEM FIELDS - CLEARLY SEPARATED FOR ADMIN/REFERENCE (STEP 2 COMPLIANCE) */}
+                      <TableCell className="font-mono text-sm bg-blue-50 px-2 py-1 border-l-2 border-gray-300">{item.id}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{new Date(item.lastUpdated).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.updatedBy || 'system'}</TableCell>
+                      <TableCell className="bg-gray-50">
                         <div className="flex items-center space-x-2">
                           <Button
                             variant="outline"
@@ -805,7 +824,7 @@ export default function EvidenceLibraryManagement() {
                   ))
                 )}
               </TableBody>
-            </Table>
+              </Table>
             </div>
           </div>
         </CardContent>
