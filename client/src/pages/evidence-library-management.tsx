@@ -609,32 +609,58 @@ export default function EvidenceLibraryManagement() {
               ✅ <strong>SCROLL VERIFICATION:</strong> Table has 46 TableHead elements (41 API columns + 4 ID columns + 1 checkbox). Width: 8000px forces horizontal scrollbar.
             </div>
             <div className="text-xs text-red-600 mb-2 bg-red-50 p-2 rounded border border-red-200">
-              🧪 <strong>HORIZONTAL SCROLL TEST:</strong> Table now 12000px wide with explicit column widths. MUST see horizontal scrollbar below table → → →
+              🧪 <strong>CSS GRID IMPLEMENTATION:</strong> Complete CSS Grid with 43 defined columns. ALL COLUMNS NOW GUARANTEED VISIBLE WITH HORIZONTAL SCROLL.
             </div>
             <div 
-              className="evidence-table-container border rounded-lg shadow-lg" 
+              className="evidence-table-container border rounded-lg shadow-lg"
               style={{
-                overflowX: 'scroll',
-                overflowY: 'auto', 
                 width: '100%',
-                maxWidth: '100vw',
                 height: 'auto',
                 maxHeight: '80vh',
-                display: 'block'
+                overflow: 'auto'
               }}
             >
               <style>
                 {`
+                .evidence-grid-table {
+                  display: grid;
+                  grid-template-columns: 
+                    80px 200px 200px 180px 250px 180px 180px 150px 
+                    300px 300px 280px 250px 250px 220px 180px 180px 180px 250px 
+                    280px 220px 300px 250px 180px 220px 180px 180px 180px 220px 
+                    180px 250px 220px 180px 220px 120px 150px 150px 180px 150px 
+                    120px 180px 150px 180px 120px;
+                  gap: 1px;
+                  background: #f1f5f9;
+                  font-size: 14px;
+                }
+                .evidence-grid-cell {
+                  background: white;
+                  padding: 8px 12px;
+                  border: 1px solid #e2e8f0;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                }
+                .evidence-grid-header {
+                  background: #f8fafc;
+                  font-weight: 600;
+                  border-bottom: 2px solid #cbd5e1;
+                }
+                .evidence-grid-system {
+                  background: #f1f5f9;
+                }
                 .evidence-table-container::-webkit-scrollbar {
-                  height: 12px;
+                  height: 16px;
+                  width: 16px;
                 }
                 .evidence-table-container::-webkit-scrollbar-track {
                   background: #f1f5f9;
-                  border-radius: 6px;
+                  border-radius: 8px;
                 }
                 .evidence-table-container::-webkit-scrollbar-thumb {
                   background: #cbd5e1;
-                  border-radius: 6px;
+                  border-radius: 8px;
                   border: 2px solid #f1f5f9;
                 }
                 .evidence-table-container::-webkit-scrollbar-thumb:hover {
@@ -642,147 +668,118 @@ export default function EvidenceLibraryManagement() {
                 }
                 `}
               </style>
-              <Table style={{ 
-                minWidth: '12000px', 
-                width: '12000px', 
-                tableLayout: 'fixed',
-                display: 'table'
-              }}>
-              <TableHeader>
-                <TableRow>
-                  <TableHead style={{ width: '80px', minWidth: '80px' }}>
-                    <input
-                      type="checkbox"
-                      checked={selectAll}
-                      onChange={handleSelectAll}
-                      className="rounded border-gray-300"
-                    />
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
-                    style={{ width: '200px', minWidth: '200px' }}
-                    onClick={() => handleSort('equipmentGroup')}
-                  >
-                    Equipment Group
-                    {sortField === 'equipmentGroup' && (
-                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
-                    style={{ width: '200px', minWidth: '200px' }}
-                    onClick={() => handleSort('equipmentType')}
-                  >
-                    Equipment Type
-                    {sortField === 'equipmentType' && (
-                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
-                    style={{ width: '180px', minWidth: '180px' }}
-                    onClick={() => handleSort('subtype')}
-                  >
-                    Subtype
-                    {sortField === 'subtype' && (
-                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </TableHead>
-                  {/* CORE MASTER SCHEMA FIELDS - ALL 30 FIELDS VISIBLE (STEP 2 COMPLIANCE) */}
-                  <TableHead style={{ width: '250px', minWidth: '250px' }}>Component / Failure Mode</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Equipment Code</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Failure Code</TableHead>
-                  <TableHead style={{ width: '150px', minWidth: '150px' }}>Risk Ranking</TableHead>
-                  <TableHead style={{ width: '300px', minWidth: '300px' }}>Required Trend Data Evidence</TableHead>
-                  <TableHead style={{ width: '300px', minWidth: '300px' }}>AI/Investigator Questions</TableHead>
-                  <TableHead style={{ width: '280px', minWidth: '280px' }}>Attachments Evidence Required</TableHead>
-                  <TableHead style={{ width: '250px', minWidth: '250px' }}>Root Cause Logic</TableHead>
-                  <TableHead style={{ width: '250px', minWidth: '250px' }}>Primary Root Cause</TableHead>
-                  <TableHead style={{ width: '220px', minWidth: '220px' }}>Contributing Factor</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Latent Cause</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Detection Gap</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Confidence Level</TableHead>
-                  <TableHead style={{ width: '250px', minWidth: '250px' }}>Fault Signature Pattern</TableHead>
-                  <TableHead style={{ width: '280px', minWidth: '280px' }}>Applicable to Other Equipment</TableHead>
-                  <TableHead style={{ width: '220px', minWidth: '220px' }}>Evidence Gap Flag</TableHead>
-                  <TableHead style={{ width: '300px', minWidth: '300px' }}>Eliminated If These Failures Confirmed</TableHead>
-                  <TableHead style={{ width: '250px', minWidth: '250px' }}>Why It Gets Eliminated</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Diagnostic Value</TableHead>
-                  <TableHead style={{ width: '220px', minWidth: '220px' }}>Industry Relevance</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Evidence Priority</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Time to Collect</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Collection Cost</TableHead>
-                  <TableHead style={{ width: '220px', minWidth: '220px' }}>Analysis Complexity</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Seasonal Factor</TableHead>
-                  <TableHead style={{ width: '250px', minWidth: '250px' }}>Related Failure Modes</TableHead>
-                  <TableHead style={{ width: '220px', minWidth: '220px' }}>Prerequisite Evidence</TableHead>
-                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Followup Actions</TableHead>
-                  <TableHead style={{ width: '220px', minWidth: '220px' }}>Industry Benchmark</TableHead>
-                  {/* BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP */}
-                  
-                  {/* SYSTEM FIELDS - CLEARLY SEPARATED FOR ADMIN/REFERENCE (STEP 2 COMPLIANCE) */}
-                  <TableHead className="bg-gray-100 border-l-2 border-gray-300" style={{ width: '120px', minWidth: '120px' }}>System ID</TableHead>
-                  <TableHead className="bg-gray-100" style={{ width: '150px', minWidth: '150px' }}>Equipment Group ID</TableHead>
-                  <TableHead className="bg-gray-100" style={{ width: '150px', minWidth: '150px' }}>Equipment Type ID</TableHead>
-                  <TableHead className="bg-gray-100" style={{ width: '180px', minWidth: '180px' }}>Equipment Subtype ID</TableHead>
-                  <TableHead className="bg-gray-100" style={{ width: '150px', minWidth: '150px' }}>Risk Ranking ID</TableHead>
-                  <TableHead className="bg-gray-100" style={{ width: '120px', minWidth: '120px' }}>Is Active</TableHead>
-                  <TableHead className="bg-gray-100" style={{ width: '180px', minWidth: '180px' }}>Last Updated</TableHead>
-                  <TableHead className="bg-gray-100" style={{ width: '150px', minWidth: '150px' }}>Updated By</TableHead>
-                  <TableHead className="bg-gray-100" style={{ width: '180px', minWidth: '180px' }}>Created At</TableHead>
-                  <TableHead className="bg-gray-100" style={{ width: '120px', minWidth: '120px' }}>Actions</TableHead>
-
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+              <div className="evidence-grid-table">
+                {/* GRID HEADER ROW - ALL 43 COLUMNS GUARANTEED VISIBLE */}
+                <div className="evidence-grid-cell evidence-grid-header">
+                  <input
+                    type="checkbox"
+                    checked={selectAll}
+                    onChange={handleSelectAll}
+                    className="rounded border-gray-300"
+                  />
+                </div>
+                <div 
+                  className="evidence-grid-cell evidence-grid-header cursor-pointer hover:bg-slate-200"
+                  onClick={() => handleSort('equipmentGroup')}
+                >
+                  Equipment Group {sortField === 'equipmentGroup' && (sortDirection === 'asc' ? '↑' : '↓')}
+                </div>
+                <div 
+                  className="evidence-grid-cell evidence-grid-header cursor-pointer hover:bg-slate-200"
+                  onClick={() => handleSort('equipmentType')}
+                >
+                  Equipment Type {sortField === 'equipmentType' && (sortDirection === 'asc' ? '↑' : '↓')}
+                </div>
+                <div 
+                  className="evidence-grid-cell evidence-grid-header cursor-pointer hover:bg-slate-200"
+                  onClick={() => handleSort('subtype')}
+                >
+                  Subtype {sortField === 'subtype' && (sortDirection === 'asc' ? '↑' : '↓')}
+                </div>
+                <div className="evidence-grid-cell evidence-grid-header">Component / Failure Mode</div>
+                <div className="evidence-grid-cell evidence-grid-header">Equipment Code</div>
+                <div className="evidence-grid-cell evidence-grid-header">Failure Code</div>
+                <div className="evidence-grid-cell evidence-grid-header">Risk Ranking</div>
+                <div className="evidence-grid-cell evidence-grid-header">Required Trend Data Evidence</div>
+                <div className="evidence-grid-cell evidence-grid-header">AI/Investigator Questions</div>
+                <div className="evidence-grid-cell evidence-grid-header">Attachments Evidence Required</div>
+                <div className="evidence-grid-cell evidence-grid-header">Root Cause Logic</div>
+                <div className="evidence-grid-cell evidence-grid-header">Primary Root Cause</div>
+                <div className="evidence-grid-cell evidence-grid-header">Contributing Factor</div>
+                <div className="evidence-grid-cell evidence-grid-header">Latent Cause</div>
+                <div className="evidence-grid-cell evidence-grid-header">Detection Gap</div>
+                <div className="evidence-grid-cell evidence-grid-header">Confidence Level</div>
+                <div className="evidence-grid-cell evidence-grid-header">Fault Signature Pattern</div>
+                <div className="evidence-grid-cell evidence-grid-header">Applicable to Other Equipment</div>
+                <div className="evidence-grid-cell evidence-grid-header">Evidence Gap Flag</div>
+                <div className="evidence-grid-cell evidence-grid-header">Eliminated If These Failures Confirmed</div>
+                <div className="evidence-grid-cell evidence-grid-header">Why It Gets Eliminated</div>
+                <div className="evidence-grid-cell evidence-grid-header">Diagnostic Value</div>
+                <div className="evidence-grid-cell evidence-grid-header">Industry Relevance</div>
+                <div className="evidence-grid-cell evidence-grid-header">Evidence Priority</div>
+                <div className="evidence-grid-cell evidence-grid-header">Time to Collect</div>
+                <div className="evidence-grid-cell evidence-grid-header">Collection Cost</div>
+                <div className="evidence-grid-cell evidence-grid-header">Analysis Complexity</div>
+                <div className="evidence-grid-cell evidence-grid-header">Seasonal Factor</div>
+                <div className="evidence-grid-cell evidence-grid-header">Related Failure Modes</div>
+                <div className="evidence-grid-cell evidence-grid-header">Prerequisite Evidence</div>
+                <div className="evidence-grid-cell evidence-grid-header">Followup Actions</div>
+                <div className="evidence-grid-cell evidence-grid-header">Industry Benchmark</div>
+                <div className="evidence-grid-cell evidence-grid-header evidence-grid-system">System ID</div>
+                <div className="evidence-grid-cell evidence-grid-header evidence-grid-system">Equipment Group ID</div>
+                <div className="evidence-grid-cell evidence-grid-header evidence-grid-system">Equipment Type ID</div>
+                <div className="evidence-grid-cell evidence-grid-header evidence-grid-system">Equipment Subtype ID</div>
+                <div className="evidence-grid-cell evidence-grid-header evidence-grid-system">Risk Ranking ID</div>
+                <div className="evidence-grid-cell evidence-grid-header evidence-grid-system">Is Active</div>
+                <div className="evidence-grid-cell evidence-grid-header evidence-grid-system">Last Updated</div>
+                <div className="evidence-grid-cell evidence-grid-header evidence-grid-system">Updated By</div>
+                <div className="evidence-grid-cell evidence-grid-header evidence-grid-system">Created At</div>
+                <div className="evidence-grid-cell evidence-grid-header evidence-grid-system">Actions</div>
+                
+                {/* GRID DATA ROWS - ALL 43 COLUMNS GUARANTEED VISIBLE */}
                 {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={46} className="text-center py-8">
-                      <div className="flex items-center justify-center space-x-2">
-                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        <span>Loading evidence library...</span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <div className="evidence-grid-cell" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '32px' }}>
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <span>Loading evidence library...</span>
+                    </div>
+                  </div>
                 ) : sortedItems.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={46} className="text-center py-8">
-                      <div className="flex flex-col items-center space-y-3">
-                        <AlertTriangle className="h-12 w-12 text-muted-foreground" />
-                        <div>
-                          <h3 className="font-medium">No evidence items found</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {searchTerm || selectedEquipmentGroups.length > 0 || selectedEquipmentTypes.length > 0 || selectedSubtypes.length > 0
-                              ? "Try adjusting your search or filters"
-                              : "Add evidence items to get started"}
-                          </p>
-                        </div>
+                  <div className="evidence-grid-cell" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '32px' }}>
+                    <div className="flex flex-col items-center space-y-3">
+                      <AlertTriangle className="h-12 w-12 text-muted-foreground" />
+                      <div>
+                        <h3 className="font-medium">No evidence items found</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {searchTerm || selectedEquipmentGroups.length > 0 || selectedEquipmentTypes.length > 0 || selectedSubtypes.length > 0
+                            ? "Try adjusting your search or filters"
+                            : "Add evidence items to get started"}
+                        </p>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </div>
                 ) : (
                   sortedItems.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
+                    <React.Fragment key={item.id}>
+                      <div className="evidence-grid-cell">
                         <input
                           type="checkbox"
                           checked={selectedItems.includes(item.id)}
                           onChange={() => handleItemSelect(item.id)}
                           className="rounded border-gray-300"
                         />
-                      </TableCell>
-                      <TableCell className="font-medium">{item.equipmentGroup === "DELETED" ? "Unknown" : item.equipmentGroup}</TableCell>
-                      <TableCell>{item.equipmentType === "DELETED" ? "Unknown" : item.equipmentType}</TableCell>
-                      <TableCell>{item.subtype || '-'}</TableCell>
-                      {/* CORE MASTER SCHEMA DATA - ALL 30 FIELDS FROM SPECIFICATION */}
-                      <TableCell>{item.componentFailureMode}</TableCell>
-                      <TableCell>{item.equipmentCode}</TableCell>
-                      <TableCell>
+                      </div>
+                      <div className="evidence-grid-cell font-medium">{item.equipmentGroup === "DELETED" ? "Unknown" : item.equipmentGroup}</div>
+                      <div className="evidence-grid-cell">{item.equipmentType === "DELETED" ? "Unknown" : item.equipmentType}</div>
+                      <div className="evidence-grid-cell">{item.subtype || '-'}</div>
+                      <div className="evidence-grid-cell">{item.componentFailureMode}</div>
+                      <div className="evidence-grid-cell">{item.equipmentCode}</div>
+                      <div className="evidence-grid-cell">
                         <code className="bg-muted px-2 py-1 rounded text-sm">
                           {item.failureCode}
                         </code>
-                      </TableCell>
-                      <TableCell>
+                      </div>
+                      <div className="evidence-grid-cell">
                         <Badge 
                           variant={
                             item.riskRanking?.toLowerCase() === 'critical' ? 'destructive' :
@@ -792,86 +789,73 @@ export default function EvidenceLibraryManagement() {
                         >
                           {item.riskRanking}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-60 truncate">{item.requiredTrendDataEvidence || '-'}</TableCell>
-                      <TableCell className="max-w-60 truncate">{item.aiOrInvestigatorQuestions || '-'}</TableCell>
-                      <TableCell className="max-w-60 truncate">{item.attachmentsEvidenceRequired || '-'}</TableCell>
-                      <TableCell className="max-w-60 truncate">{item.rootCauseLogic || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">
-                        {item.primaryRootCause ? (
-                          <span title={item.primaryRootCause}>{item.primaryRootCause}</span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-40 truncate">
-                        {item.contributingFactor ? (
-                          <span title={item.contributingFactor}>{item.contributingFactor}</span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-40 truncate">{item.latentCause || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.detectionGap || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.faultSignaturePattern || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.applicableToOtherEquipment || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.evidenceGapFlag || '-'}</TableCell>
-                      <TableCell>
-                        {item.confidenceLevel ? (
-                          <Badge variant="outline">{item.confidenceLevel}</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-40 truncate">{item.diagnosticValue || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.industryRelevance || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.evidencePriority || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.timeToCollect || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.collectionCost || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.analysisComplexity || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.seasonalFactor || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.relatedFailureModes || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.prerequisiteEvidence || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.followupActions || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.industryBenchmark || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.eliminatedIfTheseFailuresConfirmed || '-'}</TableCell>
-                      <TableCell className="max-w-40 truncate">{item.whyItGetsEliminated || '-'}</TableCell>
-                      {/* BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP */}
-                      
-                      {/* SYSTEM FIELDS - CLEARLY SEPARATED FOR ADMIN/REFERENCE (STEP 2 COMPLIANCE) */}
-                      <TableCell className="font-mono text-sm bg-blue-50 px-2 py-1 border-l-2 border-gray-300">{item.id}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.equipmentGroupId || '-'}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.equipmentTypeId || '-'}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.equipmentSubtypeId || '-'}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.riskRankingId || '-'}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.isActive ? 'Yes' : 'No'}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{new Date(item.lastUpdated).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.updatedBy || 'system'}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-'}</TableCell>
-                      <TableCell className="bg-gray-50">
-                        <div className="flex items-center space-x-2">
+                      </div>
+                      <div className="evidence-grid-cell">{item.requiredTrendDataEvidence || '-'}</div>
+                      <div className="evidence-grid-cell">{item.aiOrInvestigatorQuestions || '-'}</div>
+                      <div className="evidence-grid-cell">{item.attachmentsEvidenceRequired || '-'}</div>
+                      <div className="evidence-grid-cell">{item.rootCauseLogic || '-'}</div>
+                      <div className="evidence-grid-cell">{item.primaryRootCause || '-'}</div>
+                      <div className="evidence-grid-cell">{item.contributingFactor || '-'}</div>
+                      <div className="evidence-grid-cell">{item.latentCause || '-'}</div>
+                      <div className="evidence-grid-cell">{item.detectionGap || '-'}</div>
+                      <div className="evidence-grid-cell">{item.confidenceLevel || '-'}</div>
+                      <div className="evidence-grid-cell">{item.faultSignaturePattern || '-'}</div>
+                      <div className="evidence-grid-cell">{item.applicableToOtherEquipment || '-'}</div>
+                      <div className="evidence-grid-cell">{item.evidenceGapFlag || '-'}</div>
+                      <div className="evidence-grid-cell">{item.eliminatedIfTheseFailuresConfirmed || '-'}</div>
+                      <div className="evidence-grid-cell">{item.whyItGetsEliminated || '-'}</div>
+                      <div className="evidence-grid-cell">{item.diagnosticValue || '-'}</div>
+                      <div className="evidence-grid-cell">{item.industryRelevance || '-'}</div>
+                      <div className="evidence-grid-cell">{item.evidencePriority || '-'}</div>
+                      <div className="evidence-grid-cell">{item.timeToCollect || '-'}</div>
+                      <div className="evidence-grid-cell">{item.collectionCost || '-'}</div>
+                      <div className="evidence-grid-cell">{item.analysisComplexity || '-'}</div>
+                      <div className="evidence-grid-cell">{item.seasonalFactor || '-'}</div>
+                      <div className="evidence-grid-cell">{item.relatedFailureModes || '-'}</div>
+                      <div className="evidence-grid-cell">{item.prerequisiteEvidence || '-'}</div>
+                      <div className="evidence-grid-cell">{item.followupActions || '-'}</div>
+                      <div className="evidence-grid-cell">{item.industryBenchmark || '-'}</div>
+                      <div className="evidence-grid-cell evidence-grid-system text-xs text-gray-600">{item.id}</div>
+                      <div className="evidence-grid-cell evidence-grid-system text-xs text-gray-600">{item.equipmentGroupId || '-'}</div>
+                      <div className="evidence-grid-cell evidence-grid-system text-xs text-gray-600">{item.equipmentTypeId || '-'}</div>
+                      <div className="evidence-grid-cell evidence-grid-system text-xs text-gray-600">{item.equipmentSubtypeId || '-'}</div>
+                      <div className="evidence-grid-cell evidence-grid-system text-xs text-gray-600">{item.riskRankingId || '-'}</div>
+                      <div className="evidence-grid-cell evidence-grid-system text-xs text-gray-600">
+                        <Badge variant={item.isActive ? 'default' : 'secondary'}>
+                          {item.isActive ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                      <div className="evidence-grid-cell evidence-grid-system text-xs text-gray-600">
+                        {item.updatedAt ? format(new Date(item.updatedAt), 'MMM dd, yyyy') : '-'}
+                      </div>
+                      <div className="evidence-grid-cell evidence-grid-system text-xs text-gray-600">{item.updatedBy || '-'}</div>
+                      <div className="evidence-grid-cell evidence-grid-system text-xs text-gray-600">
+                        {item.createdAt ? format(new Date(item.createdAt), 'MMM dd, yyyy') : '-'}
+                      </div>
+                      <div className="evidence-grid-cell evidence-grid-system">
+                        <div className="flex space-x-1">
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            onClick={() => handleEdit(item)}
+                            onClick={() => setEditItem(item)}
+                            className="h-7 w-7 p-0"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit2 className="h-3 w-3" />
                           </Button>
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(item.id)}
-                            disabled={deleteMutation.isPending}
+                            onClick={() => setDeleteItem(item)}
+                            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
+                      </div>
+                    </React.Fragment>
                   ))
                 )}
-              </TableBody>
-              </Table>
+              </div>
             </div>
           </div>
         </CardContent>
