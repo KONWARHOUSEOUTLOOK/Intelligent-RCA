@@ -75,8 +75,8 @@ export default function EvidenceLibrarySimple() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Selection states
-  const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  // STEP 3: Selection states using failureCode (USER OPERATION)
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
   
   // Filter states - NO HARDCODING
@@ -210,13 +210,13 @@ export default function EvidenceLibrarySimple() {
     return matchesSearch && matchesEquipmentGroup && matchesEquipmentType && matchesSubtype;
   });
 
-  // Selection handlers
-  const handleItemSelect = (id: number) => {
-    if (selectedItems.includes(id)) {
-      setSelectedItems(selectedItems.filter(item => item !== id));
+  // STEP 3: Selection handlers using failureCode (USER OPERATION)
+  const handleItemSelect = (failureCode: string) => {
+    if (selectedItems.includes(failureCode)) {
+      setSelectedItems(selectedItems.filter(item => item !== failureCode));
       if (selectAll) setSelectAll(false);
     } else {
-      const newSelected = [...selectedItems, id];
+      const newSelected = [...selectedItems, failureCode];
       setSelectedItems(newSelected);
       if (newSelected.length === filteredItems.length) {
         setSelectAll(true);
@@ -224,12 +224,13 @@ export default function EvidenceLibrarySimple() {
     }
   };
 
+  // STEP 3: Select all handler using failureCode (USER OPERATION)
   const handleSelectAll = () => {
     if (selectAll) {
       setSelectedItems([]);
       setSelectAll(false);
     } else {
-      setSelectedItems(filteredItems.map(item => item.id));
+      setSelectedItems(filteredItems.map(item => item.failureCode));
       setSelectAll(true);
     }
   };
@@ -278,10 +279,10 @@ export default function EvidenceLibrarySimple() {
     }
   };
 
-  // Delete mutations for permanent deletion
+  // STEP 3: Delete mutations using failureCode for permanent deletion (USER OPERATION)
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return apiRequest(`/api/evidence-library/${id}`, {
+    mutationFn: async (failureCode: string) => {
+      return apiRequest(`/api/evidence-library/by-failure-code/${encodeURIComponent(failureCode)}`, {
         method: 'DELETE',
       });
     },
@@ -301,10 +302,11 @@ export default function EvidenceLibrarySimple() {
     },
   });
 
+  // STEP 3: Bulk delete mutation using failureCode (USER OPERATION)
   const bulkDeleteMutation = useMutation({
-    mutationFn: async (ids: number[]) => {
-      await Promise.all(ids.map(id => 
-        apiRequest(`/api/evidence-library/${id}`, {
+    mutationFn: async (failureCodes: string[]) => {
+      await Promise.all(failureCodes.map(failureCode => 
+        apiRequest(`/api/evidence-library/by-failure-code/${encodeURIComponent(failureCode)}`, {
           method: 'DELETE',
         })
       ));
@@ -336,11 +338,12 @@ export default function EvidenceLibrarySimple() {
     }
   };
 
+  // STEP 3: Delete all handler using failureCode (USER OPERATION)
   const handleDeleteAll = () => {
     if (filteredItems.length > 0) {
       if (confirm(`Are you sure you want to permanently delete ALL ${filteredItems.length} items? This cannot be undone.`)) {
-        const allIds = filteredItems.map(item => item.id);
-        bulkDeleteMutation.mutateAsync(allIds).then(() => {
+        const allFailureCodes = filteredItems.map(item => item.failureCode);
+        bulkDeleteMutation.mutateAsync(allFailureCodes).then(() => {
           setSelectedItems([]);
           setSelectAll(false);
         });
@@ -1133,8 +1136,8 @@ export default function EvidenceLibrarySimple() {
                       <td className="px-4 py-3 border-r">
                         <input
                           type="checkbox"
-                          checked={selectedItems.includes(item.id)}
-                          onChange={() => handleItemSelect(item.id)}
+                          checked={selectedItems.includes(item.failureCode)}
+                          onChange={() => handleItemSelect(item.failureCode)}
                           className="rounded border-gray-300"
                         />
                       </td>
@@ -1217,7 +1220,7 @@ export default function EvidenceLibrarySimple() {
                             className="h-7 w-7 p-0 text-destructive hover:text-destructive"
                             onClick={() => {
                               if (confirm('Are you sure you want to permanently delete this item? This cannot be undone.')) {
-                                deleteMutation.mutate(item.id);
+                                deleteMutation.mutate(item.failureCode);
                               }
                             }}
                             disabled={deleteMutation.isPending}

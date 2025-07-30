@@ -4631,44 +4631,150 @@ JSON array only:`;
 
   app.post("/api/evidence-library", async (req, res) => {
     try {
-      console.log("[Evidence Library] Creating new evidence library item");
+      console.log("[Evidence Library] STEP 3: Creating new evidence library item");
+      
+      // STEP 3: Check for duplicate failureCode before creating
+      if (!req.body.failureCode) {
+        return res.status(400).json({ 
+          error: "Failure code required", 
+          message: "Failure Code is required for all evidence library items"
+        });
+      }
+      
+      const existing = await investigationStorage.getEvidenceLibraryByFailureCode(req.body.failureCode);
+      if (existing) {
+        return res.status(400).json({ 
+          error: "Duplicate failure code", 
+          message: `Failure code '${req.body.failureCode}' already exists. Please use a unique failure code.`
+        });
+      }
+      
       const newItem = await investigationStorage.createEvidenceLibrary(req.body);
-      console.log(`[Evidence Library] Created item with ID: ${newItem.id}`);
+      console.log(`[Evidence Library] STEP 3: Created item with ID: ${newItem.id} and failure code: ${newItem.failureCode}`);
       res.json(newItem);
     } catch (error) {
-      console.error("[Evidence Library] Error creating evidence library item:", error);
-      res.status(500).json({ message: "Failed to create evidence library item" });
+      console.error("[Evidence Library] STEP 3: Error creating evidence library item:", error);
+      if (error.message && error.message.includes('duplicate key value violates unique constraint')) {
+        res.status(400).json({ 
+          error: "Duplicate failure code", 
+          message: "Failure code must be unique. Please use a different failure code."
+        });
+      } else {
+        res.status(500).json({ message: "Failed to create evidence library item" });
+      }
     }
   });
 
-  app.put("/api/evidence-library/:id", async (req, res) => {
+  // STEP 3: UPDATE Evidence Library by Failure Code (USER OPERATION)
+  app.put("/api/evidence-library/by-failure-code/:failureCode", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      console.log(`[Evidence Library UPDATE] Starting update for item ${id}`);
-      console.log(`[Evidence Library UPDATE] Request body:`, JSON.stringify(req.body, null, 2));
+      const failureCode = req.params.failureCode;
+      console.log(`[Evidence Library UPDATE] STEP 3: Starting update for failure code ${failureCode}`);
+      console.log(`[Evidence Library UPDATE] STEP 3: Request body:`, JSON.stringify(req.body, null, 2));
       
-      const updatedItem = await investigationStorage.updateEvidenceLibrary(id, req.body);
-      console.log(`[Evidence Library UPDATE] Successfully updated item ${id}`);
-      console.log(`[Evidence Library UPDATE] Updated data:`, JSON.stringify(updatedItem, null, 2));
+      // Check for duplicate failureCode in the update data
+      if (req.body.failureCode && req.body.failureCode !== failureCode) {
+        const existing = await investigationStorage.getEvidenceLibraryByFailureCode(req.body.failureCode);
+        if (existing) {
+          return res.status(400).json({ 
+            error: "Duplicate failure code", 
+            message: `Failure code '${req.body.failureCode}' already exists. Please use a unique failure code.`
+          });
+        }
+      }
+      
+      const updatedItem = await investigationStorage.updateEvidenceLibraryByFailureCode(failureCode, req.body);
+      console.log(`[Evidence Library UPDATE] STEP 3: Successfully updated item by failure code ${failureCode}`);
+      console.log(`[Evidence Library UPDATE] STEP 3: Updated data:`, JSON.stringify(updatedItem, null, 2));
       
       res.json(updatedItem);
     } catch (error) {
-      console.error("[Evidence Library UPDATE] Error updating evidence library item:", error);
-      console.error("[Evidence Library UPDATE] Error details:", error.message);
-      console.error("[Evidence Library UPDATE] Error stack:", error.stack);
+      console.error("[Evidence Library UPDATE] STEP 3: Error updating evidence library item by failure code:", error);
+      console.error("[Evidence Library UPDATE] STEP 3: Error details:", error.message);
+      res.status(500).json({ message: "Failed to update evidence library item by failure code", error: error.message });
+    }
+  });
+
+  // LEGACY: UPDATE Evidence Library by ID (SYSTEM OPERATION ONLY - NOT FOR USER USE)
+  app.put("/api/evidence-library/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      console.log(`[Evidence Library UPDATE] LEGACY: System update for item ${id} (NOT for user operations)`);
+      console.log(`[Evidence Library UPDATE] LEGACY: Request body:`, JSON.stringify(req.body, null, 2));
+      
+      const updatedItem = await investigationStorage.updateEvidenceLibrary(id, req.body);
+      console.log(`[Evidence Library UPDATE] LEGACY: Successfully updated item ${id}`);
+      console.log(`[Evidence Library UPDATE] LEGACY: Updated data:`, JSON.stringify(updatedItem, null, 2));
+      
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("[Evidence Library UPDATE] LEGACY: Error updating evidence library item:", error);
+      console.error("[Evidence Library UPDATE] LEGACY: Error details:", error.message);
+      console.error("[Evidence Library UPDATE] LEGACY: Error stack:", error.stack);
       res.status(500).json({ message: "Failed to update evidence library item", error: error.message });
     }
   });
 
+  // STEP 3: DELETE Evidence Library by Failure Code (USER OPERATION)
+  app.delete("/api/evidence-library/by-failure-code/:failureCode", async (req, res) => {
+    try {
+      const failureCode = req.params.failureCode;
+      console.log(`[Evidence Library DELETE] STEP 3: Deleting evidence library item by failure code ${failureCode}`);
+      
+      // Check if record exists
+      const existing = await investigationStorage.getEvidenceLibraryByFailureCode(failureCode);
+      if (!existing) {
+        return res.status(404).json({ 
+          error: "Record not found", 
+          message: `No evidence library item found with failure code: ${failureCode}`
+        });
+      }
+      
+      await investigationStorage.deleteEvidenceLibraryByFailureCode(failureCode);
+      console.log(`[Evidence Library DELETE] STEP 3: Deleted item with failure code ${failureCode}`);
+      res.json({ 
+        success: true, 
+        message: "Evidence library item deleted successfully",
+        failureCode: failureCode
+      });
+    } catch (error) {
+      console.error("[Evidence Library DELETE] STEP 3: Error deleting evidence library item by failure code:", error);
+      res.status(500).json({ message: "Failed to delete evidence library item by failure code" });
+    }
+  });
+
+  // STEP 3: GET Evidence Library by Failure Code (USER OPERATION)
+  app.get("/api/evidence-library/by-failure-code/:failureCode", async (req, res) => {
+    try {
+      const failureCode = req.params.failureCode;
+      console.log(`[Evidence Library GET] STEP 3: Getting evidence library item by failure code ${failureCode}`);
+      
+      const item = await investigationStorage.getEvidenceLibraryByFailureCode(failureCode);
+      if (!item) {
+        return res.status(404).json({ 
+          error: "Record not found", 
+          message: `No evidence library item found with failure code: ${failureCode}`
+        });
+      }
+      
+      console.log(`[Evidence Library GET] STEP 3: Found item with failure code ${failureCode}`);
+      res.json(item);
+    } catch (error) {
+      console.error("[Evidence Library GET] STEP 3: Error getting evidence library item by failure code:", error);
+      res.status(500).json({ message: "Failed to get evidence library item by failure code" });
+    }
+  });
+
+  // LEGACY: DELETE Evidence Library by ID (SYSTEM OPERATION ONLY - NOT FOR USER USE)
   app.delete("/api/evidence-library/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      console.log(`[Evidence Library] Deleting evidence library item ${id}`);
+      console.log(`[Evidence Library DELETE] LEGACY: System delete for item ${id} (NOT for user operations)`);
       await investigationStorage.deleteEvidenceLibrary(id);
-      console.log(`[Evidence Library] Deleted item ${id}`);
+      console.log(`[Evidence Library DELETE] LEGACY: Deleted item ${id}`);
       res.json({ message: "Evidence library item deleted successfully" });
     } catch (error) {
-      console.error("[Evidence Library] Error deleting evidence library item:", error);
+      console.error("[Evidence Library DELETE] LEGACY: Error deleting evidence library item:", error);
       res.status(500).json({ message: "Failed to delete evidence library item" });
     }
   });

@@ -106,7 +106,7 @@ export const evidenceLibrary = pgTable("evidence_library", {
   
   componentFailureMode: varchar("component_failure_mode").notNull(), // Component / Failure Mode
   equipmentCode: varchar("equipment_code").notNull(), // Equipment Code (not unique per specification)
-  failureCode: varchar("failure_code").notNull().unique(), // Failure Code - UNIQUE IDENTIFIER for imports
+  failureCode: varchar("failure_code").notNull().unique(), // Failure Code - UNIQUE IDENTIFIER for all user operations (Step 3)
   riskRankingId: integer("risk_ranking_id"), // FK to riskRankings (normalized)
   riskRanking: varchar("risk_ranking"), // Legacy field for import compatibility
   requiredTrendDataEvidence: text("required_trend_data_evidence"), // Required Trend Data / Evidence

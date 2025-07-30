@@ -69,10 +69,13 @@ export interface IInvestigationStorage {
   // Evidence Library operations
   getAllEvidenceLibrary(): Promise<EvidenceLibrary[]>;
   getEvidenceLibraryById(id: number): Promise<EvidenceLibrary | undefined>;
+  getEvidenceLibraryByFailureCode(failureCode: string): Promise<EvidenceLibrary | undefined>;
   createEvidenceLibrary(data: InsertEvidenceLibrary): Promise<EvidenceLibrary>;
   createEvidenceLibraryItem(data: InsertEvidenceLibrary): Promise<EvidenceLibrary>;
   updateEvidenceLibrary(id: number, data: Partial<EvidenceLibrary>): Promise<EvidenceLibrary>;
+  updateEvidenceLibraryByFailureCode(failureCode: string, data: Partial<EvidenceLibrary>): Promise<EvidenceLibrary>;
   deleteEvidenceLibrary(id: number): Promise<void>;
+  deleteEvidenceLibraryByFailureCode(failureCode: string): Promise<void>;
   searchEvidenceLibrary(searchTerm: string): Promise<EvidenceLibrary[]>;
   searchEvidenceLibraryByEquipment(equipmentGroup: string, equipmentType: string, equipmentSubtype: string): Promise<EvidenceLibrary[]>;
   searchEvidenceLibraryBySymptoms(symptoms: string[]): Promise<EvidenceLibrary[]>;
@@ -517,6 +520,19 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
     return item;
   }
 
+  async getEvidenceLibraryByFailureCode(failureCode: string): Promise<EvidenceLibrary | undefined> {
+    console.log(`[DatabaseInvestigationStorage] STEP 3: Getting evidence library item by failure code: ${failureCode}`);
+    
+    const [item] = await db
+      .select()
+      .from(evidenceLibrary)
+      .where(eq(evidenceLibrary.failureCode, failureCode))
+      .limit(1);
+    
+    console.log(`[DatabaseInvestigationStorage] STEP 3: Found item by failure code:`, item ? 'Yes' : 'No');
+    return item;
+  }
+
   async createEvidenceLibrary(data: InsertEvidenceLibrary): Promise<EvidenceLibrary> {
     const [item] = await db
       .insert(evidenceLibrary)
@@ -563,6 +579,31 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
     }
   }
 
+  async updateEvidenceLibraryByFailureCode(failureCode: string, data: Partial<EvidenceLibrary>): Promise<EvidenceLibrary> {
+    try {
+      console.log(`[Storage UPDATE] STEP 3: Updating evidence library item by failure code ${failureCode} with data:`, JSON.stringify(data, null, 2));
+      
+      const [item] = await db
+        .update(evidenceLibrary)
+        .set({
+          ...data,
+          lastUpdated: new Date(),
+        })
+        .where(eq(evidenceLibrary.failureCode, failureCode))
+        .returning();
+      
+      if (!item) {
+        throw new Error(`No evidence library item found with failure code: ${failureCode}`);
+      }
+      
+      console.log(`[Storage UPDATE] STEP 3: Successfully updated item by failure code ${failureCode}:`, JSON.stringify(item, null, 2));
+      return item;
+    } catch (error) {
+      console.error(`[Storage UPDATE] STEP 3: Failed to update evidence library item by failure code ${failureCode}:`, error);
+      throw error;
+    }
+  }
+
   async deleteEvidenceLibrary(id: number): Promise<void> {
     console.log(`[DatabaseInvestigationStorage] PERMANENT DELETION: Completely purging evidence library item ${id} from database`);
     
@@ -571,6 +612,16 @@ export class DatabaseInvestigationStorage implements IInvestigationStorage {
     await db.delete(evidenceLibrary).where(eq(evidenceLibrary.id, id));
     
     console.log(`[DatabaseInvestigationStorage] PERMANENT DELETION COMPLETE: Evidence library item ${id} permanently purged from all storage`);
+  }
+
+  async deleteEvidenceLibraryByFailureCode(failureCode: string): Promise<void> {
+    console.log(`[DatabaseInvestigationStorage] STEP 3: PERMANENT DELETION by failure code: Completely purging evidence library item ${failureCode} from database`);
+    
+    // COMPLIANCE REQUIREMENT: Complete permanent deletion with no recovery
+    // This permanently removes the record from database with NO soft-delete or archiving
+    const result = await db.delete(evidenceLibrary).where(eq(evidenceLibrary.failureCode, failureCode));
+    
+    console.log(`[DatabaseInvestigationStorage] STEP 3: PERMANENT DELETION COMPLETE: Evidence library item ${failureCode} permanently purged from all storage`);
   }
 
   async searchEvidenceLibrary(searchTerm: string): Promise<EvidenceLibrary[]> {

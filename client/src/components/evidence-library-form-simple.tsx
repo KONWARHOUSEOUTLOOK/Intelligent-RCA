@@ -151,9 +151,10 @@ export default function EvidenceLibraryFormSimple({ isOpen, onClose, item, onSuc
   }, [item]);
 
   // Mutation for create/update
+  // STEP 3: Mutation using failureCode for updates (USER OPERATION)
   const mutation = useMutation({
     mutationFn: async (data: any) => {
-      const url = item ? `/api/evidence-library/${item.id}` : '/api/evidence-library';
+      const url = item ? `/api/evidence-library/by-failure-code/${encodeURIComponent(item.failureCode)}` : '/api/evidence-library';
       const method = item ? 'PUT' : 'POST';
       
       return apiRequest(url, {
