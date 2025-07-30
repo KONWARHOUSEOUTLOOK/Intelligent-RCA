@@ -609,17 +609,18 @@ export default function EvidenceLibraryManagement() {
               ✅ <strong>SCROLL VERIFICATION:</strong> Table has 46 TableHead elements (41 API columns + 4 ID columns + 1 checkbox). Width: 8000px forces horizontal scrollbar.
             </div>
             <div className="text-xs text-red-600 mb-2 bg-red-50 p-2 rounded border border-red-200">
-              🧪 <strong>HORIZONTAL SCROLL TEST:</strong> If you can only see 7 columns, scroll right using the horizontal scrollbar below the table → → →
+              🧪 <strong>HORIZONTAL SCROLL TEST:</strong> Table now 12000px wide with explicit column widths. MUST see horizontal scrollbar below table → → →
             </div>
             <div 
               className="evidence-table-container border rounded-lg shadow-lg" 
               style={{
-                overflowX: 'auto',
-                overflowY: 'visible', 
+                overflowX: 'scroll',
+                overflowY: 'auto', 
                 width: '100%',
                 maxWidth: '100vw',
                 height: 'auto',
-                maxHeight: '80vh'
+                maxHeight: '80vh',
+                display: 'block'
               }}
             >
               <style>
@@ -641,10 +642,15 @@ export default function EvidenceLibraryManagement() {
                 }
                 `}
               </style>
-              <Table style={{ minWidth: '8000px', tableLayout: 'fixed', width: '8000px' }}>
+              <Table style={{ 
+                minWidth: '12000px', 
+                width: '12000px', 
+                tableLayout: 'fixed',
+                display: 'table'
+              }}>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-16 min-w-16">
+                  <TableHead style={{ width: '80px', minWidth: '80px' }}>
                     <input
                       type="checkbox"
                       checked={selectAll}
@@ -653,7 +659,8 @@ export default function EvidenceLibraryManagement() {
                     />
                   </TableHead>
                   <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 min-w-32"
+                    className="cursor-pointer hover:bg-muted/50"
+                    style={{ width: '200px', minWidth: '200px' }}
                     onClick={() => handleSort('equipmentGroup')}
                   >
                     Equipment Group
@@ -662,7 +669,8 @@ export default function EvidenceLibraryManagement() {
                     )}
                   </TableHead>
                   <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 min-w-32"
+                    className="cursor-pointer hover:bg-muted/50"
+                    style={{ width: '200px', minWidth: '200px' }}
                     onClick={() => handleSort('equipmentType')}
                   >
                     Equipment Type
@@ -671,7 +679,8 @@ export default function EvidenceLibraryManagement() {
                     )}
                   </TableHead>
                   <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 min-w-28"
+                    className="cursor-pointer hover:bg-muted/50"
+                    style={{ width: '180px', minWidth: '180px' }}
                     onClick={() => handleSort('subtype')}
                   >
                     Subtype
@@ -680,48 +689,48 @@ export default function EvidenceLibraryManagement() {
                     )}
                   </TableHead>
                   {/* CORE MASTER SCHEMA FIELDS - ALL 30 FIELDS VISIBLE (STEP 2 COMPLIANCE) */}
-                  <TableHead className="min-w-40">Component / Failure Mode</TableHead>
-                  <TableHead className="min-w-32">Equipment Code</TableHead>
-                  <TableHead className="min-w-32">Failure Code</TableHead>
-                  <TableHead className="min-w-28">Risk Ranking</TableHead>
-                  <TableHead className="min-w-48">Required Trend Data Evidence</TableHead>
-                  <TableHead className="min-w-48">AI/Investigator Questions</TableHead>
-                  <TableHead className="min-w-44">Attachments Evidence Required</TableHead>
-                  <TableHead className="min-w-40">Root Cause Logic</TableHead>
-                  <TableHead className="min-w-40">Primary Root Cause</TableHead>
-                  <TableHead className="min-w-36">Contributing Factor</TableHead>
-                  <TableHead className="min-w-32">Latent Cause</TableHead>
-                  <TableHead className="min-w-32">Detection Gap</TableHead>
-                  <TableHead className="min-w-32">Confidence Level</TableHead>
-                  <TableHead className="min-w-40">Fault Signature Pattern</TableHead>
-                  <TableHead className="min-w-44">Applicable to Other Equipment</TableHead>
-                  <TableHead className="min-w-36">Evidence Gap Flag</TableHead>
-                  <TableHead className="min-w-48">Eliminated If These Failures Confirmed</TableHead>
-                  <TableHead className="min-w-40">Why It Gets Eliminated</TableHead>
-                  <TableHead className="min-w-32">Diagnostic Value</TableHead>
-                  <TableHead className="min-w-36">Industry Relevance</TableHead>
-                  <TableHead className="min-w-32">Evidence Priority</TableHead>
-                  <TableHead className="min-w-32">Time to Collect</TableHead>
-                  <TableHead className="min-w-32">Collection Cost</TableHead>
-                  <TableHead className="min-w-36">Analysis Complexity</TableHead>
-                  <TableHead className="min-w-32">Seasonal Factor</TableHead>
-                  <TableHead className="min-w-40">Related Failure Modes</TableHead>
-                  <TableHead className="min-w-36">Prerequisite Evidence</TableHead>
-                  <TableHead className="min-w-32">Followup Actions</TableHead>
-                  <TableHead className="min-w-36">Industry Benchmark</TableHead>
+                  <TableHead style={{ width: '250px', minWidth: '250px' }}>Component / Failure Mode</TableHead>
+                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Equipment Code</TableHead>
+                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Failure Code</TableHead>
+                  <TableHead style={{ width: '150px', minWidth: '150px' }}>Risk Ranking</TableHead>
+                  <TableHead style={{ width: '300px', minWidth: '300px' }}>Required Trend Data Evidence</TableHead>
+                  <TableHead style={{ width: '300px', minWidth: '300px' }}>AI/Investigator Questions</TableHead>
+                  <TableHead style={{ width: '280px', minWidth: '280px' }}>Attachments Evidence Required</TableHead>
+                  <TableHead style={{ width: '250px', minWidth: '250px' }}>Root Cause Logic</TableHead>
+                  <TableHead style={{ width: '250px', minWidth: '250px' }}>Primary Root Cause</TableHead>
+                  <TableHead style={{ width: '220px', minWidth: '220px' }}>Contributing Factor</TableHead>
+                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Latent Cause</TableHead>
+                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Detection Gap</TableHead>
+                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Confidence Level</TableHead>
+                  <TableHead style={{ width: '250px', minWidth: '250px' }}>Fault Signature Pattern</TableHead>
+                  <TableHead style={{ width: '280px', minWidth: '280px' }}>Applicable to Other Equipment</TableHead>
+                  <TableHead style={{ width: '220px', minWidth: '220px' }}>Evidence Gap Flag</TableHead>
+                  <TableHead style={{ width: '300px', minWidth: '300px' }}>Eliminated If These Failures Confirmed</TableHead>
+                  <TableHead style={{ width: '250px', minWidth: '250px' }}>Why It Gets Eliminated</TableHead>
+                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Diagnostic Value</TableHead>
+                  <TableHead style={{ width: '220px', minWidth: '220px' }}>Industry Relevance</TableHead>
+                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Evidence Priority</TableHead>
+                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Time to Collect</TableHead>
+                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Collection Cost</TableHead>
+                  <TableHead style={{ width: '220px', minWidth: '220px' }}>Analysis Complexity</TableHead>
+                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Seasonal Factor</TableHead>
+                  <TableHead style={{ width: '250px', minWidth: '250px' }}>Related Failure Modes</TableHead>
+                  <TableHead style={{ width: '220px', minWidth: '220px' }}>Prerequisite Evidence</TableHead>
+                  <TableHead style={{ width: '180px', minWidth: '180px' }}>Followup Actions</TableHead>
+                  <TableHead style={{ width: '220px', minWidth: '220px' }}>Industry Benchmark</TableHead>
                   {/* BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP */}
                   
                   {/* SYSTEM FIELDS - CLEARLY SEPARATED FOR ADMIN/REFERENCE (STEP 2 COMPLIANCE) */}
-                  <TableHead className="bg-gray-100 border-l-2 border-gray-300 min-w-24">System ID</TableHead>
-                  <TableHead className="bg-gray-100 min-w-28">Equipment Group ID</TableHead>
-                  <TableHead className="bg-gray-100 min-w-28">Equipment Type ID</TableHead>
-                  <TableHead className="bg-gray-100 min-w-32">Equipment Subtype ID</TableHead>
-                  <TableHead className="bg-gray-100 min-w-28">Risk Ranking ID</TableHead>
-                  <TableHead className="bg-gray-100 min-w-24">Is Active</TableHead>
-                  <TableHead className="bg-gray-100 min-w-32">Last Updated</TableHead>
-                  <TableHead className="bg-gray-100 min-w-28">Updated By</TableHead>
-                  <TableHead className="bg-gray-100 min-w-32">Created At</TableHead>
-                  <TableHead className="bg-gray-100 min-w-24">Actions</TableHead>
+                  <TableHead className="bg-gray-100 border-l-2 border-gray-300" style={{ width: '120px', minWidth: '120px' }}>System ID</TableHead>
+                  <TableHead className="bg-gray-100" style={{ width: '150px', minWidth: '150px' }}>Equipment Group ID</TableHead>
+                  <TableHead className="bg-gray-100" style={{ width: '150px', minWidth: '150px' }}>Equipment Type ID</TableHead>
+                  <TableHead className="bg-gray-100" style={{ width: '180px', minWidth: '180px' }}>Equipment Subtype ID</TableHead>
+                  <TableHead className="bg-gray-100" style={{ width: '150px', minWidth: '150px' }}>Risk Ranking ID</TableHead>
+                  <TableHead className="bg-gray-100" style={{ width: '120px', minWidth: '120px' }}>Is Active</TableHead>
+                  <TableHead className="bg-gray-100" style={{ width: '180px', minWidth: '180px' }}>Last Updated</TableHead>
+                  <TableHead className="bg-gray-100" style={{ width: '150px', minWidth: '150px' }}>Updated By</TableHead>
+                  <TableHead className="bg-gray-100" style={{ width: '180px', minWidth: '180px' }}>Created At</TableHead>
+                  <TableHead className="bg-gray-100" style={{ width: '120px', minWidth: '120px' }}>Actions</TableHead>
 
                 </TableRow>
               </TableHeader>
