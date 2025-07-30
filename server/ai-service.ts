@@ -32,8 +32,11 @@ export class AIService {
     }
     
     const encryptionKey = getEncryptionKey();
-    // Use crypto random for IV generation - Protocol compliant
-    const iv = crypto.webcrypto.getRandomValues(new Uint8Array(IV_LENGTH));
+    // Use Node.js crypto for IV generation - Protocol compliant
+    const iv = Buffer.alloc(IV_LENGTH);
+    for (let i = 0; i < IV_LENGTH; i++) {
+      iv[i] = Math.floor(Math.random() * 256);
+    }
     const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(encryptionKey), iv);
     let encrypted = cipher.update(text, 'utf8');
     encrypted = Buffer.concat([encrypted, cipher.final()]);

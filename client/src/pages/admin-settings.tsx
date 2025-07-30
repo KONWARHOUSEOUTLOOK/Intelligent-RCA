@@ -569,7 +569,7 @@ export default function AdminSettings() {
 
     saveSettingsMutation.mutate({
       provider: formData.provider,
-      apiKey: formData.apiKey,
+      apiKey: formData.apiKey, // Backend expects apiKey field (it encrypts internally)
       model: formData.model,
       isActive: formData.isActive,
       createdBy: formData.createdBy

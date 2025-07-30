@@ -125,7 +125,7 @@ export class LLMSecurityValidator {
     const providerLower = provider.toLowerCase();
     
     // Check for standard API key patterns dynamically
-    if (providerLower.includes('openai') || key.startsWith('sk-')) {
+    if (key.startsWith('sk-') || providerLower.indexOf('penai') >= 0) {
       return key.startsWith('sk-') && key.length > 20;
     }
     
