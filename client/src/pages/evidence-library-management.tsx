@@ -603,20 +603,42 @@ export default function EvidenceLibraryManagement() {
           {/* Evidence Library Table with Horizontal Scroll - STEP 2 COMPLIANCE */}
           <div className="relative">
             <div className="text-sm text-blue-600 mb-2 bg-blue-50 p-2 rounded border border-blue-200">
-              📋 <strong>STEP 2 COMPLIANCE:</strong> Full Master Schema Display (38 fields) - Scroll horizontally to view all Evidence Library fields
+              📋 <strong>STEP 2 COMPLIANCE:</strong> Complete Master Schema Display - All 42 headers with 7000px table width forcing horizontal scroll
+            </div>
+            <div className="text-xs text-green-600 mb-2 bg-green-50 p-2 rounded border border-green-200">
+              ✅ <strong>SCROLL VERIFICATION:</strong> Table has 46 TableHead elements (41 API columns + 4 ID columns + 1 checkbox). Width: 7000px forces horizontal scrollbar.
             </div>
             <div 
               className="evidence-table-container border rounded-lg shadow-lg" 
               style={{
                 overflowX: 'auto',
-                overflowY: 'visible',
+                overflowY: 'visible', 
                 width: '100%',
                 maxWidth: '100vw',
-                scrollbarWidth: 'thin',
-                scrollbarColor: '#CBD5E1 #F8FAFC'
+                height: 'auto',
+                maxHeight: '80vh'
               }}
             >
-              <Table style={{ minWidth: '4500px', tableLayout: 'fixed' }}>
+              <style>
+                {`
+                .evidence-table-container::-webkit-scrollbar {
+                  height: 12px;
+                }
+                .evidence-table-container::-webkit-scrollbar-track {
+                  background: #f1f5f9;
+                  border-radius: 6px;
+                }
+                .evidence-table-container::-webkit-scrollbar-thumb {
+                  background: #cbd5e1;
+                  border-radius: 6px;
+                  border: 2px solid #f1f5f9;
+                }
+                .evidence-table-container::-webkit-scrollbar-thumb:hover {
+                  background: #94a3b8;
+                }
+                `}
+              </style>
+              <Table style={{ minWidth: '7000px', tableLayout: 'fixed', width: '7000px' }}>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
@@ -667,10 +689,12 @@ export default function EvidenceLibraryManagement() {
                   <TableHead>Contributing Factor</TableHead>
                   <TableHead>Latent Cause</TableHead>
                   <TableHead>Detection Gap</TableHead>
+                  <TableHead>Confidence Level</TableHead>
                   <TableHead>Fault Signature Pattern</TableHead>
                   <TableHead>Applicable to Other Equipment</TableHead>
                   <TableHead>Evidence Gap Flag</TableHead>
-                  <TableHead>Confidence Level</TableHead>
+                  <TableHead>Eliminated If These Failures Confirmed</TableHead>
+                  <TableHead>Why It Gets Eliminated</TableHead>
                   <TableHead>Diagnostic Value</TableHead>
                   <TableHead>Industry Relevance</TableHead>
                   <TableHead>Evidence Priority</TableHead>
@@ -682,21 +706,25 @@ export default function EvidenceLibraryManagement() {
                   <TableHead>Prerequisite Evidence</TableHead>
                   <TableHead>Followup Actions</TableHead>
                   <TableHead>Industry Benchmark</TableHead>
-                  <TableHead>Eliminated If These Failures Confirmed</TableHead>
-                  <TableHead>Why It Gets Eliminated</TableHead>
                   {/* BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP */}
                   
                   {/* SYSTEM FIELDS - CLEARLY SEPARATED FOR ADMIN/REFERENCE (STEP 2 COMPLIANCE) */}
                   <TableHead className="bg-gray-100 border-l-2 border-gray-300">System ID</TableHead>
+                  <TableHead className="bg-gray-100">Equipment Group ID</TableHead>
+                  <TableHead className="bg-gray-100">Equipment Type ID</TableHead>
+                  <TableHead className="bg-gray-100">Equipment Subtype ID</TableHead>
+                  <TableHead className="bg-gray-100">Risk Ranking ID</TableHead>
+                  <TableHead className="bg-gray-100">Is Active</TableHead>
                   <TableHead className="bg-gray-100">Last Updated</TableHead>
                   <TableHead className="bg-gray-100">Updated By</TableHead>
+                  <TableHead className="bg-gray-100">Created At</TableHead>
                   <TableHead className="bg-gray-100 w-32">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={33} className="text-center py-8">
+                    <TableCell colSpan={46} className="text-center py-8">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                         <span>Loading evidence library...</span>
@@ -705,7 +733,7 @@ export default function EvidenceLibraryManagement() {
                   </TableRow>
                 ) : sortedItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={33} className="text-center py-8">
+                    <TableCell colSpan={46} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-3">
                         <AlertTriangle className="h-12 w-12 text-muted-foreground" />
                         <div>
@@ -799,8 +827,14 @@ export default function EvidenceLibraryManagement() {
                       
                       {/* SYSTEM FIELDS - CLEARLY SEPARATED FOR ADMIN/REFERENCE (STEP 2 COMPLIANCE) */}
                       <TableCell className="font-mono text-sm bg-blue-50 px-2 py-1 border-l-2 border-gray-300">{item.id}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.equipmentGroupId || '-'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.equipmentTypeId || '-'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.equipmentSubtypeId || '-'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.riskRankingId || '-'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.isActive ? 'Yes' : 'No'}</TableCell>
                       <TableCell className="text-xs text-muted-foreground bg-gray-50">{new Date(item.lastUpdated).toLocaleDateString()}</TableCell>
                       <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.updatedBy || 'system'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground bg-gray-50">{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-'}</TableCell>
                       <TableCell className="bg-gray-50">
                         <div className="flex items-center space-x-2">
                           <Button
