@@ -20,10 +20,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Edit2, Trash2, AlertTriangle, Search, Upload, Download, Filter } from "lucide-react";
+import { Edit2, Trash2, AlertTriangle, Search, Upload, Download, Filter, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import EvidenceLibraryFormSimple from "@/components/evidence-library-form-simple";
 
 interface EvidenceLibrary {
   id: number;
@@ -86,6 +87,10 @@ export default function EvidenceLibrarySimple() {
   
   // Cell expansion states
   const [expandedCells, setExpandedCells] = useState<{[key: string]: boolean}>({});
+  
+  // Form states for Add/Edit functionality
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<EvidenceLibrary | null>(null);
   
   // Evidence Library data - NO HARDCODING
   const { data: evidenceItems = [], isLoading, refetch } = useQuery<EvidenceLibrary[]>({
@@ -273,6 +278,76 @@ export default function EvidenceLibrarySimple() {
     }
   };
 
+  // Delete mutations for permanent deletion
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/evidence-library/${id}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
+      toast({
+        title: "Success",
+        description: "Evidence item permanently deleted",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete evidence item",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      await Promise.all(ids.map(id => 
+        apiRequest(`/api/evidence-library/${id}`, {
+          method: 'DELETE',
+        })
+      ));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
+      setSelectedItems([]);
+      setSelectAll(false);
+      toast({
+        title: "Success", 
+        description: `${selectedItems.length} items permanently deleted`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Bulk Delete Failed",
+        description: error.message || "Failed to delete selected items",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete handlers
+  const handleDeleteSelected = () => {
+    if (selectedItems.length > 0) {
+      if (confirm(`Are you sure you want to permanently delete ${selectedItems.length} items? This cannot be undone.`)) {
+        bulkDeleteMutation.mutate(selectedItems);
+      }
+    }
+  };
+
+  const handleDeleteAll = () => {
+    if (filteredItems.length > 0) {
+      if (confirm(`Are you sure you want to permanently delete ALL ${filteredItems.length} items? This cannot be undone.`)) {
+        const allIds = filteredItems.map(item => item.id);
+        bulkDeleteMutation.mutateAsync(allIds).then(() => {
+          setSelectedItems([]);
+          setSelectAll(false);
+        });
+      }
+    }
+  };
+
   // Enhanced cell content with expansion
   const renderCellContent = (content: string | undefined, rowId: number, fieldName: string, maxLength = 50) => {
     const cellKey = `${rowId}-${fieldName}`;
@@ -309,7 +384,42 @@ export default function EvidenceLibrarySimple() {
     <div className="container mx-auto px-4 py-8">
       <Card>
         <CardHeader>
-          <CardTitle>Evidence Library Management</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Evidence Library Management</CardTitle>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setShowAddForm(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Item
+              </Button>
+              
+              {selectedItems.length > 0 && (
+                <Button
+                  onClick={handleDeleteSelected}
+                  disabled={bulkDeleteMutation.isPending}
+                  variant="destructive"
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Selected ({selectedItems.length})
+                </Button>
+              )}
+              
+              {filteredItems.length > 0 && (
+                <Button
+                  onClick={handleDeleteAll}
+                  disabled={bulkDeleteMutation.isPending}
+                  variant="destructive"
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete All ({filteredItems.length})
+                </Button>
+              )}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="text-xs text-green-600 mb-4 bg-green-50 p-3 rounded border border-green-200">
@@ -572,6 +682,7 @@ export default function EvidenceLibrarySimple() {
                             variant="ghost"
                             size="sm"
                             className="h-7 w-7 p-0"
+                            onClick={() => setEditingItem(item)}
                           >
                             <Edit2 className="h-3 w-3" />
                           </Button>
@@ -579,6 +690,12 @@ export default function EvidenceLibrarySimple() {
                             variant="ghost"
                             size="sm"
                             className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                            onClick={() => {
+                              if (confirm('Are you sure you want to permanently delete this item? This cannot be undone.')) {
+                                deleteMutation.mutate(item.id);
+                              }
+                            }}
+                            disabled={deleteMutation.isPending}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -592,6 +709,21 @@ export default function EvidenceLibrarySimple() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Add/Edit Form Dialogs */}
+      <EvidenceLibraryFormSimple
+        isOpen={showAddForm || !!editingItem}
+        onClose={() => {
+          setShowAddForm(false);
+          setEditingItem(null);
+        }}
+        item={editingItem}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/evidence-library"] });
+          setShowAddForm(false);
+          setEditingItem(null);
+        }}
+      />
     </div>
   );
 }

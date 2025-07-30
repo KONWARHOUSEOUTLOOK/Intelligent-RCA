@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -70,12 +71,13 @@ const evidenceFormSchema = z.object({
 type EvidenceFormData = z.infer<typeof evidenceFormSchema>;
 
 interface EvidenceLibraryFormProps {
+  isOpen: boolean;
+  onClose: () => void;
   item?: any;
   onSuccess?: () => void;
-  onCancel?: () => void;
 }
 
-export default function EvidenceLibraryForm({ item, onSuccess, onCancel }: EvidenceLibraryFormProps) {
+export default function EvidenceLibraryForm({ isOpen, onClose, item, onSuccess }: EvidenceLibraryFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -86,6 +88,47 @@ export default function EvidenceLibraryForm({ item, onSuccess, onCancel }: Evide
       const response = await fetch('/api/equipment-groups');
       if (!response.ok) return [];
       return response.json();
+    },
+  });
+
+  const form = useForm<EvidenceFormData>({
+    resolver: zodResolver(evidenceFormSchema),
+    defaultValues: {
+      // Core Equipment Fields
+      equipmentGroupId: item?.equipmentGroupId?.toString() || "",
+      equipmentTypeId: item?.equipmentTypeId?.toString() || "",
+      equipmentSubtypeId: item?.equipmentSubtypeId?.toString() || "",
+      componentFailureMode: item?.componentFailureMode || "",
+      equipmentCode: item?.equipmentCode || "",
+      failureCode: item?.failureCode || "",
+      riskRankingId: item?.riskRankingId?.toString() || "",
+      
+      // Core Analysis Fields
+      requiredTrendDataEvidence: item?.requiredTrendDataEvidence || "",
+      aiOrInvestigatorQuestions: item?.aiOrInvestigatorQuestions || "",
+      attachmentsEvidenceRequired: item?.attachmentsEvidenceRequired || "",
+      rootCauseLogic: item?.rootCauseLogic || "",
+      
+      // COMPLETE MASTER SCHEMA FIELDS (ALL 18 ADDITIONAL FIELDS)
+      primaryRootCause: item?.primaryRootCause || "",
+      contributingFactor: item?.contributingFactor || "",
+      latentCause: item?.latentCause || "",
+      detectionGap: item?.detectionGap || "",
+      faultSignaturePattern: item?.faultSignaturePattern || "",
+      applicableToOtherEquipment: item?.applicableToOtherEquipment || "",
+      evidenceGapFlag: item?.evidenceGapFlag || "",
+      confidenceLevel: item?.confidenceLevel || "",
+      diagnosticValue: item?.diagnosticValue || "",
+      industryRelevance: item?.industryRelevance || "",
+      evidencePriority: item?.evidencePriority || "",
+      timeToCollect: item?.timeToCollect || "",
+      collectionCost: item?.collectionCost || "",
+      analysisComplexity: item?.analysisComplexity || "",
+      seasonalFactor: item?.seasonalFactor || "",
+      relatedFailureModes: item?.relatedFailureModes || "",
+      prerequisiteEvidence: item?.prerequisiteEvidence || "",
+      followupActions: item?.followupActions || "",
+      industryBenchmark: item?.industryBenchmark || "",
     },
   });
 
