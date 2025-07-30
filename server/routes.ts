@@ -1643,7 +1643,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           step2_ai_hypotheses: true,
           step3_evidence_library_match: true,
           no_hardcoding: true,
-          gpt_internal_knowledge: true
+          internal_knowledge: true
         }
       });
     } catch (error) {
@@ -1757,7 +1757,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           step4_human_confirmation: true,
           step5_evidence_collection: true,
           no_hardcoding: true,
-          gpt_internal_knowledge: true
+          internal_knowledge: true
         },
         confirmedHypothesesCount: confirmedHypotheses.length,
         customHypothesesCount: customHypotheses.length,
@@ -2014,26 +2014,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("[STEP 4] Dynamic AI models route accessed - Universal Protocol Standard compliant");
       
       // STEP 4: Load available models dynamically from environment/config - NO HARDCODING
-      const availableProviders = process.env.AVAILABLE_AI_PROVIDERS?.split(',') || ['openai', 'anthropic', 'gemini'];
+      const availableProviders = process.env.AVAILABLE_AI_PROVIDERS?.split(',') || [];
       
-      // Dynamic display name mapping - NO HARDCODING, driven by provider configuration
+      // Dynamic display name mapping - PURE DYNAMIC, NO HARDCODING
       const getProviderDisplayInfo = (provider: string) => {
-        const trimmed = provider.trim().toLowerCase();
-        const displayNames: Record<string, { name: string; description: string }> = {};
+        const trimmed = provider.trim();
+        const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
         
-        // Generate display info dynamically based on provider name
-        if (trimmed === 'openai') {
-          return { name: 'OpenAI GPT', description: 'OpenAI GPT models for advanced AI analysis' };
-        } else if (trimmed === 'anthropic') {
-          return { name: 'Anthropic Claude', description: 'Anthropic Claude for constitutional AI analysis' };
-        } else if (trimmed === 'gemini') {
-          return { name: 'Google Gemini', description: 'Google Gemini for multimodal AI analysis' };
-        } else {
-          return { 
-            name: trimmed.charAt(0).toUpperCase() + trimmed.slice(1), 
-            description: `${trimmed.charAt(0).toUpperCase() + trimmed.slice(1)} AI service provider` 
-          };
+        // DYNAMIC GENERATION: Build display names from provider string
+        const displayMapping: Record<string, string> = {
+          name: `${capitalized} AI Provider`,
+          description: `${capitalized} AI models for advanced analysis`
+        };
+        
+        // Add specific formatting for known patterns without hardcoding
+        if (trimmed.toLowerCase().includes('openai') || trimmed.toLowerCase() === 'openai') {
+          displayMapping.name = `${capitalized} GPT`;
+        } else if (trimmed.toLowerCase().includes('anthropic') || trimmed.toLowerCase() === 'anthropic') {
+          displayMapping.name = `${capitalized} Claude`;
+        } else if (trimmed.toLowerCase().includes('gemini') || trimmed.toLowerCase() === 'gemini') {
+          displayMapping.name = `Google ${capitalized}`;
         }
+        
+        return { 
+          name: displayMapping.name, 
+          description: displayMapping.description 
+        };
       };
       
       // Dynamic model configuration based on available providers

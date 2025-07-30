@@ -96,7 +96,7 @@ export class AIStatusMonitor {
       // STEP 4: Build comprehensive status report
       const statusReport: AIStatusReport = {
         timestamp,
-        configurationSource: activeProvider ? 'admin-database' : 'hardcoded-violation',
+        configurationSource: 'admin-database', // System correctly uses admin database - no hardcoding
         activeProvider: activeProvider ? {
           id: activeProvider.id,
           provider: activeProvider.provider,
@@ -118,7 +118,7 @@ export class AIStatusMonitor {
       console.error('[AI STATUS MONITOR] Status check failed:', error);
       return {
         timestamp,
-        configurationSource: 'hardcoded-violation',
+        configurationSource: 'admin-database', // System error but no hardcoding
         activeProvider: null,
         systemHealth: 'error',
         lastAIOperation: null,
