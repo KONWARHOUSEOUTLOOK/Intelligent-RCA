@@ -43,6 +43,7 @@ function Router() {
       <Route path="/admin-settings" component={AdminSettings} />
       <Route path="/admin/evidence-library" component={EvidenceLibraryAdmin} />
       <Route path="/admin/evidence-management" component={EvidenceLibraryManagement} />
+      <Route path="/admin/evidence-library-management" component={EvidenceLibraryManagement} />
       <Route path="/admin/fault-reference-library" component={FaultReferenceLibrary} />
       <Route path="/evidence-library-management" component={EvidenceLibraryManagement} />
       <Route path="/evidence-library" component={EvidenceLibraryManagement} />
