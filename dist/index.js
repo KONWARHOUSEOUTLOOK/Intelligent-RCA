@@ -5143,8 +5143,8 @@ var init_universal_human_review_engine = __esm({
       static async calculateReviewSessionStatus(incidentId, stage) {
         try {
           const { DatabaseInvestigationStorage: DatabaseInvestigationStorage2 } = await Promise.resolve().then(() => (init_storage(), storage_exports));
-          const storage = new DatabaseInvestigationStorage2();
-          const incident = await storage.getIncident(incidentId);
+          const storage2 = new DatabaseInvestigationStorage2();
+          const incident = await storage2.getIncident(incidentId);
           const uploadedFiles = incident?.evidenceFiles || [];
           const reviewSession = {
             incidentId,
@@ -7294,6 +7294,113 @@ async function registerRoutes(app3) {
       res.status(500).json({
         error: "Create failed",
         message: "Unable to create evidence library item",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  app3.get("/api/evidence-library/export/csv", async (req, res) => {
+    console.log("[ROUTES] Evidence library CSV export route accessed - Universal Protocol Standard compliant");
+    try {
+      const evidenceItems = await storage.getAllEvidenceLibrary();
+      const headers = [
+        "Equipment Group",
+        "Equipment Type",
+        "Subtype",
+        "Component / Failure Mode",
+        "Equipment Code",
+        "Failure Code",
+        "Risk Ranking",
+        "Required Trend Data Evidence",
+        "AI/Investigator Questions",
+        "Attachments Evidence Required",
+        "Root Cause Logic",
+        "Primary Root Cause",
+        "Contributing Factor",
+        "Latent Cause",
+        "Detection Gap",
+        "Confidence Level",
+        "Fault Signature Pattern",
+        "Applicable to Other Equipment",
+        "Evidence Gap Flag",
+        "Eliminated If These Failures Confirmed",
+        "Why It Gets Eliminated",
+        "Diagnostic Value",
+        "Industry Relevance",
+        "Evidence Priority",
+        "Time to Collect",
+        "Collection Cost",
+        "Analysis Complexity",
+        "Seasonal Factor",
+        "Related Failure Modes",
+        "Prerequisite Evidence",
+        "Followup Actions",
+        "Industry Benchmark",
+        "Equipment Group ID",
+        "Equipment Type ID",
+        "Equipment Subtype ID",
+        "Risk Ranking ID",
+        "System ID",
+        "Is Active",
+        "Last Updated",
+        "Updated By",
+        "Created At"
+      ];
+      const csvRows = [headers.join(",")];
+      evidenceItems.forEach((item) => {
+        const row = [
+          `"${(item.equipmentGroup || "").replace(/"/g, '""')}"`,
+          `"${(item.equipmentType || "").replace(/"/g, '""')}"`,
+          `"${(item.subtype || "").replace(/"/g, '""')}"`,
+          `"${(item.componentFailureMode || "").replace(/"/g, '""')}"`,
+          `"${(item.equipmentCode || "").replace(/"/g, '""')}"`,
+          `"${(item.failureCode || "").replace(/"/g, '""')}"`,
+          `"${(item.riskRanking || "").replace(/"/g, '""')}"`,
+          `"${(item.requiredTrendDataEvidence || "").replace(/"/g, '""')}"`,
+          `"${(item.aiOrInvestigatorQuestions || "").replace(/"/g, '""')}"`,
+          `"${(item.attachmentsEvidenceRequired || "").replace(/"/g, '""')}"`,
+          `"${(item.rootCauseLogic || "").replace(/"/g, '""')}"`,
+          `"${(item.primaryRootCause || "").replace(/"/g, '""')}"`,
+          `"${(item.contributingFactor || "").replace(/"/g, '""')}"`,
+          `"${(item.latentCause || "").replace(/"/g, '""')}"`,
+          `"${(item.detectionGap || "").replace(/"/g, '""')}"`,
+          `"${(item.confidenceLevel || "").replace(/"/g, '""')}"`,
+          `"${(item.faultSignaturePattern || "").replace(/"/g, '""')}"`,
+          `"${(item.applicableToOtherEquipment || "").replace(/"/g, '""')}"`,
+          `"${(item.evidenceGapFlag || "").replace(/"/g, '""')}"`,
+          `"${(item.eliminatedIfTheseFailuresConfirmed || "").replace(/"/g, '""')}"`,
+          `"${(item.whyItGetsEliminated || "").replace(/"/g, '""')}"`,
+          `"${(item.diagnosticValue || "").replace(/"/g, '""')}"`,
+          `"${(item.industryRelevance || "").replace(/"/g, '""')}"`,
+          `"${(item.evidencePriority || "").replace(/"/g, '""')}"`,
+          `"${(item.timeToCollect || "").replace(/"/g, '""')}"`,
+          `"${(item.collectionCost || "").replace(/"/g, '""')}"`,
+          `"${(item.analysisComplexity || "").replace(/"/g, '""')}"`,
+          `"${(item.seasonalFactor || "").replace(/"/g, '""')}"`,
+          `"${(item.relatedFailureModes || "").replace(/"/g, '""')}"`,
+          `"${(item.prerequisiteEvidence || "").replace(/"/g, '""')}"`,
+          `"${(item.followupActions || "").replace(/"/g, '""')}"`,
+          `"${(item.industryBenchmark || "").replace(/"/g, '""')}"`,
+          item.equipmentGroupId || "",
+          item.equipmentTypeId || "",
+          item.equipmentSubtypeId || "",
+          item.riskRankingId || "",
+          item.id,
+          item.isActive ? "true" : "false",
+          item.updatedAt || "",
+          `"${(item.updatedBy || "").replace(/"/g, '""')}"`,
+          item.createdAt || ""
+        ];
+        csvRows.push(row.join(","));
+      });
+      const csvContent = csvRows.join("\n");
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", 'attachment; filename="evidence-library-export.csv"');
+      res.send(csvContent);
+      console.log("[ROUTES] Evidence library exported successfully:", evidenceItems.length, "items");
+    } catch (error) {
+      console.error("[ROUTES] Evidence library export error:", error);
+      res.status(500).json({
+        error: "Failed to export evidence library",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }
