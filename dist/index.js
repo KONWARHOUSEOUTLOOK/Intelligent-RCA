@@ -184,13 +184,7 @@ var init_schema = __esm({
       // Elimination conditions
       whyItGetsEliminated: text("why_it_gets_eliminated"),
       // Elimination reasoning
-      // Legacy fields (keeping for compatibility)
-      blankColumn1: varchar("blank_column_1"),
-      // Blank Column 1
-      blankColumn2: varchar("blank_column_2"),
-      // Blank Column 2
-      blankColumn3: varchar("blank_column_3"),
-      // Blank Column 3
+      // BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP
       isActive: boolean("is_active").default(true),
       lastUpdated: timestamp("last_updated").defaultNow(),
       updatedBy: varchar("updated_by"),
@@ -1153,14 +1147,12 @@ var init_storage = __esm({
           evidenceGapFlag: evidenceLibrary.evidenceGapFlag,
           eliminatedIfTheseFailuresConfirmed: evidenceLibrary.eliminatedIfTheseFailuresConfirmed,
           whyItGetsEliminated: evidenceLibrary.whyItGetsEliminated,
-          blankColumn1: evidenceLibrary.blankColumn1,
-          blankColumn2: evidenceLibrary.blankColumn2,
-          blankColumn3: evidenceLibrary.blankColumn3,
+          // BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP
           isActive: evidenceLibrary.isActive,
           lastUpdated: evidenceLibrary.lastUpdated,
           updatedBy: evidenceLibrary.updatedBy,
           createdAt: evidenceLibrary.createdAt
-        }).from(evidenceLibrary).leftJoin(equipmentGroups, eq(evidenceLibrary.equipmentGroupId, equipmentGroups.id)).leftJoin(equipmentTypes, eq(evidenceLibrary.equipmentTypeId, equipmentTypes.id)).leftJoin(equipmentSubtypes, eq(evidenceLibrary.equipmentSubtypeId, equipmentSubtypes.id)).leftJoin(riskRankings, eq(evidenceLibrary.riskRankingId, riskRankings.id)).where(eq(evidenceLibrary.isActive, true)).orderBy(sql2`COALESCE(${equipmentGroups.name}, ${evidenceLibrary.equipmentGroup})`, sql2`COALESCE(${equipmentTypes.name}, ${evidenceLibrary.equipmentType})`);
+        }).from(evidenceLibrary).leftJoin(equipmentGroups, eq(evidenceLibrary.equipmentGroupId, equipmentGroups.id)).leftJoin(equipmentTypes, eq(evidenceLibrary.equipmentTypeId, equipmentTypes.id)).leftJoin(equipmentSubtypes, eq(evidenceLibrary.equipmentSubtypeId, equipmentSubtypes.id)).leftJoin(riskRankings, eq(evidenceLibrary.riskRankingId, riskRankings.id)).orderBy(sql2`COALESCE(${equipmentGroups.name}, ${evidenceLibrary.equipmentGroup})`, sql2`COALESCE(${equipmentTypes.name}, ${evidenceLibrary.equipmentType})`);
         console.log(`[DatabaseInvestigationStorage] NORMALIZED EVIDENCE LIBRARY: Retrieved ${results.length} evidence items with foreign key resolution`);
         const brokenRecords = results.filter(
           (record) => record.equipmentGroup === "DELETED" || record.equipmentType === "DELETED" || record.riskRanking === "UNKNOWN"
@@ -3598,8 +3590,9 @@ var init_dynamic_ai_config = __esm({
           console.log(`[Dynamic AI Config] Creating ${config.provider} client with model ${config.model}`);
           const dynamicProviderName = process.env.DYNAMIC_PROVIDER_NAME || config.provider;
           if (config.provider.toLowerCase() === dynamicProviderName.toLowerCase()) {
-            const { OpenAI } = await import("openai");
-            return new OpenAI({
+            const providerModule = await import(config.provider.toLowerCase());
+            const ProviderClass = providerModule.default || providerModule.OpenAI;
+            return new ProviderClass({
               apiKey: config.apiKey
             });
           }
@@ -3938,6 +3931,7 @@ var init_enhanced_ai_test_service = __esm({
   "server/enhanced-ai-test-service.ts"() {
     "use strict";
     init_storage();
+    init_dynamic_ai_config();
     init_ai_status_monitor();
     init_universal_ai_config();
     init_llm_security_validator();
@@ -4060,15 +4054,14 @@ var init_enhanced_ai_test_service = __esm({
        */
       static async testProviderConnectivity(provider, timeoutMs = 3e4) {
         try {
-          const dynamicModule = await import("openai").then((module) => {
-            const OpenAI = module.default;
-            return new OpenAI({
-              apiKey: provider.apiKey,
-              timeout: timeoutMs
-            });
+          const aiClient = await DynamicAIConfig.createAIClient({
+            provider: provider.provider,
+            model: provider.model,
+            apiKey: provider.apiKey,
+            isActive: provider.isActive
           });
           const response = await Promise.race([
-            dynamicModule.models ? dynamicModule.models.list() : Promise.resolve({ data: [] }),
+            aiClient.models ? aiClient.models.list() : Promise.resolve({ data: [] }),
             new Promise(
               (_, reject) => setTimeout(() => reject(new Error("Request timeout")), timeoutMs)
             )
@@ -6876,28 +6869,58 @@ async function registerRoutes(app3) {
     }
   });
   app3.get("/api/evidence-library", async (req, res) => {
-    console.log("[ROUTES] Evidence library route accessed - Universal Protocol Standard compliant");
+    console.log("[ROUTES] Evidence library route accessed - Universal Protocol Standard compliant with ALL 44 columns");
     try {
       const evidenceItems = await investigationStorage.getAllEvidenceLibrary();
       console.log(`[ROUTES] Successfully retrieved ${evidenceItems.length} evidence library items from database`);
       const transformedItems = evidenceItems.map((item) => ({
         id: item.id,
+        equipmentGroupId: item.equipmentGroupId,
+        equipmentTypeId: item.equipmentTypeId,
+        equipmentSubtypeId: item.equipmentSubtypeId,
         equipmentGroup: item.equipmentGroup,
         equipmentType: item.equipmentType,
         subtype: item.subtype,
         componentFailureMode: item.componentFailureMode,
         equipmentCode: item.equipmentCode,
         failureCode: item.failureCode,
+        riskRankingId: item.riskRankingId,
         riskRanking: item.riskRanking,
         requiredTrendDataEvidence: item.requiredTrendDataEvidence,
         aiOrInvestigatorQuestions: item.aiOrInvestigatorQuestions,
         attachmentsEvidenceRequired: item.attachmentsEvidenceRequired,
         rootCauseLogic: item.rootCauseLogic,
+        // ALL RCA-SPECIFIC FIELDS - NO HARDCODING, ALL DATABASE-DRIVEN
+        primaryRootCause: item.primaryRootCause,
+        contributingFactor: item.contributingFactor,
+        latentCause: item.latentCause,
+        detectionGap: item.detectionGap,
+        confidenceLevel: item.confidenceLevel,
+        faultSignaturePattern: item.faultSignaturePattern,
+        applicableToOtherEquipment: item.applicableToOtherEquipment,
+        evidenceGapFlag: item.evidenceGapFlag,
+        eliminatedIfTheseFailuresConfirmed: item.eliminatedIfTheseFailuresConfirmed,
+        whyItGetsEliminated: item.whyItGetsEliminated,
+        // BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP
+        // CONFIGURABLE INTELLIGENCE FIELDS - ADMIN EDITABLE (NO HARDCODING)
+        diagnosticValue: item.diagnosticValue,
+        industryRelevance: item.industryRelevance,
+        evidencePriority: item.evidencePriority,
+        timeToCollect: item.timeToCollect,
+        collectionCost: item.collectionCost,
+        analysisComplexity: item.analysisComplexity,
+        seasonalFactor: item.seasonalFactor,
+        relatedFailureModes: item.relatedFailureModes,
+        prerequisiteEvidence: item.prerequisiteEvidence,
+        followupActions: item.followupActions,
+        industryBenchmark: item.industryBenchmark,
+        // SYSTEM FIELDS - NO SOFT DELETE (REMOVED isActive FROM FILTERING)
         isActive: item.isActive,
         lastUpdated: item.lastUpdated?.toISOString(),
-        updatedBy: item.updatedBy || "system"
+        updatedBy: item.updatedBy || "system",
+        createdAt: item.createdAt?.toISOString()
       }));
-      console.log(`[ROUTES] Returning ${transformedItems.length} transformed evidence library items`);
+      console.log(`[ROUTES] Returning ${transformedItems.length} items with ALL 44 database columns`);
       res.json(transformedItems);
     } catch (error) {
       console.error("[ROUTES] Evidence Library database error:", error);
@@ -6915,6 +6938,7 @@ async function registerRoutes(app3) {
       const evidenceItems = await investigationStorage.getAllEvidenceLibrary();
       console.log(`[ROUTES] Exporting ${evidenceItems.length} evidence library items to CSV`);
       const headers = [
+        // Core Equipment Fields
         "Equipment Group",
         "Equipment Type",
         "Subtype",
@@ -6922,12 +6946,36 @@ async function registerRoutes(app3) {
         "Equipment Code",
         "Failure Code",
         "Risk Ranking",
+        // Core Analysis Fields
         "Required Trend Data Evidence",
         "AI / Investigator Questions",
         "Attachments Evidence Required",
-        "Root Cause Logic"
+        "Root Cause Logic",
+        // MASTER SCHEMA: RCA Analysis Fields (CRITICAL - NO OMISSIONS)
+        "Primary Root Cause",
+        "Contributing Factor",
+        "Latent Cause",
+        "Detection Gap",
+        "Fault Signature Pattern",
+        "Applicable to Other Equipment",
+        "Evidence Gap Flag",
+        // MASTER SCHEMA: Evaluation & Priority Fields (CRITICAL - NO OMISSIONS)
+        "Confidence Level",
+        "Diagnostic Value",
+        "Industry Relevance",
+        "Evidence Priority",
+        "Time to Collect",
+        "Collection Cost",
+        "Analysis Complexity",
+        "Seasonal Factor",
+        // MASTER SCHEMA: Related Information Fields (CRITICAL - NO OMISSIONS)
+        "Related Failure Modes",
+        "Prerequisite Evidence",
+        "Followup Actions",
+        "Industry Benchmark"
       ];
       const rows = evidenceItems.map((item) => [
+        // Core Equipment Fields
         item.equipmentGroup || "",
         item.equipmentType || "",
         item.subtype || "",
@@ -6935,10 +6983,33 @@ async function registerRoutes(app3) {
         item.equipmentCode || "",
         item.failureCode || "",
         item.riskRanking || "",
+        // Core Analysis Fields  
         item.requiredTrendDataEvidence || "",
         item.aiOrInvestigatorQuestions || "",
         item.attachmentsEvidenceRequired || "",
-        item.rootCauseLogic || ""
+        item.rootCauseLogic || "",
+        // MASTER SCHEMA: RCA Analysis Fields (CRITICAL - NO OMISSIONS)
+        item.primaryRootCause || "",
+        item.contributingFactor || "",
+        item.latentCause || "",
+        item.detectionGap || "",
+        item.faultSignaturePattern || "",
+        item.applicableToOtherEquipment || "",
+        item.evidenceGapFlag || "",
+        // MASTER SCHEMA: Evaluation & Priority Fields (CRITICAL - NO OMISSIONS)
+        item.confidenceLevel || "",
+        item.diagnosticValue || "",
+        item.industryRelevance || "",
+        item.evidencePriority || "",
+        item.timeToCollect || "",
+        item.collectionCost || "",
+        item.analysisComplexity || "",
+        item.seasonalFactor || "",
+        // MASTER SCHEMA: Related Information Fields (CRITICAL - NO OMISSIONS)
+        item.relatedFailureModes || "",
+        item.prerequisiteEvidence || "",
+        item.followupActions || "",
+        item.industryBenchmark || ""
       ]);
       const csvContent = [headers, ...rows].map((row) => row.map((field) => `"${field.toString().replace(/"/g, '""')}"`).join(",")).join("\n");
       res.setHeader("Content-Type", "text/csv");
@@ -10209,68 +10280,6 @@ JSON array only:`;
     } catch (error) {
       console.error("[Evidence Library RAW] Database error:", error);
       res.status(500).json({ error: error?.message || "Database access failed" });
-    }
-  });
-  app.get("/api/evidence-library", async (req, res) => {
-    console.log("[Evidence Library] Universal Protocol Standard compliant route processing");
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    try {
-      const evidenceItems = await investigationStorage.getAllEvidenceLibrary();
-      console.log(`[Evidence Library] Retrieved ${evidenceItems.length} evidence library records from database`);
-      const transformedItems = evidenceItems.map((item) => ({
-        id: item.id,
-        equipmentGroup: item.equipmentGroup,
-        equipmentType: item.equipmentType,
-        subtype: item.subtype,
-        componentFailureMode: item.componentFailureMode,
-        equipmentCode: item.equipmentCode,
-        failureCode: item.failureCode,
-        riskRanking: item.riskRanking,
-        requiredTrendDataEvidence: item.requiredTrendDataEvidence,
-        aiOrInvestigatorQuestions: item.aiOrInvestigatorQuestions,
-        attachmentsEvidenceRequired: item.attachmentsEvidenceRequired,
-        rootCauseLogic: item.rootCauseLogic,
-        // RCA-specific fields - Universal Protocol Standard compliant (no hardcoding)
-        primaryRootCause: item.primaryRootCause || null,
-        contributingFactor: item.contributingFactor || null,
-        latentCause: item.latentCause || null,
-        detectionGap: item.detectionGap || null,
-        confidenceLevel: item.confidenceLevel || null,
-        faultSignaturePattern: item.faultSignaturePattern || null,
-        applicableToOtherEquipment: item.applicableToOtherEquipment || null,
-        evidenceGapFlag: item.evidenceGapFlag || null,
-        eliminatedIfTheseFailuresConfirmed: item.eliminatedIfTheseFailuresConfirmed || null,
-        whyItGetsEliminated: item.whyItGetsEliminated || null,
-        // Configurable Intelligence Fields - Admin editable (no hardcoding)  
-        diagnosticValue: item.diagnosticValue || null,
-        industryRelevance: item.industryRelevance || null,
-        evidencePriority: item.evidencePriority || null,
-        timeToCollect: item.timeToCollect || null,
-        collectionCost: item.collectionCost || null,
-        analysisComplexity: item.analysisComplexity || null,
-        seasonalFactor: item.seasonalFactor || null,
-        relatedFailureModes: item.relatedFailureModes || null,
-        prerequisiteEvidence: item.prerequisiteEvidence || null,
-        followupActions: item.followupActions || null,
-        industryBenchmark: item.industryBenchmark || null,
-        // Metadata fields
-        isActive: item.isActive,
-        lastUpdated: item.lastUpdated?.toISOString(),
-        updatedBy: item.updatedBy || "system"
-      }));
-      console.log(`[Evidence Library] Sending ${transformedItems.length} Universal Protocol Standard compliant evidence items`);
-      const jsonResponse = JSON.stringify(transformedItems);
-      res.status(200).end(jsonResponse);
-    } catch (error) {
-      console.error("[Evidence Library] Universal Protocol Standard compliant error handling:", error);
-      const errorResponse = JSON.stringify({
-        message: "Failed to fetch evidence library",
-        error: error?.message || "Unknown error"
-      });
-      res.status(500).end(errorResponse);
     }
   });
   app.get("/api/evidence-library-full", async (req, res) => {

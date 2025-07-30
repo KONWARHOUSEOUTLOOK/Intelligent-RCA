@@ -17,9 +17,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Upload, Download, Edit, Trash2, AlertTriangle, CheckCircle, Home, ArrowLeft } from "lucide-react";
+import { Search, Plus, Upload, Download, Edit, Edit2, Trash2, AlertTriangle, CheckCircle, Home, ArrowLeft } from "lucide-react";
+import { format } from "date-fns";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -66,6 +68,7 @@ interface EvidenceLibrary {
   // BLANK COLUMNS REMOVED - STEP 1 COMPLIANCE CLEANUP
   isActive: boolean;
   lastUpdated: string;
+  updatedAt?: string;
   updatedBy?: string;
   createdAt?: string;
 }
@@ -89,6 +92,10 @@ export default function EvidenceLibraryManagement() {
   // Sorting states
   const [sortField, setSortField] = useState<'equipmentGroup' | 'equipmentType' | 'subtype' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  
+  // Edit/Delete states - NO HARDCODING
+  const [editItem, setEditItem] = useState<EvidenceLibrary | null>(null);
+  const [deleteItem, setDeleteItem] = useState<EvidenceLibrary | null>(null);
 
   // UNIVERSAL PROTOCOL STANDARD: Use relative API paths only
   const { data: evidenceItems = [], isLoading, refetch } = useQuery<EvidenceLibrary[]>({
@@ -608,8 +615,8 @@ export default function EvidenceLibraryManagement() {
             <div className="text-xs text-green-600 mb-2 bg-green-50 p-2 rounded border border-green-200">
               ✅ <strong>SCROLL VERIFICATION:</strong> Table has 46 TableHead elements (41 API columns + 4 ID columns + 1 checkbox). Width: 8000px forces horizontal scrollbar.
             </div>
-            <div className="text-xs text-red-600 mb-2 bg-red-50 p-2 rounded border border-red-200">
-              🧪 <strong>CSS GRID IMPLEMENTATION:</strong> Complete CSS Grid with 43 defined columns. ALL COLUMNS NOW GUARANTEED VISIBLE WITH HORIZONTAL SCROLL.
+            <div className="text-xs text-blue-600 mb-2 bg-blue-50 p-2 rounded border border-blue-200">
+              🔧 <strong>SIMPLIFIED TABLE APPROACH:</strong> Wide table (15000px) with explicit column widths. ALL 43 COLUMNS MUST BE VISIBLE WITH HORIZONTAL SCROLL.
             </div>
             <div 
               className="evidence-table-container border rounded-lg shadow-lg"
@@ -617,58 +624,15 @@ export default function EvidenceLibraryManagement() {
                 width: '100%',
                 height: 'auto',
                 maxHeight: '80vh',
-                overflow: 'auto'
+                overflowX: 'auto',
+                overflowY: 'auto'
               }}
             >
-              <style>
-                {`
-                .evidence-grid-table {
-                  display: grid;
-                  grid-template-columns: 
-                    80px 200px 200px 180px 250px 180px 180px 150px 
-                    300px 300px 280px 250px 250px 220px 180px 180px 180px 250px 
-                    280px 220px 300px 250px 180px 220px 180px 180px 180px 220px 
-                    180px 250px 220px 180px 220px 120px 150px 150px 180px 150px 
-                    120px 180px 150px 180px 120px;
-                  gap: 1px;
-                  background: #f1f5f9;
-                  font-size: 14px;
-                }
-                .evidence-grid-cell {
-                  background: white;
-                  padding: 8px 12px;
-                  border: 1px solid #e2e8f0;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                  white-space: nowrap;
-                }
-                .evidence-grid-header {
-                  background: #f8fafc;
-                  font-weight: 600;
-                  border-bottom: 2px solid #cbd5e1;
-                }
-                .evidence-grid-system {
-                  background: #f1f5f9;
-                }
-                .evidence-table-container::-webkit-scrollbar {
-                  height: 16px;
-                  width: 16px;
-                }
-                .evidence-table-container::-webkit-scrollbar-track {
-                  background: #f1f5f9;
-                  border-radius: 8px;
-                }
-                .evidence-table-container::-webkit-scrollbar-thumb {
-                  background: #cbd5e1;
-                  border-radius: 8px;
-                  border: 2px solid #f1f5f9;
-                }
-                .evidence-table-container::-webkit-scrollbar-thumb:hover {
-                  background: #94a3b8;
-                }
-                `}
-              </style>
-              <div className="evidence-grid-table">
+              <Table style={{ 
+                minWidth: '15000px', 
+                width: '15000px', 
+                tableLayout: 'fixed'
+              }}>
                 {/* GRID HEADER ROW - ALL 43 COLUMNS GUARANTEED VISIBLE */}
                 <div className="evidence-grid-cell evidence-grid-header">
                   <input
@@ -856,6 +820,7 @@ export default function EvidenceLibraryManagement() {
                   ))
                 )}
               </div>
+            </div>
             </div>
           </div>
         </CardContent>
