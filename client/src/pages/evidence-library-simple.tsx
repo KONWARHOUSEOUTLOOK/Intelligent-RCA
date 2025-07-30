@@ -516,83 +516,608 @@ export default function EvidenceLibrarySimple() {
             style={{
               width: '100%',
               height: '80vh',
-              overflowX: 'auto',
-              overflowY: 'auto',
+              overflow: 'auto',
               position: 'relative'
             }}
           >
-            <Table style={{ 
-              minWidth: '20000px', 
-              width: '20000px', 
-              tableLayout: 'fixed'
-            }}>
-              <TableHeader className="bg-white border-b shadow-sm" style={{ position: 'sticky', top: 0, zIndex: 999 }}>
-                <TableRow>
-                  <TableHead className="bg-white border-b" style={{ width: '80px', minWidth: '80px', position: 'sticky', top: 0, zIndex: 1000 }}>
+            <table 
+              style={{ 
+                minWidth: '20000px', 
+                width: '20000px', 
+                tableLayout: 'fixed',
+                borderCollapse: 'collapse'
+              }}
+              className="w-full"
+            >
+              <thead 
+                style={{ 
+                  position: 'sticky', 
+                  top: 0, 
+                  zIndex: 1000,
+                  backgroundColor: 'white'
+                }}
+                className="bg-white shadow-sm border-b"
+              >
+                <tr>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '80px', 
+                      minWidth: '80px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={selectAll}
                       onChange={handleSelectAll}
                       className="rounded border-gray-300"
                     />
-                  </TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '200px', minWidth: '200px', position: 'sticky', top: 0, zIndex: 1000 }}>Equipment Group</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '200px', minWidth: '200px', position: 'sticky', top: 0, zIndex: 1000 }}>Equipment Type</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Subtype</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 1000 }}>Component/Failure Mode</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Equipment Code</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Failure Code</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '150px', minWidth: '150px', position: 'sticky', top: 0, zIndex: 1000 }}>Risk Ranking</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '300px', minWidth: '300px', position: 'sticky', top: 0, zIndex: 1000 }}>Required Trend Data</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '300px', minWidth: '300px', position: 'sticky', top: 0, zIndex: 1000 }}>AI Questions</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '280px', minWidth: '280px', position: 'sticky', top: 0, zIndex: 1000 }}>Attachments Required</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 1000 }}>Root Cause Logic</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 1000 }}>Primary Root Cause</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 1000 }}>Contributing Factor</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Latent Cause</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Detection Gap</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Confidence Level</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 1000 }}>Fault Signature Pattern</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '280px', minWidth: '280px', position: 'sticky', top: 0, zIndex: 1000 }}>Applicable to Other Equipment</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 1000 }}>Evidence Gap Flag</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '300px', minWidth: '300px', position: 'sticky', top: 0, zIndex: 1000 }}>Eliminated If These Failures Confirmed</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 1000 }}>Why It Gets Eliminated</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Diagnostic Value</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 1000 }}>Industry Relevance</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Evidence Priority</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Time to Collect</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Collection Cost</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 1000 }}>Analysis Complexity</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Seasonal Factor</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '250px', minWidth: '250px', position: 'sticky', top: 0, zIndex: 1000 }}>Related Failure Modes</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 1000 }}>Prerequisite Evidence</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Followup Actions</TableHead>
-                  <TableHead className="bg-white border-b" style={{ width: '220px', minWidth: '220px', position: 'sticky', top: 0, zIndex: 1000 }}>Industry Benchmark</TableHead>
-                  <TableHead className="bg-slate-100 border-b" style={{ width: '120px', minWidth: '120px', position: 'sticky', top: 0, zIndex: 1000 }}>System ID</TableHead>
-                  <TableHead className="bg-slate-100 border-b" style={{ width: '150px', minWidth: '150px', position: 'sticky', top: 0, zIndex: 1000 }}>Group ID</TableHead>
-                  <TableHead className="bg-slate-100 border-b" style={{ width: '150px', minWidth: '150px', position: 'sticky', top: 0, zIndex: 1000 }}>Type ID</TableHead>
-                  <TableHead className="bg-slate-100 border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Subtype ID</TableHead>
-                  <TableHead className="bg-slate-100 border-b" style={{ width: '150px', minWidth: '150px', position: 'sticky', top: 0, zIndex: 1000 }}>Risk ID</TableHead>
-                  <TableHead className="bg-slate-100 border-b" style={{ width: '120px', minWidth: '120px', position: 'sticky', top: 0, zIndex: 1000 }}>Active</TableHead>
-                  <TableHead className="bg-slate-100 border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Updated</TableHead>
-                  <TableHead className="bg-slate-100 border-b" style={{ width: '150px', minWidth: '150px', position: 'sticky', top: 0, zIndex: 1000 }}>Updated By</TableHead>
-                  <TableHead className="bg-slate-100 border-b" style={{ width: '180px', minWidth: '180px', position: 'sticky', top: 0, zIndex: 1000 }}>Created</TableHead>
-                  <TableHead className="bg-slate-100 border-b" style={{ width: '120px', minWidth: '120px', position: 'sticky', top: 0, zIndex: 1000 }}>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '200px', 
+                      minWidth: '200px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Equipment Group
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '200px', 
+                      minWidth: '200px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Equipment Type
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Subtype
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '250px', 
+                      minWidth: '250px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Component/Failure Mode
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Equipment Code
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Failure Code
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '150px', 
+                      minWidth: '150px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Risk Ranking
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '300px', 
+                      minWidth: '300px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Required Trend Data
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '300px', 
+                      minWidth: '300px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    AI Questions
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '280px', 
+                      minWidth: '280px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Attachments Required
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '250px', 
+                      minWidth: '250px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Root Cause Logic
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '250px', 
+                      minWidth: '250px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Primary Root Cause
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '220px', 
+                      minWidth: '220px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Contributing Factor
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Latent Cause
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Detection Gap
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Confidence Level
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '250px', 
+                      minWidth: '250px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Fault Signature Pattern
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '280px', 
+                      minWidth: '280px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Applicable to Other Equipment
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '220px', 
+                      minWidth: '220px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Evidence Gap Flag
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '300px', 
+                      minWidth: '300px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Eliminated If These Failures Confirmed
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '250px', 
+                      minWidth: '250px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Why It Gets Eliminated
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Diagnostic Value
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '220px', 
+                      minWidth: '220px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Industry Relevance
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Evidence Priority
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Time to Collect
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Collection Cost
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '220px', 
+                      minWidth: '220px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Analysis Complexity
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Seasonal Factor
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '250px', 
+                      minWidth: '250px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Related Failure Modes
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '220px', 
+                      minWidth: '220px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Prerequisite Evidence
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Followup Actions
+                  </th>
+                  <th 
+                    className="bg-white border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '220px', 
+                      minWidth: '220px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'white',
+                      zIndex: 1001
+                    }}
+                  >
+                    Industry Benchmark
+                  </th>
+                  <th 
+                    className="bg-slate-100 border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '120px', 
+                      minWidth: '120px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: '#f1f5f9',
+                      zIndex: 1001
+                    }}
+                  >
+                    System ID
+                  </th>
+                  <th 
+                    className="bg-slate-100 border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '150px', 
+                      minWidth: '150px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: '#f1f5f9',
+                      zIndex: 1001
+                    }}
+                  >
+                    Group ID
+                  </th>
+                  <th 
+                    className="bg-slate-100 border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '150px', 
+                      minWidth: '150px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: '#f1f5f9',
+                      zIndex: 1001
+                    }}
+                  >
+                    Type ID
+                  </th>
+                  <th 
+                    className="bg-slate-100 border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: '#f1f5f9',
+                      zIndex: 1001
+                    }}
+                  >
+                    Subtype ID
+                  </th>
+                  <th 
+                    className="bg-slate-100 border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '150px', 
+                      minWidth: '150px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: '#f1f5f9',
+                      zIndex: 1001
+                    }}
+                  >
+                    Risk ID
+                  </th>
+                  <th 
+                    className="bg-slate-100 border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '120px', 
+                      minWidth: '120px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: '#f1f5f9',
+                      zIndex: 1001
+                    }}
+                  >
+                    Active
+                  </th>
+                  <th 
+                    className="bg-slate-100 border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: '#f1f5f9',
+                      zIndex: 1001
+                    }}
+                  >
+                    Updated
+                  </th>
+                  <th 
+                    className="bg-slate-100 border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '150px', 
+                      minWidth: '150px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: '#f1f5f9',
+                      zIndex: 1001
+                    }}
+                  >
+                    Updated By
+                  </th>
+                  <th 
+                    className="bg-slate-100 border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '180px', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: '#f1f5f9',
+                      zIndex: 1001
+                    }}
+                  >
+                    Created
+                  </th>
+                  <th 
+                    className="bg-slate-100 border-b border-r px-4 py-3 text-left font-medium text-gray-900"
+                    style={{ 
+                      width: '120px', 
+                      minWidth: '120px',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: '#f1f5f9',
+                      zIndex: 1001
+                    }}
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
                 {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={43} className="text-center py-8">
+                  <tr>
+                    <td colSpan={43} className="text-center py-8 px-4 border-b">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                         <span>Loading evidence library...</span>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ) : filteredItems.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={43} className="text-center py-8">
+                  <tr>
+                    <td colSpan={43} className="text-center py-8 px-4 border-b">
                       <div className="flex flex-col items-center space-y-3">
                         <AlertTriangle className="h-12 w-12 text-muted-foreground" />
                         <div>
@@ -600,30 +1125,30 @@ export default function EvidenceLibrarySimple() {
                           <p className="text-sm text-muted-foreground">Add evidence items to get started</p>
                         </div>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ) : (
                   filteredItems.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
+                    <tr key={item.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-3 border-r">
                         <input
                           type="checkbox"
                           checked={selectedItems.includes(item.id)}
                           onChange={() => handleItemSelect(item.id)}
                           className="rounded border-gray-300"
                         />
-                      </TableCell>
-                      <TableCell className="font-medium">{renderCellContent(item.equipmentGroup === "DELETED" ? "Unknown" : item.equipmentGroup, item.id, 'equipmentGroup', 30)}</TableCell>
-                      <TableCell>{renderCellContent(item.equipmentType === "DELETED" ? "Unknown" : item.equipmentType, item.id, 'equipmentType', 30)}</TableCell>
-                      <TableCell>{renderCellContent(item.subtype, item.id, 'subtype', 25)}</TableCell>
-                      <TableCell>{renderCellContent(item.componentFailureMode, item.id, 'componentFailureMode', 40)}</TableCell>
-                      <TableCell>{renderCellContent(item.equipmentCode, item.id, 'equipmentCode', 25)}</TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="px-4 py-3 border-r font-medium">{renderCellContent(item.equipmentGroup === "DELETED" ? "Unknown" : item.equipmentGroup, item.id, 'equipmentGroup', 30)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.equipmentType === "DELETED" ? "Unknown" : item.equipmentType, item.id, 'equipmentType', 30)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.subtype, item.id, 'subtype', 25)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.componentFailureMode, item.id, 'componentFailureMode', 40)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.equipmentCode, item.id, 'equipmentCode', 25)}</td>
+                      <td className="px-4 py-3 border-r">
                         <code className="bg-muted px-2 py-1 rounded text-sm">
                           {renderCellContent(item.failureCode, item.id, 'failureCode', 20)}
                         </code>
-                      </TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="px-4 py-3 border-r">
                         <Badge 
                           variant={
                             item.riskRanking?.toLowerCase() === 'critical' ? 'destructive' :
@@ -633,50 +1158,50 @@ export default function EvidenceLibrarySimple() {
                         >
                           {item.riskRanking}
                         </Badge>
-                      </TableCell>
-                      <TableCell>{renderCellContent(item.requiredTrendDataEvidence, item.id, 'requiredTrendDataEvidence', 60)}</TableCell>
-                      <TableCell>{renderCellContent(item.aiOrInvestigatorQuestions, item.id, 'aiOrInvestigatorQuestions', 60)}</TableCell>
-                      <TableCell>{renderCellContent(item.attachmentsEvidenceRequired, item.id, 'attachmentsEvidenceRequired', 50)}</TableCell>
-                      <TableCell>{renderCellContent(item.rootCauseLogic, item.id, 'rootCauseLogic', 50)}</TableCell>
-                      <TableCell>{renderCellContent(item.primaryRootCause, item.id, 'primaryRootCause', 40)}</TableCell>
-                      <TableCell>{renderCellContent(item.contributingFactor, item.id, 'contributingFactor', 40)}</TableCell>
-                      <TableCell>{renderCellContent(item.latentCause, item.id, 'latentCause', 30)}</TableCell>
-                      <TableCell>{renderCellContent(item.detectionGap, item.id, 'detectionGap', 30)}</TableCell>
-                      <TableCell>{renderCellContent(item.confidenceLevel, item.id, 'confidenceLevel', 25)}</TableCell>
-                      <TableCell>{renderCellContent(item.faultSignaturePattern, item.id, 'faultSignaturePattern', 40)}</TableCell>
-                      <TableCell>{renderCellContent(item.applicableToOtherEquipment, item.id, 'applicableToOtherEquipment', 50)}</TableCell>
-                      <TableCell>{renderCellContent(item.evidenceGapFlag, item.id, 'evidenceGapFlag', 35)}</TableCell>
-                      <TableCell>{renderCellContent(item.eliminatedIfTheseFailuresConfirmed, item.id, 'eliminatedIfTheseFailuresConfirmed', 60)}</TableCell>
-                      <TableCell>{renderCellContent(item.whyItGetsEliminated, item.id, 'whyItGetsEliminated', 40)}</TableCell>
-                      <TableCell>{renderCellContent(item.diagnosticValue, item.id, 'diagnosticValue', 30)}</TableCell>
-                      <TableCell>{renderCellContent(item.industryRelevance, item.id, 'industryRelevance', 35)}</TableCell>
-                      <TableCell>{renderCellContent(item.evidencePriority, item.id, 'evidencePriority', 25)}</TableCell>
-                      <TableCell>{renderCellContent(item.timeToCollect, item.id, 'timeToCollect', 25)}</TableCell>
-                      <TableCell>{renderCellContent(item.collectionCost, item.id, 'collectionCost', 25)}</TableCell>
-                      <TableCell>{renderCellContent(item.analysisComplexity, item.id, 'analysisComplexity', 35)}</TableCell>
-                      <TableCell>{renderCellContent(item.seasonalFactor, item.id, 'seasonalFactor', 25)}</TableCell>
-                      <TableCell>{renderCellContent(item.relatedFailureModes, item.id, 'relatedFailureModes', 40)}</TableCell>
-                      <TableCell>{renderCellContent(item.prerequisiteEvidence, item.id, 'prerequisiteEvidence', 35)}</TableCell>
-                      <TableCell>{renderCellContent(item.followupActions, item.id, 'followupActions', 25)}</TableCell>
-                      <TableCell>{renderCellContent(item.industryBenchmark, item.id, 'industryBenchmark', 35)}</TableCell>
-                      <TableCell className="text-xs text-gray-600 bg-gray-50">{item.id}</TableCell>
-                      <TableCell className="text-xs text-gray-600 bg-gray-50">{item.equipmentGroupId || '-'}</TableCell>
-                      <TableCell className="text-xs text-gray-600 bg-gray-50">{item.equipmentTypeId || '-'}</TableCell>
-                      <TableCell className="text-xs text-gray-600 bg-gray-50">{item.equipmentSubtypeId || '-'}</TableCell>
-                      <TableCell className="text-xs text-gray-600 bg-gray-50">{item.riskRankingId || '-'}</TableCell>
-                      <TableCell className="text-xs text-gray-600 bg-gray-50">
+                      </td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.requiredTrendDataEvidence, item.id, 'requiredTrendDataEvidence', 60)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.aiOrInvestigatorQuestions, item.id, 'aiOrInvestigatorQuestions', 60)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.attachmentsEvidenceRequired, item.id, 'attachmentsEvidenceRequired', 50)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.rootCauseLogic, item.id, 'rootCauseLogic', 50)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.primaryRootCause, item.id, 'primaryRootCause', 40)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.contributingFactor, item.id, 'contributingFactor', 40)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.latentCause, item.id, 'latentCause', 30)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.detectionGap, item.id, 'detectionGap', 30)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.confidenceLevel, item.id, 'confidenceLevel', 25)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.faultSignaturePattern, item.id, 'faultSignaturePattern', 40)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.applicableToOtherEquipment, item.id, 'applicableToOtherEquipment', 50)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.evidenceGapFlag, item.id, 'evidenceGapFlag', 35)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.eliminatedIfTheseFailuresConfirmed, item.id, 'eliminatedIfTheseFailuresConfirmed', 60)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.whyItGetsEliminated, item.id, 'whyItGetsEliminated', 40)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.diagnosticValue, item.id, 'diagnosticValue', 30)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.industryRelevance, item.id, 'industryRelevance', 35)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.evidencePriority, item.id, 'evidencePriority', 25)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.timeToCollect, item.id, 'timeToCollect', 25)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.collectionCost, item.id, 'collectionCost', 25)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.analysisComplexity, item.id, 'analysisComplexity', 35)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.seasonalFactor, item.id, 'seasonalFactor', 25)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.relatedFailureModes, item.id, 'relatedFailureModes', 40)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.prerequisiteEvidence, item.id, 'prerequisiteEvidence', 35)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.followupActions, item.id, 'followupActions', 25)}</td>
+                      <td className="px-4 py-3 border-r">{renderCellContent(item.industryBenchmark, item.id, 'industryBenchmark', 35)}</td>
+                      <td className="px-4 py-3 border-r text-xs text-gray-600 bg-gray-50">{item.id}</td>
+                      <td className="px-4 py-3 border-r text-xs text-gray-600 bg-gray-50">{item.equipmentGroupId || '-'}</td>
+                      <td className="px-4 py-3 border-r text-xs text-gray-600 bg-gray-50">{item.equipmentTypeId || '-'}</td>
+                      <td className="px-4 py-3 border-r text-xs text-gray-600 bg-gray-50">{item.equipmentSubtypeId || '-'}</td>
+                      <td className="px-4 py-3 border-r text-xs text-gray-600 bg-gray-50">{item.riskRankingId || '-'}</td>
+                      <td className="px-4 py-3 border-r text-xs text-gray-600 bg-gray-50">
                         <Badge variant={item.isActive ? 'default' : 'secondary'}>
                           {item.isActive ? 'Active' : 'Inactive'}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-gray-600 bg-gray-50">
+                      </td>
+                      <td className="px-4 py-3 border-r text-xs text-gray-600 bg-gray-50">
                         {item.updatedAt ? format(new Date(item.updatedAt), 'MMM dd, yyyy') : '-'}
-                      </TableCell>
-                      <TableCell className="text-xs text-gray-600 bg-gray-50">{item.updatedBy || '-'}</TableCell>
-                      <TableCell className="text-xs text-gray-600 bg-gray-50">
+                      </td>
+                      <td className="px-4 py-3 border-r text-xs text-gray-600 bg-gray-50">{item.updatedBy || '-'}</td>
+                      <td className="px-4 py-3 border-r text-xs text-gray-600 bg-gray-50">
                         {item.createdAt ? format(new Date(item.createdAt), 'MMM dd, yyyy') : '-'}
-                      </TableCell>
-                      <TableCell className="bg-gray-50">
+                      </td>
+                      <td className="px-4 py-3 bg-gray-50">
                         <div className="flex space-x-1">
                           <Button
                             variant="ghost"
@@ -700,12 +1225,12 @@ export default function EvidenceLibrarySimple() {
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   ))
                 )}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
