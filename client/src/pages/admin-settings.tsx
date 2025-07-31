@@ -73,10 +73,11 @@ export default function AdminSettings() {
   const [riskRankingsFileRef, setRiskRankingsFileRef] = useState<HTMLInputElement | null>(null);
   const { toast } = useToast();
 
-  // Fetch current AI settings
-  const { data: aiSettings, isLoading } = useQuery<AiSettings[]>({
+  // Fetch current AI settings - SINGLE QUERY ONLY
+  const { data: aiSettings, isLoading: aiSettingsLoading } = useQuery<AiSettings[]>({
     queryKey: ["/api/admin/ai-settings"],
-    retry: false,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   // Fetch equipment groups using the default queryFn
@@ -113,6 +114,8 @@ export default function AdminSettings() {
     staleTime: 0,
     refetchOnMount: true,
   });
+
+
 
   // Test API key mutation
   const testKeyMutation = useMutation({
@@ -800,7 +803,7 @@ export default function AdminSettings() {
           <p className="text-sm text-muted-foreground">Manage existing AI provider configurations</p>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {aiSettingsLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading settings...</div>
           ) : !aiSettings || aiSettings.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
