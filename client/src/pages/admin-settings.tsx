@@ -80,6 +80,9 @@ export default function AdminSettings() {
     refetchOnMount: true,
   });
 
+  // DEBUG LOGGING - REMOVE AFTER FIXING
+  console.log('AI Settings Query Result:', { aiSettings, aiSettingsLoading });
+
   // Fetch equipment groups using the default queryFn
   const { data: equipmentGroups, isLoading: equipmentGroupsLoading } = useQuery({
     queryKey: ['/api/equipment-groups'],
@@ -803,6 +806,12 @@ export default function AdminSettings() {
           <p className="text-sm text-muted-foreground">Manage existing AI provider configurations</p>
         </CardHeader>
         <CardContent>
+          {/* DEBUG INFO - REMOVE AFTER FIXING */}
+          <div className="mb-4 p-2 bg-gray-100 text-xs">
+            DEBUG: aiSettingsLoading={String(aiSettingsLoading)}, aiSettings length={aiSettings?.length || 0}
+            {aiSettings && <pre>{JSON.stringify(aiSettings, null, 2)}</pre>}
+          </div>
+          
           {aiSettingsLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading settings...</div>
           ) : !aiSettings || aiSettings.length === 0 ? (
