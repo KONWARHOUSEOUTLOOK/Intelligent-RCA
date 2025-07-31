@@ -410,17 +410,17 @@ export default function AdminSettings() {
     },
   });
 
-  // Test specific AI provider mutation
+  // Test specific AI provider mutation - FIXED RESPONSE HANDLING
   const testProviderMutation = useMutation({
     mutationFn: async (id: number) => {
       return await apiRequest(`/api/admin/ai-settings/${id}/test`, {
         method: "POST",
       });
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: data.success ? "Test Successful" : "Test Failed",
-        description: data.message,
+        description: data.message || "API test completed",
         variant: data.success ? "default" : "destructive",
       });
       // Refresh the providers list
@@ -435,17 +435,17 @@ export default function AdminSettings() {
     },
   });
 
-  // Delete AI provider mutation
+  // Delete AI provider mutation - FIXED RESPONSE HANDLING  
   const deleteProviderMutation = useMutation({
     mutationFn: async (id: number) => {
       return await apiRequest(`/api/admin/ai-settings/${id}`, {
         method: "DELETE",
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       toast({
         title: "Provider Deleted",
-        description: "AI provider deleted successfully",
+        description: data.message || "AI provider deleted successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ai-settings"] });
     },
@@ -619,7 +619,7 @@ export default function AdminSettings() {
 
     saveSettingsMutation.mutate({
       provider: formData.provider,
-      apiKey: formData.apiKey, // Backend expects apiKey field (it encrypts internally)
+      apiKey: formData.apiKey, // Backend expects raw apiKey and encrypts internally
       model: formData.model,
       isActive: formData.isActive,
       createdBy: formData.createdBy
