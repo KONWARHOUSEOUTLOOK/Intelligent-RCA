@@ -8,3 +8,5 @@
 #.violations-detected.log
 #.env
 #.env.local
+.cache/
+.local/
